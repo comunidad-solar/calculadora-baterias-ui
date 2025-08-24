@@ -141,21 +141,35 @@ Registro datos  Datos técnicos      Calculadora
 
 ## ⚙️ Configuración Backend
 
-### Simulación (apiService.ts)
+### URL Base API
 ```typescript
-const SIMULATE_BACKEND = true; // Cambiar a false para backend real
+// Desarrollo
+VITE_API_BASE_URL=https://calculadora-baterias-api-20084454554.development.catalystserverless.eu/server/api
 ```
 
-### Códigos de Prueba
+### Endpoints Implementados
+- ✅ **POST /comunero/validar-email** - Validar email y enviar código
+
+### Endpoints en Simulación
+- 🔄 **POST /comunero/validar-codigo** - Validar código 6 dígitos
+- 🔄 **PUT /comunero/actualizar-datos** - Actualizar datos usuario
+- 🔄 **POST /comunero** - Crear nuevo comunero
+
+### Configuración de Simulación
+```typescript
+// apiService.ts
+const SIMULATE_BACKEND = true; // Cambiar a false para backend completo
+const REAL_ENDPOINTS = ['comunero/validar-email']; // Endpoints reales
+```
+
+### Códigos de Prueba (Simulación)
 - Códigos que empiecen con **'0'**: Usuario fuera de zona
 - Otros códigos: Usuario en zona de cobertura
 
-### Endpoints Esperados
-```
-POST /api/comunero/validar-email
-POST /api/comunero/validar-codigo
-PUT /api/comunero/actualizar-datos
-```
+### Probar API Real
+1. **Validar Email**: Ir a página "Comunero existente"
+2. **Introducir email**: El sistema usará el endpoint real
+3. **Verificar en red**: DevTools → Network para ver llamada real
 
 ## 📝 Validaciones
 

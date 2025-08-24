@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import BackButton from './BackButton';
 import CodeInput from './CodeInput';
@@ -12,11 +12,38 @@ const ComuneroCodigoForm = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [resendLoading, setResendLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [lastResendTime, setLastResendTime] = useState<number | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const email = location.state?.email;
   const { showToast } = useToast();
   // const { setValidacionData } = useUsuario();
+
+  // Cooldown timer effect
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => {
+        setResendCooldown(resendCooldown - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCooldown]);
+
+  // Initialize cooldown on component mount (first email sent)
+  useEffect(() => {
+    if (!lastResendTime) {
+      const now = Date.now();
+      setLastResendTime(now);
+      setResendCooldown(300); // 5 minutos = 300 segundos
+    }
+  }, []);
+
+  const formatTime = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,6 +53,7 @@ const ComuneroCodigoForm = () => {
     try {
       const response = await comuneroService.validarCodigo(codigo, email);
       
+      console.log('🌐 Response from validarCodigo:', response);
       if (response.success) {
         showToast('¡Código validado correctamente!', 'success');
         // Guardar los datos de validación en el contexto
@@ -49,7 +77,7 @@ const ComuneroCodigoForm = () => {
   };
 
   const handleResend = async () => {
-    if (!email) return;
+    if (!email || resendCooldown > 0) return;
     
     setResendLoading(true);
     try {
@@ -57,6 +85,11 @@ const ComuneroCodigoForm = () => {
       if (response.success) {
         showToast('Código reenviado correctamente', 'success');
         setCodigo(''); // Limpiar el código anterior
+        
+        // Activar cooldown de 5 minutos
+        const now = Date.now();
+        setLastResendTime(now);
+        setResendCooldown(300); // 5 minutos = 300 segundos
       } else {
         showToast('Error al reenviar el código', 'error');
       }
@@ -100,15 +133,23 @@ const ComuneroCodigoForm = () => {
         
         <div className="text-center">
           <span className="text-muted">¿No recibiste el código? </span>
-          <button
-            type="button"
-            className="btn btn-link p-0 fw-semibold"
-            onClick={handleResend}
-            disabled={resendLoading}
-            style={{textDecoration: 'none'}}
-          >
-            {resendLoading ? 'Reenviando...' : 'Reenviar'}
-          </button>
+          {resendCooldown > 0 ? (
+            <div className="mt-2">
+              <div className="text-muted small">
+                Reenviar de nuevo en: <span className="fw-bold text-primary">{formatTime(resendCooldown)}</span>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="btn btn-link p-0 fw-semibold"
+              onClick={handleResend}
+              disabled={resendLoading}
+              style={{textDecoration: 'none'}}
+            >
+              {resendLoading ? 'Reenviando...' : 'Reenviar'}
+            </button>
+          )}
         </div>
       </form>
       </div>
