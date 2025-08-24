@@ -5,6 +5,7 @@ interface FormState {
   mail: string;
   telefono: string;
   direccion: string;
+  direccionComplementaria: string;
   proteccionDatos: boolean;
   utm: string;
 }
@@ -20,6 +21,7 @@ const initialState: FormState = {
   mail: '',
   telefono: '',
   direccion: '',
+  direccionComplementaria: '',
   proteccionDatos: false,
   utm: '', // Aquí puedes inicializar con el valor UTM si lo tienes
 };
@@ -32,7 +34,7 @@ export const useFormStore = create<FormStore>((set, get) => ({
     })),
   submitForm: () => {
     // Aquí puedes manejar el envío, por ejemplo guardar en localStorage o enviar a una API
-    alert('Formulario enviado!');
+    
     console.log('Datos:', get().form);
   },
 }));

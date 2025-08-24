@@ -19,8 +19,10 @@ src/
 │   ├── CodeInput.tsx    # Input código 6 dígitos
 │   ├── ComuneroEmailForm.tsx     # Formulario email inicial
 │   ├── ComuneroCodigoForm.tsx    # Validación código
+│   ├── ComuneroForm.tsx          # Formulario nuevo comunero
 │   ├── GoogleAddressInput.tsx    # Autocomplete direcciones
 │   ├── PageTransition.tsx        # Transiciones entre vistas
+│   ├── PreguntasAdicionales.tsx  # Preguntas post-registro
 │   ├── ResultadoValidacion.tsx   # Página resultado validación
 │   └── Propuesta.tsx    # Página propuesta (placeholder)
 ├── context/             # Contextos React
@@ -74,6 +76,18 @@ npm run dev
 - **Features**: Debounced search, fallback mock data
 - **Dependencia**: Google Maps API
 
+### ComuneroForm
+- **Propósito**: Registro de nuevos comuneros
+- **Features**: Validación teléfono español, autocompletado email
+- **Campos**: Nombre, email, teléfono, dirección + complementaria
+- **Navegación**: → PreguntasAdicionales (tras registro)
+
+### PreguntasAdicionales
+- **Propósito**: Recopilar datos técnicos para propuesta personalizada
+- **Features**: Flujo condicional según instalación existente
+- **Preguntas**: Instalación FV, tipo inversor/instalación
+- **Navegación**: → Propuesta
+
 ## 📊 Contextos
 
 ### UsuarioContext
@@ -84,6 +98,7 @@ interface Usuario {
   email: string;
   telefono: string;
   direccion: string;
+  direccionComplementaria?: string;  // Nuevo campo
   tipoInstalacion?: 'monofasica' | 'trifasica' | 'desconozco';
   tieneBaterias?: boolean;
 }
@@ -96,11 +111,20 @@ interface Usuario {
 
 ## 🔀 Flujo de Usuario
 
+### Comunero Existente
 ```
 EmailForm → CodigoForm → ResultadoValidacion → Propuesta
     ↓           ↓              ↓                 ↓
   Email     Código 6d.    Datos usuario    Calculadora
 validation  validation    + validaciones   (placeholder)
+```
+
+### Nuevo Comunero
+```
+ComuneroForm → PreguntasAdicionales → Propuesta
+     ↓               ↓                   ↓
+Registro datos  Datos técnicos      Calculadora
+  completo      (FV + inversor)     (placeholder)
 ```
 
 ## 🎨 Sistema de Animaciones

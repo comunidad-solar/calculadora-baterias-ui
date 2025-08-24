@@ -2,6 +2,7 @@ import { useFormStore } from '../zustand/formStore';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import GoogleAddressInput from './GoogleAddressInput';
+import PageTransition from './PageTransition';
 import { nuevoComuneroService } from '../services/apiService';
 import { useToast } from '../context/ToastContext';
 
@@ -64,15 +65,16 @@ const ComuneroForm = () => {
         nombre: form.nombre,
         mail: form.mail,
         telefono: form.telefono,
-        direccion: form.direccion
+        direccion: form.direccion,
+        direccionComplementaria: form.direccionComplementaria
       });
       
       if (response.success) {
         showToast('¡Comunero registrado correctamente! Bienvenido.', 'success');
         // Resetear el formulario
         submitForm();
-        // Volver al inicio
-        navigate('/');
+        // Redirigir a preguntas adicionales
+        navigate('/preguntas-adicionales');
       } else {
         const errorMsg = response.error || 'Error al registrar el comunero. Inténtalo de nuevo.';
         showToast(errorMsg, 'error');
@@ -85,7 +87,8 @@ const ComuneroForm = () => {
   };
 
   return (
-    <div className="bg-white rounded-4 p-4 shadow-lg border w-100 mx-auto" style={{maxWidth: 400}}>
+    <PageTransition>
+      <div className="bg-white rounded-4 p-4 shadow-lg border w-100 mx-auto" style={{maxWidth: 400}}>
       <h2 className="h4 fw-bold mb-4 text-center">Ingresa tus datos</h2>
       <form
         className="d-grid gap-3"
@@ -102,7 +105,7 @@ const ComuneroForm = () => {
           />
         </div>
         <div className="position-relative">
-          <label className="form-label">Mail</label>
+          <label className="form-label">Correo electrónico</label>
           <input
             type="email"
             required
@@ -128,7 +131,7 @@ const ComuneroForm = () => {
           )}
         </div>
         <div>
-          <label className="form-label">Teléfono (España)</label>
+          <label className="form-label">Teléfono</label>
           <input
             type="tel"
             required
@@ -149,6 +152,16 @@ const ComuneroForm = () => {
           value={form.direccion}
           onChange={(address: string) => setField('direccion', address)}
         />
+        <div>
+          <label className="form-label">Dirección complementaria</label>
+          <input
+            type="text"
+            className="form-control form-control-lg"
+            value={form.direccionComplementaria}
+            onChange={e => setField('direccionComplementaria', e.target.value)}
+            placeholder="Piso, puerta, bloque, etc. (opcional)"
+          />
+        </div>
         <div className="form-check mb-2">
           <input
             id="proteccionDatos"
@@ -172,7 +185,8 @@ const ComuneroForm = () => {
           {loading ? 'Enviando...' : 'Enviar'}
         </button>
       </form>
-    </div>
+      </div>
+    </PageTransition>
   );
 };
 
