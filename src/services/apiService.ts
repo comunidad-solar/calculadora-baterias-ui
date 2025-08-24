@@ -172,7 +172,13 @@ export const comuneroService = {
   },
 
   // Validar código de verificación
-  async validarCodigo(codigo: string, email?: string): Promise<ApiResponse<{ token: string; comunero: any }>> {
+  async validarCodigo(codigo: string, email?: string): Promise<ApiResponse<{ 
+    token: string; 
+    comunero: any; 
+    enZona: boolean; 
+    propuestaId?: string;
+    motivo?: string;
+  }>> {
     return makeRequest('baterias/comunero/validar-codigo', {
       method: 'POST',
       body: JSON.stringify({ codigo, email }),

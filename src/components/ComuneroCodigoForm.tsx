@@ -5,7 +5,7 @@ import CodeInput from './CodeInput';
 import PageTransition from './PageTransition';
 import { comuneroService } from '../services/apiService';
 import { useToast } from '../context/ToastContext';
-// import { useUsuario } from '../context/UsuarioContext';
+import { useUsuario } from '../context/UsuarioContext';
 
 const ComuneroCodigoForm = () => {
   const [codigo, setCodigo] = useState('');
@@ -18,7 +18,7 @@ const ComuneroCodigoForm = () => {
   const navigate = useNavigate();
   const email = location.state?.email;
   const { showToast } = useToast();
-  // const { setValidacionData } = useUsuario();
+  const { setValidacionData } = useUsuario();
 
   // Cooldown timer effect
   useEffect(() => {
@@ -58,10 +58,34 @@ const ComuneroCodigoForm = () => {
         showToast('¡Código validado correctamente!', 'success');
         // Guardar los datos de validación en el contexto
         if (response.data) {
-          // setValidacionData(response.data);
+          // Asegurarnos de que tiene la estructura correcta
+          const validacionData = {
+            token: response.data.token,
+            comunero: response.data.comunero,
+            enZona: response.data.enZona,
+            motivo: response.data.motivo,
+            propuestaId: response.data.propuestaId
+          };
+          
+          setValidacionData(validacionData);
+          
+          // Verificar si está en zona para redirigir correctamente
+          if (response.data.enZona) {
+            // En zona: ir a la página de resultado (calculadora)
+            navigate('/resultado');
+          } else {
+            // Fuera de zona: ir a página de resultado pero con mensaje de fuera de zona
+            navigate('/resultado', { 
+              state: { 
+                fueraDeZona: true, 
+                motivo: response.data.motivo 
+              } 
+            });
+          }
+        } else {
+          // Fallback si no hay data
+          navigate('/resultado');
         }
-        // Redirigir al resultado
-        navigate('/resultado');
       } else {
         const errorMsg = response.error || 'Código incorrecto. Inténtalo de nuevo.';
         setError(errorMsg);
