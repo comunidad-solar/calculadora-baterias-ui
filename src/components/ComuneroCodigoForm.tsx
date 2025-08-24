@@ -5,7 +5,7 @@ import CodeInput from './CodeInput';
 import PageTransition from './PageTransition';
 import { comuneroService } from '../services/apiService';
 import { useToast } from '../context/ToastContext';
-import { useUsuario } from '../context/UsuarioContext';
+// import { useUsuario } from '../context/UsuarioContext';
 
 const ComuneroCodigoForm = () => {
   const [codigo, setCodigo] = useState('');
