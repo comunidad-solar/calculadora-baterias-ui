@@ -16,7 +16,7 @@ const ComuneroCodigoForm = () => {
   const navigate = useNavigate();
   const email = location.state?.email;
   const { showToast } = useToast();
-  const { setValidacionData } = useUsuario();
+  // const { setValidacionData } = useUsuario();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
