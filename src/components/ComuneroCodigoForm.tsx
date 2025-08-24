@@ -30,7 +30,7 @@ const ComuneroCodigoForm = () => {
         showToast('¡Código validado correctamente!', 'success');
         // Guardar los datos de validación en el contexto
         if (response.data) {
-          setValidacionData(response.data);
+          // setValidacionData(response.data);
         }
         // Redirigir al resultado
         navigate('/resultado');
