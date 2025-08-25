@@ -8,6 +8,7 @@ import ComuneroCodigoForm from '../components/ComuneroCodigoForm';
 import ResultadoValidacion from '../components/ResultadoValidacion';
 import Propuesta from '../components/Propuesta';
 import PreguntasAdicionales from '../components/PreguntasAdicionales';
+import EmailDuplicado from '../components/EmailDuplicado';
 import BackButton from '../components/BackButton';
 
 const AppRoutes = ({ onSelect }: { onSelect: (isComunero: boolean) => void }) => (
@@ -19,6 +20,7 @@ const AppRoutes = ({ onSelect }: { onSelect: (isComunero: boolean) => void }) =>
 		} />
 		<Route path="/comunero" element={<ComuneroEmailForm />} />
 		<Route path="/comunero/validar" element={<ComuneroCodigoForm />} />
+		<Route path="/comunero/email-duplicado" element={<EmailDuplicado />} />
 		<Route path="/resultado" element={<ResultadoValidacion />} />
 		<Route path="/propuesta" element={<Propuesta />} />
 		<Route path="/preguntas-adicionales" element={<PreguntasAdicionales />} />

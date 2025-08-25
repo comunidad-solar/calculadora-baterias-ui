@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
 import BackButton from './BackButton';
 import PageTransition from './PageTransition';
+import GoogleAddressInput from './GoogleAddressInput';
 
 const ResultadoValidacion = () => {
   const { validacionData, usuario, updateUsuario } = useUsuario();
@@ -13,17 +14,28 @@ const ResultadoValidacion = () => {
   const [loading, setLoading] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const [cardAnimated, setCardAnimated] = useState(false);
+  const [direccionOriginalVacia, setDireccionOriginalVacia] = useState(false);
   const navigate = useNavigate();
   const { showToast } = useToast();
 
-  // Animaciones de entrada
+  // Animaciones de entrada y auto-edición si falta dirección
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsVisible(true);
       setCardAnimated(true);
+      
+      // Detectar si la dirección estaba vacía originalmente
+      if (usuario && (!usuario.direccion || usuario.direccion.trim() === '')) {
+        setDireccionOriginalVacia(true);
+      }
+      
+      // Auto-activar edición si no hay dirección y está en zona
+      if (validacionData?.enZona && usuario && (!usuario.direccion || usuario.direccion.trim() === '')) {
+        setEditMode(true);
+      }
     }, 150);
     return () => clearTimeout(timer);
-  }, []);
+  }, [validacionData, usuario]);
 
   if (!validacionData || !usuario) {
     navigate('/');
@@ -33,6 +45,10 @@ const ResultadoValidacion = () => {
   const handleSaveChanges = async () => {
     // Validar campos obligatorios para usuarios en zona
     if (validacionData.enZona) {
+      if (!editData.direccion || editData.direccion.trim() === '') {
+        showToast('Por favor completa tu dirección', 'error');
+        return;
+      }
       if (!editData.tipoInstalacion) {
         showToast('Por favor selecciona el tipo de instalación', 'error');
         return;
@@ -213,13 +229,32 @@ const ResultadoValidacion = () => {
                   />
                 </div>
                 <div className="col-12 form-field-result">
-                  <label className="form-label">Dirección</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={editData.direccion || ''}
-                    onChange={(e) => setEditData({...editData, direccion: e.target.value})}
-                  />
+                  {direccionOriginalVacia ? (
+                    // Si la dirección estaba vacía originalmente, siempre usar Google Places
+                    <GoogleAddressInput
+                      value={editData.direccion || ''}
+                      onChange={(newAddress) => setEditData({...editData, direccion: newAddress})}
+                    />
+                  ) : (
+                    // Si ya tenía dirección, usar input normal con label
+                    <>
+                      <label className="form-label">
+                        Dirección {validacionData.enZona && <span className="text-danger">*</span>}
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={editData.direccion || ''}
+                        onChange={(e) => setEditData({...editData, direccion: e.target.value})}
+                        placeholder="Introduce tu dirección completa"
+                      />
+                    </>
+                  )}
+                  {direccionOriginalVacia && validacionData.enZona && (
+                    <small className="form-text text-muted">
+                      La dirección es necesaria para calcular la propuesta de baterías
+                    </small>
+                  )}
                 </div>
                 {validacionData.enZona && (
                   <>
@@ -297,7 +332,18 @@ const ResultadoValidacion = () => {
                 </div>
                 <div className="col-12">
                   <strong className="text-muted d-block">Dirección:</strong>
-                  <span>{usuario.direccion}</span>
+                  {usuario.direccion && usuario.direccion.trim() !== '' ? (
+                    <span>{usuario.direccion}</span>
+                  ) : (
+                    <div>
+                      <span className="text-warning">⚠️ No completada</span>
+                      {validacionData.enZona && (
+                        <small className="d-block text-muted mt-1">
+                          Es necesario completar la dirección para generar una propuesta
+                        </small>
+                      )}
+                    </div>
+                  )}
                 </div>
                 {validacionData.enZona && (
                   <>

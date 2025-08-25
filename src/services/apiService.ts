@@ -8,7 +8,8 @@ const SIMULATE_BACKEND = false;
 // Lista de endpoints que ya están listos (no simular)
 const REAL_ENDPOINTS = [
   'baterias/comunero/validar-email',
-  'baterias/comunero/validar-codigo'
+  'baterias/comunero/validar-codigo',
+  'baterias/comunero'
 ];
 
 // Tipo para las respuestas de la API

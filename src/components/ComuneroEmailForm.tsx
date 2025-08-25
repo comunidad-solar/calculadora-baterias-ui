@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import BackButton from './BackButton';
 import PageTransition from './PageTransition';
 import { comuneroService } from '../services/apiService';
@@ -11,7 +11,16 @@ const ComuneroEmailForm = () => {
   const [error, setError] = useState('');
   const [mailSuggestions, setMailSuggestions] = useState<string[]>([]);
   const navigate = useNavigate();
+  const location = useLocation();
   const { showToast } = useToast();
+
+  // Pre-rellenar email si viene desde error de duplicado
+  useEffect(() => {
+    const prefilledEmail = location.state?.prefilledEmail;
+    if (prefilledEmail) {
+      setEmail(prefilledEmail);
+    }
+  }, [location.state]);
 
   // Dominios comunes para autocompletado
   const mailDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com'];

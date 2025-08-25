@@ -76,8 +76,19 @@ const ComuneroForm = () => {
         // Redirigir a preguntas adicionales
         navigate('/preguntas-adicionales');
       } else {
-        const errorMsg = response.error || 'Error al registrar el comunero. Inténtalo de nuevo.';
-        showToast(errorMsg, 'error');
+        // Verificar si es error de email duplicado
+        if (response.error && response.error.includes('Ya existe un registro con este email')) {
+          // Redirigir al flujo de validación de email existente
+          navigate('/comunero/email-duplicado', { 
+            state: { 
+              email: form.mail,
+              fromRegistration: true 
+            } 
+          });
+        } else {
+          const errorMsg = response.error || 'Error al registrar el comunero. Inténtalo de nuevo.';
+          showToast(errorMsg, 'error');
+        }
       }
     } catch (err) {
       showToast('No se pudo conectar con el servidor. Comprueba tu conexión a internet.', 'error');
