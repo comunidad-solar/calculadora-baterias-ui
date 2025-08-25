@@ -5,8 +5,10 @@ import PageTransition from './PageTransition';
 
 const PreguntasAdicionales = () => {
   const [tieneInstalacionFV, setTieneInstalacionFV] = useState<boolean | null>(null);
-  const [tipoInversor, setTipoInversor] = useState<string>('');
   const [tipoInstalacion, setTipoInstalacion] = useState<string>('');
+  const [tieneInversorHuawei, setTieneInversorHuawei] = useState<string>('');
+  const [tipoInversorHuawei, setTipoInversorHuawei] = useState<string>('');
+  const [fotoInversor, setFotoInversor] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { showToast } = useToast();
@@ -22,8 +24,23 @@ const PreguntasAdicionales = () => {
       return;
     }
 
-    if (tieneInstalacionFV && !tipoInversor) {
-      showToast('Por favor selecciona el tipo de inversor', 'error');
+    // Validación para inversor Huawei
+    if (tieneInstalacionFV && !tieneInversorHuawei) {
+      showToast('Por favor indica si tienes un inversor híbrido Huawei', 'error');
+      setLoading(false);
+      return;
+    }
+
+    // Si tiene Huawei y respondió "sí", validar tipo
+    if (tieneInstalacionFV && tieneInversorHuawei === 'si' && !tipoInversorHuawei) {
+      showToast('Por favor selecciona el tipo de inversor Huawei', 'error');
+      setLoading(false);
+      return;
+    }
+
+    // Si tiene Huawei y respondió "desconozco", validar foto
+    if (tieneInstalacionFV && tieneInversorHuawei === 'desconozco' && !fotoInversor) {
+      showToast('Por favor sube una foto del inversor', 'error');
       setLoading(false);
       return;
     }
@@ -41,7 +58,11 @@ const PreguntasAdicionales = () => {
       // Datos a guardar/enviar
       const datosAdicionales = {
         tieneInstalacionFV,
-        ...(tieneInstalacionFV ? { tipoInversor } : { tipoInstalacion })
+        ...(tieneInstalacionFV ? { 
+          tieneInversorHuawei,
+          ...(tieneInversorHuawei === 'si' ? { tipoInversorHuawei } : {}),
+          ...(tieneInversorHuawei === 'desconozco' ? { fotoInversor: fotoInversor?.name } : {})
+        } : { tipoInstalacion })
       };
 
       console.log('Datos adicionales:', datosAdicionales);
@@ -55,6 +76,35 @@ const PreguntasAdicionales = () => {
       showToast('Error al guardar la información', 'error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleInstalacionChange = (valor: boolean) => {
+    setTieneInstalacionFV(valor);
+    // Reset campos dependientes
+    setTipoInstalacion('');
+    setTieneInversorHuawei('');
+    setTipoInversorHuawei('');
+    setFotoInversor(null);
+  };
+
+  const handleHuaweiChange = (valor: string) => {
+    setTieneInversorHuawei(valor);
+    // Reset campos dependientes
+    setTipoInversorHuawei('');
+    setFotoInversor(null);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validar que sea imagen
+      if (file.type.startsWith('image/')) {
+        setFotoInversor(file);
+      } else {
+        showToast('Por favor selecciona una imagen válida', 'error');
+        e.target.value = '';
+      }
     }
   };
 
@@ -90,10 +140,7 @@ const PreguntasAdicionales = () => {
                     name="instalacionFV"
                     id="instalacionSi"
                     checked={tieneInstalacionFV === true}
-                    onChange={() => {
-                      setTieneInstalacionFV(true);
-                      setTipoInstalacion(''); // Reset tipo instalación
-                    }}
+                    onChange={() => handleInstalacionChange(true)}
                   />
                   <label className="form-check-label fw-semibold" htmlFor="instalacionSi">
                     Sí
@@ -106,10 +153,7 @@ const PreguntasAdicionales = () => {
                     name="instalacionFV"
                     id="instalacionNo"
                     checked={tieneInstalacionFV === false}
-                    onChange={() => {
-                      setTieneInstalacionFV(false);
-                      setTipoInversor(''); // Reset tipo inversor
-                    }}
+                    onChange={() => handleInstalacionChange(false)}
                   />
                   <label className="form-check-label fw-semibold" htmlFor="instalacionNo">
                     No
@@ -118,23 +162,121 @@ const PreguntasAdicionales = () => {
               </div>
             </div>
 
-            {/* Si tiene instalación FV - Tipo de inversor */}
+            {/* Pregunta sobre inversor Huawei - Solo si tiene instalación FV */}
             {tieneInstalacionFV === true && (
               <div className="fade-in-result">
                 <label className="form-label h5 fw-bold mb-3">
-                  Tipo de inversor <span className="text-danger">*</span>
+                  ¿Tienes un inversor híbrido Huawei? <span className="text-danger">*</span>
+                </label>
+                <div className="d-flex gap-4">
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="inversorHuawei"
+                      id="huaweiSi"
+                      checked={tieneInversorHuawei === 'si'}
+                      onChange={() => handleHuaweiChange('si')}
+                    />
+                    <label className="form-check-label fw-semibold" htmlFor="huaweiSi">
+                      Sí
+                    </label>
+                  </div>
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="inversorHuawei"
+                      id="huaweiNo"
+                      checked={tieneInversorHuawei === 'no'}
+                      onChange={() => handleHuaweiChange('no')}
+                    />
+                    <label className="form-check-label fw-semibold" htmlFor="huaweiNo">
+                      No
+                    </label>
+                  </div>
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="inversorHuawei"
+                      id="huaweiDesconozco"
+                      checked={tieneInversorHuawei === 'desconozco'}
+                      onChange={() => handleHuaweiChange('desconozco')}
+                    />
+                    <label className="form-check-label fw-semibold" htmlFor="huaweiDesconozco">
+                      Lo desconozco
+                    </label>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Si tiene Huawei = SÍ - Tipo de inversor Huawei */}
+            {tieneInstalacionFV === true && tieneInversorHuawei === 'si' && (
+              <div className="fade-in-result">
+                <label className="form-label h5 fw-bold mb-3">
+                  Tipo de inversor Huawei <span className="text-danger">*</span>
                 </label>
                 <select
                   className="form-select form-select-lg"
-                  value={tipoInversor}
-                  onChange={(e) => setTipoInversor(e.target.value)}
+                  value={tipoInversorHuawei}
+                  onChange={(e) => setTipoInversorHuawei(e.target.value)}
                   required
                 >
-                  <option value="">Selecciona el tipo de inversor</option>
-                  <option value="trifasica">Trifásica</option>
-                  <option value="monofasica">Monofásica</option>
+                  <option value="">Selecciona el tipo</option>
+                  <option value="monofasico">Monofásico</option>
+                  <option value="trifasico">Trifásico</option>
                   <option value="desconozco">Lo desconozco</option>
                 </select>
+              </div>
+            )}
+
+            {/* Si tiene Huawei = DESCONOZCO - Upload foto */}
+            {tieneInstalacionFV === true && tieneInversorHuawei === 'desconozco' && (
+              <div className="fade-in-result">
+                <label className="form-label h5 fw-bold mb-3">
+                  Foto del inversor <span className="text-danger">*</span>
+                </label>
+                <div className="border-2 border-dashed border-primary rounded-3 p-4 text-center">
+                  <input
+                    type="file"
+                    id="fotoInversor"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="d-none"
+                  />
+                  <label htmlFor="fotoInversor" className="btn btn-outline-primary btn-lg w-100" style={{cursor: 'pointer'}}>
+                    {fotoInversor ? (
+                      <>
+                        <span className="me-2">✅</span>
+                        {fotoInversor.name}
+                      </>
+                    ) : (
+                      <>
+                        <span className="me-2">📷</span>
+                        Subir foto del inversor
+                      </>
+                    )}
+                  </label>
+                  <small className="text-muted d-block mt-2">
+                    Sube una foto clara donde se vea la marca y modelo del inversor
+                  </small>
+                </div>
+              </div>
+            )}
+
+            {/* Si tiene Huawei = NO - Mensaje informativo */}
+            {tieneInstalacionFV === true && tieneInversorHuawei === 'no' && (
+              <div className="fade-in-result">
+                <div className="alert alert-info border-0">
+                  <div className="d-flex align-items-center">
+                    <span className="me-2">ℹ️</span>
+                    <small>
+                      <strong>Perfecto.</strong> Continuaremos con tu propuesta personalizada.
+                    </small>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -202,6 +344,10 @@ const PreguntasAdicionales = () => {
             .form-select-lg {
               font-size: 1.1rem;
               padding: 0.75rem;
+            }
+
+            .border-dashed {
+              border-style: dashed !important;
             }
           `}</style>
         </div>
