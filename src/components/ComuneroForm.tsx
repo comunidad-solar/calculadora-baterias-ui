@@ -183,7 +183,15 @@ const ComuneroForm = () => {
             onChange={e => setField('proteccionDatos', e.target.checked)}
           />
           <label htmlFor="proteccionDatos" className="form-check-label">
-            Acepto la protección de datos
+            Acepto la{' '}
+            <a 
+              href="https://comunidadsolar.es/politica-privacidad/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-decoration-none"
+            >
+              protección de datos
+            </a>
           </label>
         </div>
         {/* UTM oculto */}

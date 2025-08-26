@@ -38,6 +38,13 @@ const PreguntasAdicionales = () => {
       return;
     }
 
+    // Si tiene Huawei "sí" y tipo "desconozco", validar foto
+    if (tieneInstalacionFV && tieneInversorHuawei === 'si' && tipoInversorHuawei === 'desconozco' && !fotoInversor) {
+      showToast('Por favor sube una foto del inversor', 'error');
+      setLoading(false);
+      return;
+    }
+
     // Si tiene Huawei y respondió "desconozco", validar foto
     if (tieneInstalacionFV && tieneInversorHuawei === 'desconozco' && !fotoInversor) {
       showToast('Por favor sube una foto del inversor', 'error');
@@ -60,7 +67,10 @@ const PreguntasAdicionales = () => {
         tieneInstalacionFV,
         ...(tieneInstalacionFV ? { 
           tieneInversorHuawei,
-          ...(tieneInversorHuawei === 'si' ? { tipoInversorHuawei } : {}),
+          ...(tieneInversorHuawei === 'si' ? { 
+            tipoInversorHuawei,
+            ...(tipoInversorHuawei === 'desconozco' ? { fotoInversor: fotoInversor?.name } : {})
+          } : {}),
           ...(tieneInversorHuawei === 'desconozco' ? { fotoInversor: fotoInversor?.name } : {})
         } : { tipoInstalacion })
       };
@@ -93,6 +103,14 @@ const PreguntasAdicionales = () => {
     // Reset campos dependientes
     setTipoInversorHuawei('');
     setFotoInversor(null);
+  };
+
+  const handleTipoInversorChange = (valor: string) => {
+    setTipoInversorHuawei(valor);
+    // Reset foto si no es "desconozco"
+    if (valor !== 'desconozco') {
+      setFotoInversor(null);
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -221,7 +239,7 @@ const PreguntasAdicionales = () => {
                 <select
                   className="form-select form-select-lg"
                   value={tipoInversorHuawei}
-                  onChange={(e) => setTipoInversorHuawei(e.target.value)}
+                  onChange={(e) => handleTipoInversorChange(e.target.value)}
                   required
                 >
                   <option value="">Selecciona el tipo</option>
@@ -229,6 +247,40 @@ const PreguntasAdicionales = () => {
                   <option value="trifasico">Trifásico</option>
                   <option value="desconozco">Lo desconozco</option>
                 </select>
+              </div>
+            )}
+
+            {/* Si tipo de inversor Huawei = DESCONOZCO - Upload foto */}
+            {tieneInstalacionFV === true && tieneInversorHuawei === 'si' && tipoInversorHuawei === 'desconozco' && (
+              <div className="fade-in-result">
+                <label className="form-label h5 fw-bold mb-3">
+                  Foto del inversor <span className="text-danger">*</span>
+                </label>
+                <div className="border-2 border-dashed border-primary rounded-3 p-4 text-center">
+                  <input
+                    type="file"
+                    id="fotoInversorTipo"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                    className="d-none"
+                  />
+                  <label htmlFor="fotoInversorTipo" className="btn btn-outline-primary btn-lg w-100" style={{cursor: 'pointer'}}>
+                    {fotoInversor ? (
+                      <>
+                        <span className="me-2">✅</span>
+                        {fotoInversor.name}
+                      </>
+                    ) : (
+                      <>
+                        <span className="me-2">📷</span>
+                        Subir foto del inversor
+                      </>
+                    )}
+                  </label>
+                  <small className="text-muted d-block mt-2">
+                    Sube una foto clara donde se vea la marca y modelo del inversor
+                  </small>
+                </div>
               </div>
             )}
 

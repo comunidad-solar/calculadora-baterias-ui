@@ -104,10 +104,39 @@ const makeRequest = async <T = any>(
       } as ApiResponse<T>;
     }
     
-    if (endpoint.includes('baterias/comunero') && options.method === 'POST') {
+    if (cleanEndpoint.includes('baterias/comunero') && options.method === 'POST') {
+      const body = JSON.parse(options.body as string);
+      const email = body.email;
+      
+      // Simular los 3 casos basándose en el email
+      if (email.includes('local')) {
+        // Caso 1: Email existe en tabla local
+        return {
+          success: false,
+          error: 'Ya existe un registro con este email'
+        } as ApiResponse<T>;
+      }
+      
+      if (email.includes('zoho')) {
+        // Caso 2: Email existe en Zoho CRM
+        return {
+          success: false,
+          error: 'Ya existe un contacto con este email en Zoho CRM'
+        } as ApiResponse<T>;
+      }
+      
+      // Caso 3: Email NO existe en ningún lado - Crear comunero
       return {
         success: true,
-        data: { id: 'new-comunero-123', comunero: { id: '1', nombre: 'Nuevo Comunero' } } as T
+        data: { 
+          id: 'new-comunero-123', 
+          comunero: { 
+            id: '1', 
+            email: email,
+            nombre: 'Nuevo Comunero',
+            codigoEnviado: true 
+          } 
+        } as T
       };
     }
   }
@@ -164,6 +193,14 @@ const makeRequest = async <T = any>(
 
 // Servicios específicos para comuneros
 export const comuneroService = {
+  // Crear comunero (maneja los 3 casos)
+  async crearComunero(email: string): Promise<ApiResponse<{ id: string; comunero: any }>> {
+    return makeRequest('baterias/comunero', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  },
+
   // Validar email de comunero y enviar código
   async validarEmail(email: string): Promise<ApiResponse<{ codigoEnviado: boolean }>> {
     return makeRequest('baterias/comunero/validar-email', {

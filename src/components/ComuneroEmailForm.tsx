@@ -42,15 +42,45 @@ const ComuneroEmailForm = () => {
     setError('');
     
     try {
-      const response = await comuneroService.validarEmail(email);
+      // Intentar crear el comunero (POST a baterias/comunero)
+      const response = await comuneroService.crearComunero(email);
       
       if (response.success) {
-        showToast('¡Código enviado! Revisa tu correo electrónico.', 'success');
-        navigate('/comunero/validar', { state: { email } });
+        // Caso 3: Email NO existe en ningún lado - Comunero creado correctamente
+        showToast('¡Comunero registrado correctamente!', 'success');
+        // Continuar directamente con las preguntas adicionales
+        navigate('/preguntas-adicionales', { 
+          state: { 
+            email, 
+            comunero: response.data?.comunero || { email }
+          } 
+        });
       } else {
-        const errorMsg = response.error || 'Error al enviar el correo. Inténtalo de nuevo.';
-        setError(errorMsg);
-        showToast(errorMsg, 'error');
+        // Caso 1 y 2: Email existe (local o Zoho) - Redirigir a validación
+        if (response.error?.includes('Ya existe un registro con este email') || 
+            response.error?.includes('Ya existe un contacto con este email en Zoho CRM')) {
+          
+          showToast('Email encontrado. Te enviamos un código de validación.', 'info');
+          
+          // Enviar código de validación para emails existentes
+          try {
+            const validacionResponse = await comuneroService.validarEmail(email);
+            if (validacionResponse.success) {
+              navigate('/comunero/validar', { state: { email } });
+            } else {
+              setError('Error al enviar el código de validación.');
+              showToast('Error al enviar el código de validación.', 'error');
+            }
+          } catch (validacionError) {
+            setError('Error al enviar el código de validación.');
+            showToast('Error al enviar el código de validación.', 'error');
+          }
+        } else {
+          // Otros errores
+          const errorMsg = response.error || 'Error inesperado. Inténtalo de nuevo.';
+          setError(errorMsg);
+          showToast(errorMsg, 'error');
+        }
       }
     } catch (err) {
       const errorMsg = 'No se pudo conectar con el servidor. Comprueba tu conexión a internet.';
@@ -98,11 +128,11 @@ const ComuneroEmailForm = () => {
           )}
         </div>
         <div className="mb-2 text-muted text-center">
-          Se te enviará un código de validación a tu correo electrónico.
+          Verificaremos si eres comunero. Si ya tienes cuenta, te enviaremos un código de validación.
         </div>
         {error && <div className="text-danger text-center mb-2">{error}</div>}
         <button type="submit" className="btn btn-dark btn-lg w-100 fw-bold" disabled={loading}>
-          {loading ? 'Enviando...' : 'Validar'}
+          {loading ? 'Verificando...' : 'Verificar comunero'}
         </button>
       </form>
       </div>
