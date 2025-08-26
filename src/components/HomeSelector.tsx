@@ -19,7 +19,7 @@ const HomeSelector: React.FC<HomeSelectorProps> = ({ onSelect }) => {
           className="btn btn-outline-dark btn-lg fw-bold px-4 rounded-pill"
           onClick={() => onSelect(false)}
         >
-          Nuevo Comunero
+          No soy Comunero
         </button>
       </div>
     </div>
