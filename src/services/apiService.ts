@@ -78,7 +78,49 @@ const makeRequest = async <T = any>(
               provincia: 'Madrid'
             },
             enZona: false,
-            motivo: 'Tu ubicación está fuera de nuestra área de cobertura actual.'
+            motivo: 'Tu ubicación está fuera de nuestra área de cobertura actual.',
+            analisisTratos: {
+              tieneTratoCerradoGanado: false,
+              hasInversor: null,
+              tratoGanadoBaterias: false,
+              bateriaInicial: null,
+              tieneAmpliacionBaterias: false,
+              bateriaAmpliacion: null
+            }
+          } 
+        } as ApiResponse<T>;
+      }
+      
+      // Simular caso con inversor con datos vacíos (códigos que empiecen con 1)
+      if (codigo.startsWith('1')) {
+        return {
+          success: true,
+          data: { 
+            token: 'token-inversor-vacio',
+            comunero: {
+              id: '2',
+              nombre: 'Ana López Martín',
+              email: body.email || 'ana@example.com',
+              telefono: '677888999',
+              direccion: 'Plaza España 10, 28013 Madrid',
+              codigoPostal: '28013',
+              ciudad: 'Madrid',
+              provincia: 'Madrid'
+            },
+            enZona: true,
+            propuestaId: 'propuesta-456',
+            analisisTratos: {
+              tieneTratoCerradoGanado: true,
+              hasInversor: {
+                marca: "",
+                modelo: "",
+                numero: ""
+              },
+              tratoGanadoBaterias: false,
+              bateriaInicial: null,
+              tieneAmpliacionBaterias: false,
+              bateriaAmpliacion: null
+            }
           } 
         } as ApiResponse<T>;
       }
@@ -99,7 +141,21 @@ const makeRequest = async <T = any>(
             provincia: 'Madrid'
           },
           enZona: true,
-          propuestaId: 'propuesta-123'
+          propuestaId: 'propuesta-123',
+          analisisTratos: {
+            tieneTratoCerradoGanado: true,
+            hasInversor: {
+              marca: "Huawei",
+              modelo: "Huawei 4KTL-L1", 
+              numero: 2
+            },
+            tratoGanadoBaterias: true,
+            bateriaInicial: {
+              modeloCapacidad: "6,6 kWh - Batería EP Cube de Canadian Solar"
+            },
+            tieneAmpliacionBaterias: false,
+            bateriaAmpliacion: null
+          }
         } 
       } as ApiResponse<T>;
     }
@@ -216,6 +272,20 @@ export const comuneroService = {
     enZona: boolean; 
     propuestaId?: string;
     motivo?: string;
+    analisisTratos?: {
+      tieneTratoCerradoGanado: boolean;
+      hasInversor: {
+        marca: string;
+        modelo: string;
+        numero: number | string;
+      } | null;
+      tratoGanadoBaterias: boolean;
+      bateriaInicial: {
+        modeloCapacidad: string;
+      } | null;
+      tieneAmpliacionBaterias: boolean;
+      bateriaAmpliacion: any | null;
+    };
   }>> {
     return makeRequest('baterias/comunero/validar-codigo', {
       method: 'POST',

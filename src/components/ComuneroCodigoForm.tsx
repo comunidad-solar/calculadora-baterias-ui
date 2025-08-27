@@ -55,6 +55,11 @@ const ComuneroCodigoForm = () => {
       
       console.log('🌐 Response from validarCodigo:', response);
       if (response.success) {
+        // Log específico para analisisTratos
+        if (response.data?.analisisTratos) {
+          console.log('📊 Análisis de tratos:', response.data.analisisTratos);
+        }
+        
         showToast('¡Código validado correctamente!', 'success');
         // Guardar los datos de validación en el contexto
         if (response.data) {
@@ -64,7 +69,8 @@ const ComuneroCodigoForm = () => {
             comunero: response.data.comunero,
             enZona: response.data.enZona,
             motivo: response.data.motivo,
-            propuestaId: response.data.propuestaId
+            propuestaId: response.data.propuestaId,
+            analisisTratos: response.data.analisisTratos
           };
           
           setValidacionData(validacionData);

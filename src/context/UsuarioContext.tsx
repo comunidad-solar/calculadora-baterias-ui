@@ -20,6 +20,20 @@ export interface ValidacionResponse {
   enZona: boolean;
   motivo?: string;
   propuestaId?: string;
+  analisisTratos?: {
+    tieneTratoCerradoGanado: boolean;
+    hasInversor: {
+      marca: string;
+      modelo: string;
+      numero: number | string;
+    } | null;
+    tratoGanadoBaterias: boolean;
+    bateriaInicial: {
+      modeloCapacidad: string;
+    } | null;
+    tieneAmpliacionBaterias: boolean;
+    bateriaAmpliacion: any | null;
+  };
 }
 
 interface UsuarioContextType {
