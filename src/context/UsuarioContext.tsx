@@ -17,7 +17,7 @@ export interface Usuario {
 export interface ValidacionResponse {
   token: string;
   comunero: Usuario;
-  enZona: boolean;
+  enZona: "inZone" | "inZoneWithCost" | "outZone";
   motivo?: string;
   propuestaId?: string;
   analisisTratos?: {

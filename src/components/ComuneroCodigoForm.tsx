@@ -60,6 +60,8 @@ const ComuneroCodigoForm = () => {
           console.log('📊 Análisis de tratos:', response.data.analisisTratos);
         }
         
+        console.log('🔍 Estado de enZona:', response.data?.enZona);
+        
         showToast('¡Código validado correctamente!', 'success');
         // Guardar los datos de validación en el contexto
         if (response.data) {
@@ -73,20 +75,36 @@ const ComuneroCodigoForm = () => {
             analisisTratos: response.data.analisisTratos
           };
           
+          console.log('💾 Guardando validacionData:', validacionData);
           setValidacionData(validacionData);
           
-          // Verificar si está en zona para redirigir correctamente
-          if (response.data.enZona) {
-            // En zona: ir a la página de resultado (calculadora)
-            navigate('/resultado');
-          } else {
-            // Fuera de zona: ir a página de resultado pero con mensaje de fuera de zona
+          // Verificar el estado de la zona para redirigir correctamente
+          console.log('🧭 Preparando navegación para enZona:', response.data.enZona);
+          
+          if (response.data.enZona === "inZone") {
+            console.log('✅ Navegando a /propuesta (inZone)');
+            // En zona: ir directo a la propuesta
+            navigate('/propuesta');
+          } else if (response.data.enZona === "inZoneWithCost") {
+            console.log('✅ Navegando a /resultado (inZoneWithCost)');
+            // En zona con costo: ir a resultado con información de costo
+            navigate('/resultado', { 
+              state: { 
+                inZoneWithCost: true,
+                motivo: response.data.motivo 
+              } 
+            });
+          } else if (response.data.enZona === "outZone") {
+            console.log('✅ Navegando a /resultado (outZone)');
+            // Fuera de zona: ir a página de resultado con mensaje de fuera de zona
             navigate('/resultado', { 
               state: { 
                 fueraDeZona: true, 
                 motivo: response.data.motivo 
               } 
             });
+          } else {
+            console.log('⚠️ Valor de enZona no reconocido:', response.data.enZona);
           }
         } else {
           // Fallback si no hay data

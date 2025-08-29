@@ -60,6 +60,9 @@ const ComuneroForm = () => {
     e.preventDefault();
     setLoading(true);
     
+    // Usar el bypass del store de Zustand
+    const bypass = form.bypass;
+    
     try {
       const response = await nuevoComuneroService.crear({
         nombre: form.nombre,
@@ -67,7 +70,7 @@ const ComuneroForm = () => {
         telefono: form.telefono,
         direccion: form.direccion,
         direccionComplementaria: form.direccionComplementaria
-      });
+      }, bypass);
       
       if (response.success) {
         showToast('¡Comunero registrado correctamente! Bienvenido.', 'success');

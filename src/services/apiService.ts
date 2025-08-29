@@ -77,7 +77,7 @@ const makeRequest = async <T = any>(
               ciudad: 'Alcalá de Henares',
               provincia: 'Madrid'
             },
-            enZona: false,
+            enZona: "outZone",
             motivo: 'Tu ubicación está fuera de nuestra área de cobertura actual.',
             analisisTratos: {
               tieneTratoCerradoGanado: false,
@@ -107,7 +107,7 @@ const makeRequest = async <T = any>(
               ciudad: 'Madrid',
               provincia: 'Madrid'
             },
-            enZona: true,
+            enZona: "inZone",
             propuestaId: 'propuesta-456',
             analisisTratos: {
               tieneTratoCerradoGanado: true,
@@ -140,7 +140,7 @@ const makeRequest = async <T = any>(
             ciudad: 'Madrid',
             provincia: 'Madrid'
           },
-          enZona: true,
+          enZona: "inZone",
           propuestaId: 'propuesta-123',
           analisisTratos: {
             tieneTratoCerradoGanado: true,
@@ -250,10 +250,15 @@ const makeRequest = async <T = any>(
 // Servicios específicos para comuneros
 export const comuneroService = {
   // Crear comunero (maneja los 3 casos)
-  async crearComunero(email: string): Promise<ApiResponse<{ id: string; comunero: any }>> {
+  async crearComunero(email: string, bypass?: boolean): Promise<ApiResponse<{ id: string; comunero: any }>> {
+    const requestBody: any = { email };
+    if (bypass !== undefined) {
+      requestBody.bypass = bypass;
+    }
+    
     return makeRequest('baterias/comunero', {
       method: 'POST',
-      body: JSON.stringify({ email }),
+      body: JSON.stringify(requestBody),
     });
   },
 
@@ -269,7 +274,7 @@ export const comuneroService = {
   async validarCodigo(codigo: string, email?: string): Promise<ApiResponse<{ 
     token: string; 
     comunero: any; 
-    enZona: boolean; 
+    enZona: "inZone" | "inZoneWithCost" | "outZone"; 
     propuestaId?: string;
     motivo?: string;
     analisisTratos?: {
@@ -297,10 +302,15 @@ export const comuneroService = {
 // Servicios para nuevos comuneros
 export const nuevoComuneroService = {
   // Crear nuevo comunero
-  async crear(comuneroData: any): Promise<ApiResponse<{ id: string; comunero: any }>> {
+  async crear(comuneroData: any, bypass?: boolean): Promise<ApiResponse<{ id: string; comunero: any }>> {
+    const requestBody = { ...comuneroData };
+    if (bypass !== undefined) {
+      requestBody.bypass = bypass;
+    }
+    
     return makeRequest('baterias/comunero', {
       method: 'POST',
-      body: JSON.stringify(comuneroData),
+      body: JSON.stringify(requestBody),
     });
   },
 };

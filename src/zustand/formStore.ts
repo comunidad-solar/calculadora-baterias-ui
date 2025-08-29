@@ -8,6 +8,7 @@ interface FormState {
   direccionComplementaria: string;
   proteccionDatos: boolean;
   utm: string;
+  bypass: boolean;
 }
 
 interface FormStore {
@@ -24,6 +25,7 @@ const initialState: FormState = {
   direccionComplementaria: '',
   proteccionDatos: false,
   utm: '', // Aquí puedes inicializar con el valor UTM si lo tienes
+  bypass: false,
 };
 
 export const useFormStore = create<FormStore>((set, get) => ({
