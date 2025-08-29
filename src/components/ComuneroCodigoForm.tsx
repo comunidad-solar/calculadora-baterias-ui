@@ -82,9 +82,9 @@ const ComuneroCodigoForm = () => {
           console.log('🧭 Preparando navegación para enZona:', response.data.enZona);
           
           if (response.data.enZona === "inZone") {
-            console.log('✅ Navegando a /propuesta (inZone)');
-            // En zona: ir directo a la propuesta
-            navigate('/propuesta');
+            console.log('✅ Navegando a /preguntas-adicionales (inZone)');
+            // En zona: ir primero a preguntas adicionales antes de la propuesta
+            navigate('/preguntas-adicionales');
           } else if (response.data.enZona === "inZoneWithCost") {
             console.log('✅ Navegando a /resultado (inZoneWithCost)');
             // En zona con costo: ir a resultado con información de costo
