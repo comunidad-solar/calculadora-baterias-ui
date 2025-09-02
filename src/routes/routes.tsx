@@ -10,7 +10,6 @@ import Propuesta from '../components/Propuesta';
 import PreguntasAdicionales from '../components/PreguntasAdicionales';
 import EmailDuplicado from '../components/EmailDuplicado';
 import GraciasContacto from '../components/GraciasContacto';
-import BackButton from '../components/BackButton';
 
 const AppRoutes = ({ onSelect }: { onSelect: (isComunero: boolean) => void }) => (
 	<Routes>
@@ -28,7 +27,6 @@ const AppRoutes = ({ onSelect }: { onSelect: (isComunero: boolean) => void }) =>
 		<Route path="/gracias-contacto" element={<GraciasContacto />} />
 		<Route path="/nuevo-comunero" element={
 			<div className="w-100" style={{ maxWidth: 700 }}>
-				<BackButton />
 				<ComuneroForm />
 			</div>
 		} />

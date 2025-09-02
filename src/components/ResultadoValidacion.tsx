@@ -6,9 +6,11 @@ import { useToast } from '../context/ToastContext';
 import BackButton from './BackButton';
 import PageTransition from './PageTransition';
 import GoogleAddressInput from './GoogleAddressInput';
+import { useFormStore } from '../zustand/formStore';
 
 const ResultadoValidacion = () => {
   const { validacionData, usuario, updateUsuario } = useUsuario();
+  const { form } = useFormStore();
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState<Usuario>(usuario || {} as Usuario);
   const [loading, setLoading] = useState(false);
@@ -17,6 +19,7 @@ const ResultadoValidacion = () => {
   const [direccionOriginalVacia, setDireccionOriginalVacia] = useState(false);
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const bypass = form.bypass;
 
   // Animaciones de entrada y auto-edición si falta dirección
   useEffect(() => {
@@ -166,14 +169,27 @@ const ResultadoValidacion = () => {
           
           {/* Header con estado */}
           <div className="text-center mb-4 fade-in-result">
-            <div className={`bg-${validacionData.enZona ? 'success' : 'warning'} bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3 status-icon-result`} style={{width: '80px', height: '80px'}}>
-              <span style={{fontSize: '2.5rem'}}>{validacionData.enZona ? '✅' : '⚠️'}</span>
+            <div className={`bg-${validacionData.enZona ? 'success' : (bypass ? 'info' : 'warning')} bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3 status-icon-result`} style={{width: '80px', height: '80px'}}>
+              <span style={{fontSize: '2.5rem'}}>
+                {validacionData.enZona ? '✅' : (bypass ? '📋' : '⚠️')}
+              </span>
             </div>
             <h2 className="h4 fw-bold mb-2">
-              {validacionData.enZona ? '¡Genial! Podemos ayudarte' : 'Zona fuera de cobertura'}
+              {validacionData.enZona 
+                ? '¡Genial! Podemos ayudarte' 
+                : (bypass 
+                    ? '¡Perfecto! Hemos guardado tus datos'
+                    : 'Zona fuera de cobertura'
+                  )
+              }
             </h2>
-            {!validacionData.enZona && validacionData.motivo && (
-              <p className="text-muted">{validacionData.motivo}</p>
+            {!validacionData.enZona && (
+              <p className="text-muted">
+                {bypass 
+                  ? 'Tu solicitud de información ha sido registrada correctamente. Un asesor especializado se pondrá en contacto contigo próximamente para brindarte toda la información sobre nuestras soluciones de energía solar.'
+                  : validacionData.motivo
+                }
+              </p>
             )}
           </div>
 
@@ -391,20 +407,41 @@ const ResultadoValidacion = () => {
             </>
           ) : (
             <>
-              <button 
-                className="btn btn-warning btn-lg button-hover-result"
-                onClick={handleConsultarAsesor}
-                style={{
-                  background: 'linear-gradient(135deg, #ffc107 0%, #ff8500 100%)',
-                  border: 'none',
-                  color: 'white'
-                }}
-              >
-                Consultar con un asesor
-              </button>
-              <small className="text-muted text-center">
-                Nuestro equipo revisará tu caso y te contactará para ver las opciones disponibles
-              </small>
+              {bypass ? (
+                // Modo bypass: mostrar mensaje de confirmación
+                <div className="text-center">
+                  <div className="bg-success bg-opacity-10 rounded-3 p-4 mb-3">
+                    <span className="text-success" style={{fontSize: '2rem'}}>✅</span>
+                    <p className="fw-bold text-success mb-2 mt-2">¡Solicitud registrada correctamente!</p>
+                    <p className="text-muted mb-0">
+                      Nuestro equipo de especialistas revisará tu caso específico y se pondrá en contacto contigo 
+                      en las próximas <strong>24-48 horas</strong> para ofrecerte las mejores soluciones disponibles.
+                    </p>
+                  </div>
+                  <div className="d-flex justify-content-center align-items-center text-muted">
+                    <span className="me-2">📞</span>
+                    <small>Te contactaremos al {usuario.telefono}</small>
+                  </div>
+                </div>
+              ) : (
+                // Modo normal: botón de consultar asesor
+                <>
+                  <button 
+                    className="btn btn-warning btn-lg button-hover-result"
+                    onClick={handleConsultarAsesor}
+                    style={{
+                      background: 'linear-gradient(135deg, #ffc107 0%, #ff8500 100%)',
+                      border: 'none',
+                      color: 'white'
+                    }}
+                  >
+                    Consultar con un asesor
+                  </button>
+                  <small className="text-muted text-center">
+                    Nuestro equipo revisará tu caso y te contactará para ver las opciones disponibles
+                  </small>
+                </>
+              )}
             </>
           )}
         </div>

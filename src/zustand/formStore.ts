@@ -8,6 +8,7 @@ interface FormState {
   direccionComplementaria: string;
   proteccionDatos: boolean;
   utm: string;
+  campaignSource: string;
   bypass: boolean;
 }
 
@@ -25,6 +26,7 @@ const initialState: FormState = {
   direccionComplementaria: '',
   proteccionDatos: false,
   utm: '', // Aquí puedes inicializar con el valor UTM si lo tienes
+  campaignSource: '',
   bypass: false,
 };
 

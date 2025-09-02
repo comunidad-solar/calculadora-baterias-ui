@@ -1,8 +1,9 @@
 import { useFormStore } from '../zustand/formStore';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import GoogleAddressInput from './GoogleAddressInput';
 import PageTransition from './PageTransition';
+import BackButton from './BackButton';
 import { nuevoComuneroService } from '../services/apiService';
 import { useToast } from '../context/ToastContext';
 
@@ -14,6 +15,15 @@ const ComuneroForm = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const [searchParams] = useSearchParams();
+
+  // Capturar campaign_source de la URL al cargar el componente
+  useEffect(() => {
+    const campaignSource = searchParams.get('campaign_source') || searchParams.get('campaignSource');
+    if (campaignSource) {
+      setField('campaignSource', campaignSource);
+    }
+  }, [searchParams, setField]);
 
   // Validación para teléfonos españoles (solo 9 dígitos, móvil 6/7, fijo 8/9)
   const validateTelefono = (value: string) => {
@@ -69,25 +79,50 @@ const ComuneroForm = () => {
         mail: form.mail,
         telefono: form.telefono,
         direccion: form.direccion,
-        direccionComplementaria: form.direccionComplementaria
+        direccionComplementaria: form.direccionComplementaria,
+        campaignSource: form.campaignSource
       }, bypass);
       
       if (response.success) {
-        showToast('¡Comunero registrado correctamente! Bienvenido.', 'success');
-        // Resetear el formulario
-        submitForm();
-        // Redirigir a preguntas adicionales
-        navigate('/preguntas-adicionales');
-      } else {
-        // Verificar si es error de email duplicado
-        if (response.error && response.error.includes('Ya existe un registro con este email')) {
-          // Redirigir al flujo de validación de email existente
+        if (bypass) {
+          // Modo bypass: comunero nuevo creado, mostrar mensaje de asesor
+          showToast('¡Datos guardados correctamente!', 'success');
           navigate('/comunero/email-duplicado', { 
             state: { 
               email: form.mail,
-              fromRegistration: true 
+              fromRegistration: true,
+              bypass: true // Pasar el bypass al componente
             } 
           });
+        } else {
+          // Modo normal: continuar con el flujo
+          showToast('¡Comunero registrado correctamente! Bienvenido.', 'success');
+          // Resetear el formulario
+          submitForm();
+          // Redirigir a preguntas adicionales
+          navigate('/preguntas-adicionales');
+        }
+      } else {
+        // Verificar si es error de email duplicado
+        if (response.error && response.error.includes('Ya existe un registro con este email')) {
+          if (bypass) {
+            // Modo bypass: comunero existente, también mostrar mensaje de asesor
+            navigate('/comunero/email-duplicado', { 
+              state: { 
+                email: form.mail,
+                fromRegistration: true,
+                bypass: true // Pasar el bypass al componente
+              } 
+            });
+          } else {
+            // Modo normal: flujo de validación de email existente
+            navigate('/comunero/email-duplicado', { 
+              state: { 
+                email: form.mail,
+                fromRegistration: true 
+              } 
+            });
+          }
         } else {
           const errorMsg = response.error || 'Error al registrar el comunero. Inténtalo de nuevo.';
           showToast(errorMsg, 'error');
@@ -102,6 +137,9 @@ const ComuneroForm = () => {
 
   return (
     <PageTransition>
+      {/* Mostrar botón de volver solo si bypass es false */}
+      {!form.bypass && <BackButton />}
+      
       <div className="bg-white rounded-4 p-4 shadow-lg border w-100 mx-auto" style={{maxWidth: 400}}>
       <h2 className="h4 fw-bold mb-4 text-center">Ingresa tus datos</h2>
       <form
@@ -199,6 +237,8 @@ const ComuneroForm = () => {
         </div>
         {/* UTM oculto */}
         <input type="hidden" value={form.utm} />
+        {/* Campaign Source oculto */}
+        <input type="hidden" value={form.campaignSource} />
         <button
           type="submit"
           className="btn btn-dark btn-lg w-100 fw-bold"
