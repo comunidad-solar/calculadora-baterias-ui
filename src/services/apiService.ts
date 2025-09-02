@@ -9,7 +9,8 @@ const SIMULATE_BACKEND = false;
 const REAL_ENDPOINTS = [
   'baterias/comunero/validar-email',
   'baterias/comunero/validar-codigo',
-  'baterias/comunero'
+  'baterias/comunero',
+  'baterias/comunero/desconoce-unidad/contactar-asesor'
 ];
 
 // Tipo para las respuestas de la API
@@ -315,7 +316,70 @@ export const nuevoComuneroService = {
   },
 };
 
+// Servicios para baterías
+export const bateriaService = {
+  // Crear solicitud de contacto manual para usuarios que desconocen su unidad
+  async contactarAsesorDesconoceUnidad(datosCompletos: {
+    // Datos del usuario
+    usuarioId: string;
+    nombre: string;
+    email: string;
+    telefono: string;
+    direccion: string;
+    ciudad?: string;
+    provincia?: string;
+    codigoPostal?: string;
+    // Datos técnicos del formulario
+    tieneInstalacionFV: boolean;
+    tipoInstalacion?: string;
+    tieneInversorHuawei?: string;
+    tipoInversorHuawei?: string;
+    tipoCuadroElectrico?: string;
+    requiereContactoManual: boolean;
+    // Datos de validación
+    token?: string;
+    propuestaId?: string;
+    enZona?: string;
+  }): Promise<ApiResponse<{ id: string; solicitud: any }>> {
+    return makeRequest('baterias/comunero/desconoce-unidad/contactar-asesor', {
+      method: 'POST',
+      body: JSON.stringify(datosCompletos),
+    });
+  },
+
+  // Crear solicitud de propuesta automatizada (caso normal)
+  async crearSolicitud(datosCompletos: {
+    // Datos del usuario
+    usuarioId: string;
+    nombre: string;
+    email: string;
+    telefono: string;
+    direccion: string;
+    ciudad?: string;
+    provincia?: string;
+    codigoPostal?: string;
+    // Datos técnicos del formulario
+    tieneInstalacionFV: boolean;
+    tipoInstalacion?: string;
+    tieneInversorHuawei?: string;
+    tipoInversorHuawei?: string;
+    tipoCuadroElectrico?: string;
+    requiereContactoManual: boolean;
+    // Datos de validación
+    token?: string;
+    propuestaId?: string;
+    enZona?: string;
+  }): Promise<ApiResponse<{ id: string; solicitud: any }>> {
+    // TODO: Necesito el endpoint correcto para propuesta automatizada
+    return makeRequest('baterias/comunero/propuesta', {
+      method: 'POST',
+      body: JSON.stringify(datosCompletos),
+    });
+  },
+};
+
 export default {
   comuneroService,
   nuevoComuneroService,
+  bateriaService,
 };

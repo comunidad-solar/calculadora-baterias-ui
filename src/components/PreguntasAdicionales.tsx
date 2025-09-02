@@ -1,17 +1,32 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
+import { useUsuario } from '../context/UsuarioContext';
+import { bateriaService } from '../services/apiService';
+import { usePreguntasAdicionalesStore } from '../zustand/preguntasAdicionalesStore';
 import PageTransition from './PageTransition';
 
 const PreguntasAdicionales = () => {
-  const [tieneInstalacionFV, setTieneInstalacionFV] = useState<boolean | null>(null);
-  const [tipoInstalacion, setTipoInstalacion] = useState<string>('');
-  const [tieneInversorHuawei, setTieneInversorHuawei] = useState<string>('');
-  const [tipoInversorHuawei, setTipoInversorHuawei] = useState<string>('');
-  const [fotoInversor, setFotoInversor] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { usuario, validacionData } = useUsuario();
+  
+  // Usar Zustand store para persistir datos
+  const { preguntas, setField, resetDependentFields } = usePreguntasAdicionalesStore();
+  const {
+    tieneInstalacionFV,
+    tieneInversorHuawei,
+    tipoInversorHuawei,
+    fotoInversor,
+    tipoInstalacion,
+    tipoCuadroElectrico,
+    tieneBaterias,
+    tipoBaterias,
+    capacidadCanadian,
+    capacidadHuawei,
+    instalacionCerca10m
+  } = preguntas;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,12 +73,112 @@ const PreguntasAdicionales = () => {
       return;
     }
 
-    try {
-      // Simular envío de datos adicionales al backend
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Datos a guardar/enviar
-      const datosAdicionales = {
+    // Si no tiene instalación FV pero sabe el tipo (monofásica/trifásica), validar si tiene baterías
+    if (!tieneInstalacionFV && (tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') && tieneBaterias === null) {
+      showToast('Por favor indica si ya tienes baterías instaladas', 'error');
+      setLoading(false);
+      return;
+    }
+
+    // Si tiene baterías, validar tipo de baterías
+    if (!tieneInstalacionFV && (tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') && tieneBaterias === true && !tipoBaterias) {
+      showToast('Por favor indica qué tipo de baterías tienes instaladas', 'error');
+      setLoading(false);
+      return;
+    }
+
+    // Si seleccionó CANADIAN, validar capacidad
+    if (!tieneInstalacionFV && (tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') && tieneBaterias === true && tipoBaterias === 'canadian' && !capacidadCanadian) {
+      showToast('Por favor selecciona la capacidad de tus baterías CANADIAN', 'error');
+      setLoading(false);
+      return;
+    }
+
+    // Si seleccionó HUAWEI, validar capacidad
+    if (!tieneInstalacionFV && (tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') && tieneBaterias === true && tipoBaterias === 'huawei' && !capacidadHuawei) {
+      showToast('Por favor selecciona la capacidad de tus baterías HUAWEI', 'error');
+      setLoading(false);
+      return;
+    }
+
+    // Si NO tiene baterías, validar distancia de instalación
+    if (!tieneInstalacionFV && (tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') && tieneBaterias === false && instalacionCerca10m === null) {
+      showToast('Por favor indica si podríamos realizar la instalación a menos de 10m del cuadro eléctrico', 'error');
+      setLoading(false);
+      return;
+    }
+
+    // Si no tiene instalación FV y desconoce el tipo, validar cuadro eléctrico
+    if (!tieneInstalacionFV && tipoInstalacion === 'desconozco' && !tipoCuadroElectrico) {
+      showToast('Por favor identifica el tipo de cuadro eléctrico o confirma que lo desconoces', 'error');
+      setLoading(false);
+      return;
+    }
+
+    // Si selecciona "ninguno" de los cuadros, no puede continuar con propuesta automatizada
+    if (!tieneInstalacionFV && tipoInstalacion === 'desconozco' && tipoCuadroElectrico === 'ninguno') {
+      try {
+        // Preparar datos completos para el backend
+        const datosCompletos = {
+          // Datos del usuario del contexto
+          usuarioId: usuario?.id || '',
+          nombre: usuario?.nombre || '',
+          email: usuario?.email || '',
+          telefono: usuario?.telefono || '',
+          direccion: usuario?.direccion || '',
+          ciudad: usuario?.ciudad || '',
+          provincia: usuario?.provincia || '',
+          codigoPostal: usuario?.codigoPostal || '',
+          // Datos técnicos del formulario
+          tieneInstalacionFV: false,
+          tipoInstalacion: 'desconozco',
+          tipoCuadroElectrico: 'ninguno',
+          requiereContactoManual: true,
+          // Datos de validación del contexto
+          token: validacionData?.token || '',
+          propuestaId: validacionData?.propuestaId || '',
+          enZona: validacionData?.enZona || 'outZone'
+        };
+
+        // Llamada real al endpoint /baterias/comunero/desconoce-unidad/contactar-asesor
+        const response = await bateriaService.contactarAsesorDesconoceUnidad(datosCompletos);
+        
+        if (response.success) {
+          console.log('Solicitud de contacto manual creada:', response.data);
+          showToast('¡Gracias por tu solicitud! Un asesor especializado se pondrá en contacto contigo muy pronto para ayudarte con tu propuesta personalizada.', 'success');
+          
+          // Redirigir a página de agradecimiento con mensaje personalizado
+          navigate('/gracias-contacto', { 
+            state: { 
+              motivo: 'desconoce-unidad',
+              mensaje: 'Hemos recibido tu solicitud. Un especialista en baterías evaluará tu caso específico y te contactará tan pronto como sea posible para ofrecerte la propuesta perfecta que se adapte a tus necesidades.'
+            } 
+          });
+        } else {
+          throw new Error(response.error || 'Error al crear la solicitud');
+        }
+        
+        return;
+        
+      } catch (error) {
+        console.error('Error al crear solicitud de contacto manual:', error);
+        showToast('Error al registrar la información', 'error');
+        setLoading(false);
+        return;
+      }
+    }    try {
+      // Preparar datos completos para el backend
+      const datosCompletos = {
+        // Datos del usuario del contexto
+        usuarioId: usuario?.id || '',
+        nombre: usuario?.nombre || '',
+        email: usuario?.email || '',
+        telefono: usuario?.telefono || '',
+        direccion: usuario?.direccion || '',
+        ciudad: usuario?.ciudad || '',
+        provincia: usuario?.provincia || '',
+        codigoPostal: usuario?.codigoPostal || '',
+        // Datos técnicos del formulario
         tieneInstalacionFV,
         ...(tieneInstalacionFV ? { 
           tieneInversorHuawei,
@@ -72,17 +187,41 @@ const PreguntasAdicionales = () => {
             ...(tipoInversorHuawei === 'desconozco' ? { fotoInversor: fotoInversor?.name } : {})
           } : {}),
           ...(tieneInversorHuawei === 'desconozco' ? { fotoInversor: fotoInversor?.name } : {})
-        } : { tipoInstalacion })
+        } : { 
+          tipoInstalacion,
+          ...(tipoInstalacion === 'desconozco' ? { tipoCuadroElectrico } : {}),
+          // Si conoce el tipo de instalación (monofásica/trifásica), incluir datos de baterías
+          ...((tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') ? {
+            tieneBaterias,
+            ...(tieneBaterias === true ? { 
+              tipoBaterias,
+              ...(tipoBaterias === 'canadian' ? { capacidadCanadian } : {}),
+              ...(tipoBaterias === 'huawei' ? { capacidadHuawei } : {})
+            } : {})
+          } : {})
+        }),
+        requiereContactoManual: false,
+        // Datos de validación del contexto
+        token: validacionData?.token || '',
+        propuestaId: validacionData?.propuestaId || '',
+        enZona: validacionData?.enZona || 'inZone'
       };
 
-      console.log('Datos adicionales:', datosAdicionales);
+      // Llamada real al endpoint /baterias/crea
+      const response = await bateriaService.crearSolicitud(datosCompletos);
       
-      showToast('¡Información guardada correctamente!', 'success');
-      
-      // Redirigir a la página de propuesta o dashboard
-      navigate('/propuesta');
+      if (response.success) {
+        console.log('Datos adicionales enviados:', response.data);
+        showToast('¡Información guardada correctamente!', 'success');
+        
+        // Redirigir a la página de propuesta o dashboard
+        navigate('/propuesta');
+      } else {
+        throw new Error(response.error || 'Error al guardar la información');
+      }
       
     } catch (error) {
+      console.error('Error al enviar datos adicionales:', error);
       showToast('Error al guardar la información', 'error');
     } finally {
       setLoading(false);
@@ -90,27 +229,37 @@ const PreguntasAdicionales = () => {
   };
 
   const handleInstalacionChange = (valor: boolean) => {
-    setTieneInstalacionFV(valor);
-    // Reset campos dependientes
-    setTipoInstalacion('');
-    setTieneInversorHuawei('');
-    setTipoInversorHuawei('');
-    setFotoInversor(null);
+    setField('tieneInstalacionFV', valor);
+    resetDependentFields('tieneInstalacionFV');
   };
 
   const handleHuaweiChange = (valor: string) => {
-    setTieneInversorHuawei(valor);
-    // Reset campos dependientes
-    setTipoInversorHuawei('');
-    setFotoInversor(null);
+    setField('tieneInversorHuawei', valor);
+    resetDependentFields('tieneInversorHuawei');
   };
 
   const handleTipoInversorChange = (valor: string) => {
-    setTipoInversorHuawei(valor);
-    // Reset foto si no es "desconozco"
-    if (valor !== 'desconozco') {
-      setFotoInversor(null);
-    }
+    setField('tipoInversorHuawei', valor);
+    resetDependentFields('tipoInversorHuawei', valor);
+  };
+
+  const handleTipoInstalacionChange = (valor: string) => {
+    setField('tipoInstalacion', valor);
+    resetDependentFields('tipoInstalacion', valor);
+  };
+
+  const handleTieneBateriasChange = (valor: boolean) => {
+    setField('tieneBaterias', valor);
+    resetDependentFields('tieneBaterias');
+  };
+
+  const handleTipoBateriasChange = (valor: string) => {
+    setField('tipoBaterias', valor);
+    resetDependentFields('tipoBaterias');
+  };
+
+  const handleInstalacionCerca10mChange = (valor: boolean) => {
+    setField('instalacionCerca10m', valor);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -118,7 +267,7 @@ const PreguntasAdicionales = () => {
     if (file) {
       // Validar que sea imagen
       if (file.type.startsWith('image/')) {
-        setFotoInversor(file);
+        setField('fotoInversor', file);
       } else {
         showToast('Por favor selecciona una imagen válida', 'error');
         e.target.value = '';
@@ -341,7 +490,7 @@ const PreguntasAdicionales = () => {
                 <select
                   className="form-select form-select-lg"
                   value={tipoInstalacion}
-                  onChange={(e) => setTipoInstalacion(e.target.value)}
+                  onChange={(e) => handleTipoInstalacionChange(e.target.value)}
                   required
                 >
                   <option value="">Selecciona el tipo de instalación</option>
@@ -352,21 +501,322 @@ const PreguntasAdicionales = () => {
               </div>
             )}
 
+            {/* Si NO tiene instalación FV y conoce el tipo (monofásica/trifásica) - Pregunta sobre baterías */}
+            {tieneInstalacionFV === false && (tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') && (
+              <div className="fade-in-result">
+                <label className="form-label h5 fw-bold mb-3">
+                  ¿Tienes ya baterías instaladas? <span className="text-danger">*</span>
+                </label>
+                <div className="d-flex gap-4">
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="tieneBaterias"
+                      id="bateriasSi"
+                      checked={tieneBaterias === true}
+                      onChange={() => handleTieneBateriasChange(true)}
+                    />
+                    <label className="form-check-label fw-semibold" htmlFor="bateriasSi">
+                      Sí
+                    </label>
+                  </div>
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="tieneBaterias"
+                      id="bateriasNo"
+                      checked={tieneBaterias === false}
+                      onChange={() => handleTieneBateriasChange(false)}
+                    />
+                    <label className="form-check-label fw-semibold" htmlFor="bateriasNo">
+                      No
+                    </label>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Si tiene baterías instaladas - Tipo de baterías */}
+            {tieneInstalacionFV === false && (tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') && tieneBaterias === true && (
+              <div className="fade-in-result">
+                <label className="form-label h5 fw-bold mb-3">
+                  ¿Qué baterías tienes instaladas? <span className="text-danger">*</span>
+                </label>
+                <select
+                  className="form-select form-select-lg"
+                  value={tipoBaterias}
+                  onChange={(e) => handleTipoBateriasChange(e.target.value)}
+                  required
+                >
+                  <option value="">Selecciona el tipo de batería</option>
+                  <option value="canadian">CANADIAN</option>
+                  <option value="huawei">HUAWEI</option>
+                  <option value="otra">OTRA O LO DESCONOZCO</option>
+                </select>
+              </div>
+            )}
+
+            {/* Si seleccionó CANADIAN - Pregunta capacidad */}
+            {tieneInstalacionFV === false && (tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') && tieneBaterias === true && tipoBaterias === 'canadian' && (
+              <div className="fade-in-result">
+                <label className="form-label h5 fw-bold mb-3">
+                  ¿Qué capacidad tienes instalada? <span className="text-danger">*</span>
+                </label>
+                <select
+                  className="form-select form-select-lg"
+                  value={capacidadCanadian}
+                  onChange={(e) => setField('capacidadCanadian', e.target.value)}
+                  required
+                >
+                  <option value="">Selecciona la capacidad</option>
+                  <option value="6.6kw">6,6 kW</option>
+                  <option value="9.9kw">9,9 kW</option>
+                  <option value="13.2kw">13,2 kW</option>
+                  <option value="16.5kw">16,5 kW</option>
+                  <option value="19.8kw">19,8 kW</option>
+                </select>
+              </div>
+            )}
+
+            {/* Si seleccionó HUAWEI - Pregunta capacidad */}
+            {tieneInstalacionFV === false && (tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') && tieneBaterias === true && tipoBaterias === 'huawei' && (
+              <div className="fade-in-result">
+                <label className="form-label h5 fw-bold mb-3">
+                  ¿Qué capacidad tienes instalada? <span className="text-danger">*</span>
+                </label>
+                <select
+                  className="form-select form-select-lg"
+                  value={capacidadHuawei}
+                  onChange={(e) => setField('capacidadHuawei', e.target.value)}
+                  required
+                >
+                  <option value="">Selecciona la capacidad</option>
+                  <option value="5kw">5kW</option>
+                  <option value="10kw">10kW</option>
+                  <option value="15kw">15kW</option>
+                </select>
+              </div>
+            )}
+
+            {/* Si seleccionó OTRA O LO DESCONOZCO - Mensaje informativo */}
+            {tieneInstalacionFV === false && (tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') && tieneBaterias === true && tipoBaterias === 'otra' && (
+              <div className="fade-in-result">
+                <div className="alert alert-info border-0">
+                  <div className="d-flex align-items-center">
+                    <span className="me-2">ℹ️</span>
+                    <small>
+                      <strong>Perfecto.</strong> Un especialista revisará tu caso específico para ofrecerte la mejor propuesta.
+                    </small>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Si SÍ tiene baterías instaladas - Mensaje informativo */}
+            {tieneInstalacionFV === false && (tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') && tieneBaterias === true && (
+              <div className="fade-in-result">
+                <div className="alert alert-info border-0">
+                  <div className="d-flex align-items-center">
+                    <span className="me-2">ℹ️</span>
+                    <small>
+                      <strong>Perfecto.</strong> Continuaremos con tu propuesta personalizada de baterías.
+                    </small>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Pregunta sobre distancia de instalación - solo si NO tiene baterías */}
+            {tieneInstalacionFV === false && (tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') && tieneBaterias === false && (
+              <div className="fade-in-result">
+                <label className="form-label h5 fw-bold mb-3">
+                  ¿Podríamos realizar la instalación a menos de 10m del cuadro eléctrico? <span className="text-danger">*</span>
+                </label>
+                
+                <div className="d-flex gap-3 mb-3">
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="instalacionCerca10m"
+                      id="instalacionCercaSi"
+                      checked={instalacionCerca10m === true}
+                      onChange={() => handleInstalacionCerca10mChange(true)}
+                    />
+                    <label className="form-check-label fw-bold text-success" htmlFor="instalacionCercaSi">
+                      Sí
+                    </label>
+                  </div>
+                  
+                  <div className="form-check">
+                    <input
+                      className="form-check-input"
+                      type="radio"
+                      name="instalacionCerca10m"
+                      id="instalacionCercaNo"
+                      checked={instalacionCerca10m === false}
+                      onChange={() => handleInstalacionCerca10mChange(false)}
+                    />
+                    <label className="form-check-label fw-bold text-danger" htmlFor="instalacionCercaNo">
+                      No
+                    </label>
+                  </div>
+                </div>
+
+                {/* Mensaje informativo según la respuesta */}
+                {instalacionCerca10m === true && (
+                  <div className="alert alert-success border-0 fade-in-result">
+                    <div className="d-flex align-items-center">
+                      <span className="me-2">✅</span>
+                      <small>
+                        <strong>Excelente.</strong> La proximidad al cuadro eléctrico facilitará la instalación.
+                      </small>
+                    </div>
+                  </div>
+                )}
+                
+                {instalacionCerca10m === false && (
+                  <div className="alert alert-warning border-0 fade-in-result">
+                    <div className="d-flex align-items-center">
+                      <span className="me-2">⚠️</span>
+                      <small>
+                        <strong>Sin problema.</strong> Evaluaremos las opciones técnicas para la instalación a mayor distancia.
+                      </small>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Si NO tiene instalación FV y selecciona "Lo desconozco" - Mostrar fotos de cuadros */}
+            {tieneInstalacionFV === false && tipoInstalacion === 'desconozco' && (
+              <div className="fade-in-result">
+                <label className="form-label h5 fw-bold mb-3">
+                  ¿Reconoces alguno de estos tipos de cuadro eléctrico? <span className="text-danger">*</span>
+                </label>
+                <p className="text-muted mb-4">
+                  Por favor, observa las siguientes imágenes e indica si alguna corresponde a tu cuadro eléctrico:
+                </p>
+                
+                <div className="row g-3 mb-4">
+                  {/* Cuadro Tipo 1 */}
+                  <div className="col-md-6">
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="radio"
+                        name="tipoCuadro"
+                        id="cuadroTipo1"
+                        value="tipo1"
+                        checked={tipoCuadroElectrico === 'tipo1'}
+                        onChange={(e) => setField('tipoCuadroElectrico', e.target.value)}
+                      />
+                      <label className="form-check-label d-block" htmlFor="cuadroTipo1">
+                        <div className="border rounded-3 overflow-hidden mb-2" style={{ cursor: 'pointer' }}>
+                          <img 
+                            src="https://placehold.co/600x400/e3f2fd/1976d2?text=Cuadro+Tipo+1" 
+                            alt="Cuadro eléctrico tipo 1" 
+                            className="w-100 h-auto"
+                          />
+                        </div>
+                        <strong className="d-block text-center">Tipo 1 - Cuadro Monofásico</strong>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Cuadro Tipo 2 */}
+                  <div className="col-md-6">
+                    <div className="form-check">
+                      <input
+                        className="form-check-input"
+                        type="radio"
+                        name="tipoCuadro"
+                        id="cuadroTipo2"
+                        value="tipo2"
+                        checked={tipoCuadroElectrico === 'tipo2'}
+                        onChange={(e) => setField('tipoCuadroElectrico', e.target.value)}
+                      />
+                      <label className="form-check-label d-block" htmlFor="cuadroTipo2">
+                        <div className="border rounded-3 overflow-hidden mb-2" style={{ cursor: 'pointer' }}>
+                          <img 
+                            src="https://placehold.co/600x400/f3e5f5/7b1fa2?text=Cuadro+Tipo+2" 
+                            alt="Cuadro eléctrico tipo 2" 
+                            className="w-100 h-auto"
+                          />
+                        </div>
+                        <strong className="d-block text-center">Tipo 2 - Cuadro Trifásico</strong>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Opción "Ninguno coincide" */}
+                <div className="form-check mb-3">
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="tipoCuadro"
+                    id="cuadroNinguno"
+                    value="ninguno"
+                    checked={tipoCuadroElectrico === 'ninguno'}
+                    onChange={(e) => setField('tipoCuadroElectrico', e.target.value)}
+                  />
+                  <label className="form-check-label fw-semibold" htmlFor="cuadroNinguno">
+                    Ninguno de los anteriores coincide con mi cuadro eléctrico
+                  </label>
+                </div>
+
+                {/* Mensaje informativo si selecciona "ninguno" */}
+                {tipoCuadroElectrico === 'ninguno' && (
+                  <div className="alert alert-info border-0 fade-in-result">
+                    <div className="d-flex align-items-center">
+                      <span className="me-2">ℹ️</span>
+                      <small>
+                        <strong>Perfecto.</strong> Nuestro equipo técnico se pondrá en contacto contigo para evaluar tu instalación específica.
+                      </small>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Botón enviar */}
             <div className="d-grid gap-2 mt-4">
-              <button
-                type="submit"
-                className="btn btn-primary btn-lg fw-bold button-hover-result"
-                disabled={loading}
-                style={{
-                  background: 'linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%)',
-                  border: 'none'
-                }}
-              >
-                {loading ? 'Guardando...' : 'Continuar con mi propuesta'}
-              </button>
+              {/* Si selecciona "ninguno" de los cuadros, mostrar botón diferente */}
+              {(!tieneInstalacionFV && tipoInstalacion === 'desconozco' && tipoCuadroElectrico === 'ninguno') ? (
+                <button
+                  type="submit"
+                  className="btn btn-warning btn-lg fw-bold button-hover-result"
+                  disabled={loading}
+                  style={{
+                    background: 'linear-gradient(135deg, #ff6b35 0%, #f7931e 100%)',
+                    border: 'none',
+                    color: 'white'
+                  }}
+                >
+                  {loading ? 'Registrando...' : 'Contactar con un asesor'}
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-lg fw-bold button-hover-result"
+                  disabled={loading}
+                  style={{
+                    background: 'linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%)',
+                    border: 'none'
+                  }}
+                >
+                  {loading ? 'Guardando...' : 'Continuar con mi propuesta'}
+                </button>
+              )}
+              
               <small className="text-muted text-center">
-                Esta información nos ayudará a crear una propuesta personalizada para ti
+                {(!tieneInstalacionFV && tipoInstalacion === 'desconozco' && tipoCuadroElectrico === 'ninguno') 
+                  ? 'Un especialista evaluará tu caso específico y te contactará pronto'
+                  : 'Esta información nos ayudará a crear una propuesta personalizada para ti'
+                }
               </small>
             </div>
           </form>
