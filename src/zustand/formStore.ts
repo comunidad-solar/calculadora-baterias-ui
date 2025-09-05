@@ -1,6 +1,10 @@
 import { create } from 'zustand';
+import { devtools } from 'zustand/middleware';
+import type { FSMState } from '../types/fsmTypes';
+import { FSM_STATES } from '../types/fsmTypes';
 
 interface FormState {
+  // Datos básicos del formulario
   nombre: string;
   mail: string;
   telefono: string;
@@ -10,12 +14,76 @@ interface FormState {
   utm: string;
   campaignSource: string;
   bypass: boolean;
+  fsmState: FSMState;
+  
+  // Datos de validación del backend
+  token?: string;
+  comunero?: {
+    id: string;
+    nombre: string;
+    email: string;
+    telefono: string;
+    direccion: string;
+    codigoPostal?: string;
+    ciudad?: string;
+    provincia?: string;
+  };
+  enZona?: "inZone" | "inZoneWithCost" | "outZone";
+  motivo?: string;
+  dealId?: string;
+  propuestaId?: string;
+  
+  // Análisis de tratos (datos del backend)
+  analisisTratos?: {
+    tieneTratoCerradoGanado: boolean;
+    hasInversor: {
+      marca: string;
+      modelo: string;
+      numero: number | string;
+    } | null;
+    tratoGanadoBaterias: boolean;
+    bateriaInicial: {
+      modeloCapacidad: string;
+    } | null;
+    tieneAmpliacionBaterias: boolean;
+    bateriaAmpliacion: any | null;
+  };
+  
+  // Respuestas a las preguntas adicionales
+  respuestasPreguntas: {
+    tieneInstalacionFV?: boolean | null;
+    tieneInversorHuawei?: string;
+    tipoInversorHuawei?: string;
+    fotoInversor?: File | null;
+    tipoInstalacion?: string;
+    tipoCuadroElectrico?: string;
+    tieneBaterias?: boolean | null;
+    tipoBaterias?: string;
+    capacidadCanadian?: string;
+    capacidadHuawei?: string;
+    instalacionCerca10m?: boolean | null;
+    requiereContactoManual?: boolean;
+    [key: string]: any; // Para preguntas adicionales futuras
+  };
 }
 
 interface FormStore {
   form: FormState;
   setField: (field: keyof FormState, value: any) => void;
+  setFsmState: (state: FSMState) => void;
+  setValidacionData: (data: {
+    token: string;
+    comunero: any;
+    enZona: "inZone" | "inZoneWithCost" | "outZone";
+    motivo?: string;
+    dealId?: string;
+    propuestaId?: string;
+    analisisTratos?: any;
+  }) => void;
+  setRespuestaPregunta: (pregunta: string, respuesta: any) => void;
+  setRespuestasPreguntas: (respuestas: any) => void;
   submitForm: () => void;
+  resetForm: () => void;
 }
 
 const initialState: FormState = {
@@ -28,17 +96,104 @@ const initialState: FormState = {
   utm: '', // Aquí puedes inicializar con el valor UTM si lo tienes
   campaignSource: '',
   bypass: false,
+  fsmState: FSM_STATES.INITIAL, // Estado inicial de la máquina de estados
+  
+  // Inicializar respuestas de preguntas
+  respuestasPreguntas: {
+    tieneInstalacionFV: null,
+    tieneInversorHuawei: '',
+    tipoInversorHuawei: '',
+    fotoInversor: null,
+    tipoInstalacion: '',
+    tipoCuadroElectrico: '',
+    tieneBaterias: null,
+    tipoBaterias: '',
+    capacidadCanadian: '',
+    capacidadHuawei: '',
+    instalacionCerca10m: null,
+    requiereContactoManual: false,
+  },
 };
 
-export const useFormStore = create<FormStore>((set, get) => ({
-  form: initialState,
-  setField: (field, value) =>
-    set(state => ({
-      form: { ...state.form, [field]: value },
-    })),
-  submitForm: () => {
-    // Aquí puedes manejar el envío, por ejemplo guardar en localStorage o enviar a una API
-    
-    console.log('Datos:', get().form);
-  },
-}));
+export const useFormStore = create<FormStore>()(
+  devtools(
+    (set, get) => ({
+      form: initialState,
+      setField: (field, value) =>
+        set(
+          state => ({
+            form: { ...state.form, [field]: value },
+          }),
+          false,
+          `setField_${field}`
+        ),
+      setFsmState: (state) =>
+        set(
+          currentState => ({
+            form: { ...currentState.form, fsmState: state },
+          }),
+          false,
+          `setFsmState_${state}`
+        ),
+      setValidacionData: (data) =>
+        set(
+          state => ({
+            form: { 
+              ...state.form, 
+              token: data.token,
+              comunero: data.comunero,
+              enZona: data.enZona,
+              motivo: data.motivo,
+              dealId: data.dealId,
+              propuestaId: data.propuestaId,
+              analisisTratos: data.analisisTratos,
+            },
+          }),
+          false,
+          'setValidacionData'
+        ),
+      setRespuestaPregunta: (pregunta, respuesta) =>
+        set(
+          state => ({
+            form: {
+              ...state.form,
+              respuestasPreguntas: {
+                ...state.form.respuestasPreguntas,
+                [pregunta]: respuesta,
+              },
+            },
+          }),
+          false,
+          `setRespuestaPregunta_${pregunta}`
+        ),
+      setRespuestasPreguntas: (respuestas) =>
+        set(
+          state => ({
+            form: {
+              ...state.form,
+              respuestasPreguntas: {
+                ...state.form.respuestasPreguntas,
+                ...respuestas,
+              },
+            },
+          }),
+          false,
+          'setRespuestasPreguntas'
+        ),
+      submitForm: () => {
+        // Aquí puedes manejar el envío, por ejemplo guardar en localStorage o enviar a una API
+        set({}, false, 'submitForm');
+        console.log('Datos:', get().form);
+      },
+      resetForm: () =>
+        set(
+          { form: initialState },
+          false,
+          'resetForm'
+        ),
+    }),
+    {
+      name: 'form-store', // nombre que aparecerá en Redux DevTools
+    }
+  )
+);

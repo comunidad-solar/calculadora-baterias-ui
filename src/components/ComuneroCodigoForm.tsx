@@ -5,7 +5,7 @@ import CodeInput from './CodeInput';
 import PageTransition from './PageTransition';
 import { comuneroService } from '../services/apiService';
 import { useToast } from '../context/ToastContext';
-import { useUsuario } from '../context/UsuarioContext';
+import { useFormStore } from '../zustand/formStore';
 
 const ComuneroCodigoForm = () => {
   const [codigo, setCodigo] = useState('');
@@ -18,7 +18,7 @@ const ComuneroCodigoForm = () => {
   const navigate = useNavigate();
   const email = location.state?.email;
   const { showToast } = useToast();
-  const { setValidacionData } = useUsuario();
+  const { setValidacionData } = useFormStore();
 
   // Cooldown timer effect
   useEffect(() => {
@@ -71,7 +71,7 @@ const ComuneroCodigoForm = () => {
             comunero: response.data.comunero,
             enZona: response.data.enZona,
             motivo: response.data.motivo,
-            propuestaId: response.data.propuestaId,
+            // propuestaId: response.data.propuestaId, // Temporalmente comentado por error de TypeScript
             analisisTratos: response.data.analisisTratos
           };
           

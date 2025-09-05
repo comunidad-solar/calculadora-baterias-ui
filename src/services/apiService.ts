@@ -109,7 +109,7 @@ const makeRequest = async <T = any>(
               provincia: 'Madrid'
             },
             enZona: "inZone",
-            propuestaId: 'propuesta-456',
+            dealId: 'propuesta-456',
             analisisTratos: {
               tieneTratoCerradoGanado: true,
               hasInversor: {
@@ -142,7 +142,7 @@ const makeRequest = async <T = any>(
             provincia: 'Madrid'
           },
           enZona: "inZone",
-          propuestaId: 'propuesta-123',
+          dealId: 'propuesta-123',
           analisisTratos: {
             tieneTratoCerradoGanado: true,
             hasInversor: {
@@ -276,7 +276,7 @@ export const comuneroService = {
     token: string; 
     comunero: any; 
     enZona: "inZone" | "inZoneWithCost" | "outZone"; 
-    propuestaId?: string;
+    dealId?: string;
     motivo?: string;
     analisisTratos?: {
       tieneTratoCerradoGanado: boolean;
@@ -314,6 +314,13 @@ export const nuevoComuneroService = {
       body: JSON.stringify(requestBody),
     });
   },
+  
+  // Obtener datos de comunero por ID único
+  async obtenerPorId(clienteId: string): Promise<ApiResponse<{ comunero: any }>> {
+    return makeRequest(`baterias/comunero/${clienteId}`, {
+      method: 'GET',
+    });
+  },
 };
 
 // Servicios para baterías
@@ -338,7 +345,7 @@ export const bateriaService = {
     requiereContactoManual: boolean;
     // Datos de validación
     token?: string;
-    propuestaId?: string;
+    dealId?: string;
     enZona?: string;
   }): Promise<ApiResponse<{ id: string; solicitud: any }>> {
     return makeRequest('baterias/comunero/desconoce-unidad/contactar-asesor', {
@@ -367,7 +374,7 @@ export const bateriaService = {
     requiereContactoManual: boolean;
     // Datos de validación
     token?: string;
-    propuestaId?: string;
+    dealId?: string;
     enZona?: string;
   }): Promise<ApiResponse<{ id: string; solicitud: any }>> {
     // TODO: Necesito el endpoint correcto para propuesta automatizada

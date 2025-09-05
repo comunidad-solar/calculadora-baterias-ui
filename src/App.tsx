@@ -1,6 +1,8 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect } from "react";
 import AppRoutes from "./routes/routes";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
 import { ToastProvider } from "./context/ToastContext";
 import { UsuarioProvider } from "./context/UsuarioContext";
 import { useFormStore } from "./zustand/formStore";
@@ -25,14 +27,23 @@ function App() {
   return (
     <ToastProvider>
       <UsuarioProvider>
-        <div className="d-flex justify-content-center align-items-center min-vh-100 w-100" style={{background: '#FCFCF7'}}>
-          <AppRoutes onSelect={isComunero => {
-            if (isComunero) {
-              navigate('/comunero');
-            } else {
-              navigate('/nuevo-comunero');
-            }
-          }} />
+        <div className="d-flex flex-column min-vh-100" style={{background: '#FCFCF7'}}>
+          {/* Header */}
+          <Header />
+          
+          {/* Contenido principal */}
+          <main className="flex-grow-1 d-flex justify-content-center align-items-start w-100 py-4">
+            <AppRoutes onSelect={isComunero => {
+              if (isComunero) {
+                navigate('/comunero');
+              } else {
+                navigate('/nuevo-comunero');
+              }
+            }} />
+          </main>
+          
+          {/* Footer */}
+          <Footer />
         </div>
       </UsuarioProvider>
     </ToastProvider>

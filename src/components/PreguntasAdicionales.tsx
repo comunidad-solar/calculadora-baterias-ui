@@ -1,32 +1,36 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
-import { useUsuario } from '../context/UsuarioContext';
 import { bateriaService } from '../services/apiService';
-import { usePreguntasAdicionalesStore } from '../zustand/preguntasAdicionalesStore';
+import { useFormStore } from '../zustand/formStore';
 import PageTransition from './PageTransition';
 
 const PreguntasAdicionales = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const { usuario, validacionData } = useUsuario();
   
-  // Usar Zustand store para persistir datos
-  const { preguntas, setField, resetDependentFields } = usePreguntasAdicionalesStore();
+  // Usar formStore principal para persistir datos con Redux DevTools
+  const { 
+    form, 
+    setRespuestaPregunta, 
+    setFsmState 
+  } = useFormStore();
+  
+  // Obtener respuestas de preguntas del store principal
   const {
-    tieneInstalacionFV,
-    tieneInversorHuawei,
-    tipoInversorHuawei,
-    fotoInversor,
-    tipoInstalacion,
-    tipoCuadroElectrico,
-    tieneBaterias,
-    tipoBaterias,
-    capacidadCanadian,
-    capacidadHuawei,
-    instalacionCerca10m
-  } = preguntas;
+    tieneInstalacionFV = null,
+    tieneInversorHuawei = '',
+    tipoInversorHuawei = '',
+    fotoInversor = null,
+    tipoInstalacion = '',
+    tipoCuadroElectrico = '',
+    tieneBaterias = null,
+    tipoBaterias = '',
+    capacidadCanadian = '',
+    capacidadHuawei = '',
+    instalacionCerca10m = null
+  } = form.respuestasPreguntas || {};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,27 +124,25 @@ const PreguntasAdicionales = () => {
       try {
         // Preparar datos completos para el backend
         const datosCompletos = {
-          // Datos del usuario del contexto
-          usuarioId: usuario?.id || '',
-          nombre: usuario?.nombre || '',
-          email: usuario?.email || '',
-          telefono: usuario?.telefono || '',
-          direccion: usuario?.direccion || '',
-          ciudad: usuario?.ciudad || '',
-          provincia: usuario?.provincia || '',
-          codigoPostal: usuario?.codigoPostal || '',
+          // Datos del usuario del store
+          usuarioId: form.comunero?.id || '',
+          nombre: form.comunero?.nombre || '',
+          email: form.comunero?.email || '',
+          telefono: form.comunero?.telefono || '',
+          direccion: form.comunero?.direccion || '',
+          ciudad: form.comunero?.ciudad || '',
+          provincia: form.comunero?.provincia || '',
+          codigoPostal: form.comunero?.codigoPostal || '',
           // Datos técnicos del formulario
           tieneInstalacionFV: false,
           tipoInstalacion: 'desconozco',
           tipoCuadroElectrico: 'ninguno',
           requiereContactoManual: true,
-          // Datos de validación del contexto
-          token: validacionData?.token || '',
-          propuestaId: validacionData?.propuestaId || '',
-          enZona: validacionData?.enZona || 'outZone'
-        };
-
-        // Llamada real al endpoint /baterias/comunero/desconoce-unidad/contactar-asesor
+          // Datos de validación del store
+          token: form.token || '',
+          propuestaId: form.propuestaId || '',
+          enZona: form.enZona || 'outZone'
+        };        // Llamada real al endpoint /baterias/comunero/desconoce-unidad/contactar-asesor
         const response = await bateriaService.contactarAsesorDesconoceUnidad(datosCompletos);
         
         if (response.success) {
@@ -166,18 +168,20 @@ const PreguntasAdicionales = () => {
         setLoading(false);
         return;
       }
-    }    try {
+    }
+    
+    try {
       // Preparar datos completos para el backend
       const datosCompletos = {
-        // Datos del usuario del contexto
-        usuarioId: usuario?.id || '',
-        nombre: usuario?.nombre || '',
-        email: usuario?.email || '',
-        telefono: usuario?.telefono || '',
-        direccion: usuario?.direccion || '',
-        ciudad: usuario?.ciudad || '',
-        provincia: usuario?.provincia || '',
-        codigoPostal: usuario?.codigoPostal || '',
+        // Datos del usuario del store
+        usuarioId: form.comunero?.id || '',
+        nombre: form.comunero?.nombre || '',
+        email: form.comunero?.email || '',
+        telefono: form.comunero?.telefono || '',
+        direccion: form.comunero?.direccion || '',
+        ciudad: form.comunero?.ciudad || '',
+        provincia: form.comunero?.provincia || '',
+        codigoPostal: form.comunero?.codigoPostal || '',
         // Datos técnicos del formulario
         tieneInstalacionFV,
         ...(tieneInstalacionFV ? { 
@@ -201,10 +205,10 @@ const PreguntasAdicionales = () => {
           } : {})
         }),
         requiereContactoManual: false,
-        // Datos de validación del contexto
-        token: validacionData?.token || '',
-        propuestaId: validacionData?.propuestaId || '',
-        enZona: validacionData?.enZona || 'inZone'
+        // Datos de validación del store
+        token: form.token || '',
+        propuestaId: form.propuestaId || '',
+        enZona: form.enZona || 'inZone'
       };
 
       // Llamada real al endpoint /baterias/crea
@@ -229,37 +233,64 @@ const PreguntasAdicionales = () => {
   };
 
   const handleInstalacionChange = (valor: boolean) => {
-    setField('tieneInstalacionFV', valor);
-    resetDependentFields('tieneInstalacionFV');
+    setRespuestaPregunta('tieneInstalacionFV', valor);
+    // Reset dependent fields
+    setRespuestaPregunta('tieneInversorHuawei', '');
+    setRespuestaPregunta('tipoInversorHuawei', '');
+    setRespuestaPregunta('fotoInversor', null);
+    setRespuestaPregunta('tipoInstalacion', '');
+    setRespuestaPregunta('tipoCuadroElectrico', '');
+    setRespuestaPregunta('tieneBaterias', null);
+    setRespuestaPregunta('tipoBaterias', '');
+    setRespuestaPregunta('capacidadCanadian', '');
+    setRespuestaPregunta('capacidadHuawei', '');
+    setRespuestaPregunta('instalacionCerca10m', null);
   };
 
   const handleHuaweiChange = (valor: string) => {
-    setField('tieneInversorHuawei', valor);
-    resetDependentFields('tieneInversorHuawei');
+    setRespuestaPregunta('tieneInversorHuawei', valor);
+    // Reset dependent fields
+    setRespuestaPregunta('tipoInversorHuawei', '');
+    setRespuestaPregunta('fotoInversor', null);
   };
 
   const handleTipoInversorChange = (valor: string) => {
-    setField('tipoInversorHuawei', valor);
-    resetDependentFields('tipoInversorHuawei', valor);
+    setRespuestaPregunta('tipoInversorHuawei', valor);
+    if (valor !== 'desconozco') {
+      setRespuestaPregunta('fotoInversor', null);
+    }
   };
 
   const handleTipoInstalacionChange = (valor: string) => {
-    setField('tipoInstalacion', valor);
-    resetDependentFields('tipoInstalacion', valor);
+    setRespuestaPregunta('tipoInstalacion', valor);
+    if (valor !== 'desconozco') {
+      setRespuestaPregunta('tipoCuadroElectrico', '');
+    }
+    // Reset battery related fields
+    setRespuestaPregunta('tieneBaterias', null);
+    setRespuestaPregunta('tipoBaterias', '');
+    setRespuestaPregunta('capacidadCanadian', '');
+    setRespuestaPregunta('capacidadHuawei', '');
+    setRespuestaPregunta('instalacionCerca10m', null);
   };
 
   const handleTieneBateriasChange = (valor: boolean) => {
-    setField('tieneBaterias', valor);
-    resetDependentFields('tieneBaterias');
+    setRespuestaPregunta('tieneBaterias', valor);
+    // Reset dependent fields
+    setRespuestaPregunta('tipoBaterias', '');
+    setRespuestaPregunta('capacidadCanadian', '');
+    setRespuestaPregunta('capacidadHuawei', '');
   };
 
   const handleTipoBateriasChange = (valor: string) => {
-    setField('tipoBaterias', valor);
-    resetDependentFields('tipoBaterias');
+    setRespuestaPregunta('tipoBaterias', valor);
+    // Reset capacity fields
+    setRespuestaPregunta('capacidadCanadian', '');
+    setRespuestaPregunta('capacidadHuawei', '');
   };
 
   const handleInstalacionCerca10mChange = (valor: boolean) => {
-    setField('instalacionCerca10m', valor);
+    setRespuestaPregunta('instalacionCerca10m', valor);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -267,7 +298,7 @@ const PreguntasAdicionales = () => {
     if (file) {
       // Validar que sea imagen
       if (file.type.startsWith('image/')) {
-        setField('fotoInversor', file);
+        setRespuestaPregunta('fotoInversor', file);
       } else {
         showToast('Por favor selecciona una imagen válida', 'error');
         e.target.value = '';
@@ -567,7 +598,7 @@ const PreguntasAdicionales = () => {
                 <select
                   className="form-select form-select-lg"
                   value={capacidadCanadian}
-                  onChange={(e) => setField('capacidadCanadian', e.target.value)}
+                  onChange={(e) => setRespuestaPregunta('capacidadCanadian', e.target.value)}
                   required
                 >
                   <option value="">Selecciona la capacidad</option>
@@ -589,7 +620,7 @@ const PreguntasAdicionales = () => {
                 <select
                   className="form-select form-select-lg"
                   value={capacidadHuawei}
-                  onChange={(e) => setField('capacidadHuawei', e.target.value)}
+                  onChange={(e) => setRespuestaPregunta('capacidadHuawei', e.target.value)}
                   required
                 >
                   <option value="">Selecciona la capacidad</option>
@@ -711,7 +742,7 @@ const PreguntasAdicionales = () => {
                         id="cuadroTipo1"
                         value="tipo1"
                         checked={tipoCuadroElectrico === 'tipo1'}
-                        onChange={(e) => setField('tipoCuadroElectrico', e.target.value)}
+                        onChange={(e) => setRespuestaPregunta('tipoCuadroElectrico', e.target.value)}
                       />
                       <label className="form-check-label d-block" htmlFor="cuadroTipo1">
                         <div className="border rounded-3 overflow-hidden mb-2" style={{ cursor: 'pointer' }}>
@@ -736,7 +767,7 @@ const PreguntasAdicionales = () => {
                         id="cuadroTipo2"
                         value="tipo2"
                         checked={tipoCuadroElectrico === 'tipo2'}
-                        onChange={(e) => setField('tipoCuadroElectrico', e.target.value)}
+                        onChange={(e) => setRespuestaPregunta('tipoCuadroElectrico', e.target.value)}
                       />
                       <label className="form-check-label d-block" htmlFor="cuadroTipo2">
                         <div className="border rounded-3 overflow-hidden mb-2" style={{ cursor: 'pointer' }}>
@@ -761,7 +792,7 @@ const PreguntasAdicionales = () => {
                     id="cuadroNinguno"
                     value="ninguno"
                     checked={tipoCuadroElectrico === 'ninguno'}
-                    onChange={(e) => setField('tipoCuadroElectrico', e.target.value)}
+                    onChange={(e) => setRespuestaPregunta('tipoCuadroElectrico', e.target.value)}
                   />
                   <label className="form-check-label fw-semibold" htmlFor="cuadroNinguno">
                     Ninguno de los anteriores coincide con mi cuadro eléctrico
