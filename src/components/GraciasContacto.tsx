@@ -26,7 +26,7 @@ const GraciasContacto = () => {
 
   const handleContactarWhatsApp = () => {
     // Número de WhatsApp de ejemplo - ajustar según necesidades
-    const phoneNumber = '34600000000';
+    const phoneNumber = '34611195869';
     const message = encodeURIComponent('Hola, he completado el formulario de baterías y me gustaría obtener más información sobre mi propuesta personalizada.');
     window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
   };

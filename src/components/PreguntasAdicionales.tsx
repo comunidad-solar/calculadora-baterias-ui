@@ -122,27 +122,37 @@ const PreguntasAdicionales = () => {
     // Si selecciona "ninguno" de los cuadros, no puede continuar con propuesta automatizada
     if (!tieneInstalacionFV && tipoInstalacion === 'desconozco' && tipoCuadroElectrico === 'ninguno') {
       try {
-        // Preparar datos completos para el backend
+        // Preparar datos completos para el backend según especificaciones
         const datosCompletos = {
-          // Datos del usuario del store
-          usuarioId: form.comunero?.id || '',
-          nombre: form.comunero?.nombre || '',
+          // Datos principales requeridos
+          contactId: form.comunero?.id || '', // ID del comunero si existe
           email: form.comunero?.email || '',
+          dealId: form.dealId || '',
+          
+          // Datos de preguntas adicionales específicas
+          tieneInstalacionFV: false,
+          tipoInstalacion: 'desconozco',
+          tipoCuadroElectrico: 'ninguno',
+          requiereContactoManual: true,
+          
+          // Datos adicionales del usuario para contexto
+          nombre: form.comunero?.nombre || '',
           telefono: form.comunero?.telefono || '',
           direccion: form.comunero?.direccion || '',
           ciudad: form.comunero?.ciudad || '',
           provincia: form.comunero?.provincia || '',
           codigoPostal: form.comunero?.codigoPostal || '',
-          // Datos técnicos del formulario
-          tieneInstalacionFV: false,
-          tipoInstalacion: 'desconozco',
-          tipoCuadroElectrico: 'ninguno',
-          requiereContactoManual: true,
-          // Datos de validación del store
+          
+          // Datos de validación
           token: form.token || '',
           propuestaId: form.propuestaId || '',
           enZona: form.enZona || 'outZone'
-        };        // Llamada real al endpoint /baterias/comunero/desconoce-unidad/contactar-asesor
+        };        console.log('📤 Enviando solicitud de contacto manual:', {
+          endpoint: '/baterias/comunero/desconoce-unidad/contactar-asesor',
+          datos: datosCompletos
+        });
+
+        // Llamada real al endpoint /baterias/comunero/desconoce-unidad/contactar-asesor
         const response = await bateriaService.contactarAsesorDesconoceUnidad(datosCompletos);
         
         if (response.success) {

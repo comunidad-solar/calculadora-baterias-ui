@@ -327,25 +327,28 @@ export const nuevoComuneroService = {
 export const bateriaService = {
   // Crear solicitud de contacto manual para usuarios que desconocen su unidad
   async contactarAsesorDesconoceUnidad(datosCompletos: {
-    // Datos del usuario
-    usuarioId: string;
-    nombre: string;
+    // Datos principales requeridos
+    contactId: string; // ID del comunero si existe
     email: string;
-    telefono: string;
-    direccion: string;
+    dealId: string;
+    
+    // Datos de preguntas adicionales
+    tieneInstalacionFV: boolean;
+    tipoInstalacion?: string;
+    tipoCuadroElectrico?: string;
+    requiereContactoManual: boolean;
+    
+    // Datos adicionales del usuario para contexto
+    nombre?: string;
+    telefono?: string;
+    direccion?: string;
     ciudad?: string;
     provincia?: string;
     codigoPostal?: string;
-    // Datos técnicos del formulario
-    tieneInstalacionFV: boolean;
-    tipoInstalacion?: string;
-    tieneInversorHuawei?: string;
-    tipoInversorHuawei?: string;
-    tipoCuadroElectrico?: string;
-    requiereContactoManual: boolean;
+    
     // Datos de validación
     token?: string;
-    dealId?: string;
+    propuestaId?: string;
     enZona?: string;
   }): Promise<ApiResponse<{ id: string; solicitud: any }>> {
     return makeRequest('baterias/comunero/desconoce-unidad/contactar-asesor', {
