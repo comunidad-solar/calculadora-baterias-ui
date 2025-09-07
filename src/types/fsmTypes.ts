@@ -9,6 +9,7 @@ export type FSMState =
   | 'form_filling'
   | 'form_validation'
   | 'form_submission'
+  | 'calc_to_negociacion'
   | 'success'
   | 'error';
 
@@ -24,6 +25,7 @@ export const isValidFSMState = (state: string): state is FSMState => {
     'form_filling',
     'form_validation',
     'form_submission',
+    'calc_to_negociacion',
     'success',
     'error'
   ];
@@ -41,6 +43,7 @@ export const FSM_STATES = {
   FORM_FILLING: 'form_filling' as const,
   FORM_VALIDATION: 'form_validation' as const,
   FORM_SUBMISSION: 'form_submission' as const,
+  CALC_TO_NEGOCIACION: 'calc_to_negociacion' as const,
   SUCCESS: 'success' as const,
   ERROR: 'error' as const,
 } as const;
@@ -52,10 +55,11 @@ export const FSM_TRANSITIONS: Record<FSMState, FSMState[]> = {
   selecting_user_type: ['comunero_flow', 'nuevo_comunero_flow'],
   comunero_flow: ['questions_flow', 'form_filling', 'error'],
   nuevo_comunero_flow: ['questions_flow', 'form_filling', 'error'],
-  questions_flow: ['form_filling', 'error'],
+  questions_flow: ['form_filling', 'calc_to_negociacion', 'error'],
   form_filling: ['form_validation', 'error'],
   form_validation: ['form_submission', 'form_filling', 'error'],
   form_submission: ['success', 'error'],
+  calc_to_negociacion: ['success', 'error'],
   success: ['initial'],
   error: ['initial', 'selecting_user_type', 'form_filling'],
 };

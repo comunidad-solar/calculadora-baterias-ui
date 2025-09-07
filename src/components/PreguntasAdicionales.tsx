@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
 import { bateriaService } from '../services/apiService';
 import { useFormStore } from '../zustand/formStore';
+import { FSM_STATES } from '../types/fsmTypes';
 import PageTransition from './PageTransition';
 
 const PreguntasAdicionales = () => {
@@ -175,6 +176,77 @@ const PreguntasAdicionales = () => {
       } catch (error) {
         console.error('Error al crear solicitud de contacto manual:', error);
         showToast('Error al registrar la información', 'error');
+        setLoading(false);
+        return;
+      }
+    }
+    
+    // Si está en zona (inZone) y puede instalar dentro de 10m
+    if (!tieneInstalacionFV && (tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') && 
+        tieneBaterias === false && instalacionCerca10m === true && form.enZona === 'inZone') {
+      try {
+        // Preparar datos para el endpoint específico de instalación dentro de 10m
+        const datosCompletos = {
+          // Datos principales requeridos
+          contactId: form.comunero?.id || '',
+          email: form.comunero?.email || '',
+          dealId: form.dealId || '',
+          
+          // Datos de preguntas adicionales
+          tieneInstalacionFV: false,
+          tipoInstalacion: tipoInstalacion,
+          tieneBaterias: false,
+          instalacionCerca10m: true,
+          
+          // Estado FSM para transición a negociación
+          fsmState: FSM_STATES.CALC_TO_NEGOCIACION,
+          
+          // Datos adicionales del usuario para contexto
+          nombre: form.comunero?.nombre || '',
+          telefono: form.comunero?.telefono || '',
+          direccion: form.comunero?.direccion || '',
+          ciudad: form.comunero?.ciudad || '',
+          provincia: form.comunero?.provincia || '',
+          codigoPostal: form.comunero?.codigoPostal || '',
+          
+          // Datos de validación
+          token: form.token || '',
+          propuestaId: form.propuestaId || '',
+          enZona: form.enZona || 'inZone'
+        };
+        
+        console.log('📤 Enviando solicitud para instalación dentro de 10m (inZone):', {
+          endpoint: '/baterias/comunero/in-zone-no-cost/dentro-10m/1/EFW-5FVM',
+          datos: datosCompletos
+        });
+
+        // Llamada al endpoint específico
+        const response = await bateriaService.solicitudInZoneDentro10m(datosCompletos);
+        
+        if (response.success) {
+          console.log('✅ Solicitud dentro de 10m procesada:', response.data);
+          
+          // Actualizar el estado FSM en el store
+          setFsmState(FSM_STATES.CALC_TO_NEGOCIACION);
+          
+          showToast('¡Propuesta generada correctamente!', 'success');
+          
+          // Redirigir a la página de propuesta con los datos
+          navigate('/propuesta', { 
+            state: { 
+              propuestaData: response.data,
+              tipoSolicitud: 'dentro-10m'
+            } 
+          });
+        } else {
+          throw new Error(response.error || 'Error al procesar la solicitud');
+        }
+        
+        return;
+        
+      } catch (error) {
+        console.error('Error al procesar solicitud dentro de 10m:', error);
+        showToast('Error al generar la propuesta', 'error');
         setLoading(false);
         return;
       }

@@ -357,6 +357,41 @@ export const bateriaService = {
     });
   },
 
+  // Solicitud para instalación dentro de 10m en zona (inZone)
+  async solicitudInZoneDentro10m(datosCompletos: {
+    // Datos principales requeridos
+    contactId: string;
+    email: string;
+    dealId: string;
+    
+    // Datos de preguntas adicionales
+    tieneInstalacionFV: boolean;
+    tipoInstalacion: string;
+    tieneBaterias: boolean;
+    instalacionCerca10m: boolean;
+    
+    // Estado FSM
+    fsmState: string;
+    
+    // Datos adicionales del usuario para contexto
+    nombre?: string;
+    telefono?: string;
+    direccion?: string;
+    ciudad?: string;
+    provincia?: string;
+    codigoPostal?: string;
+    
+    // Datos de validación
+    token?: string;
+    propuestaId?: string;
+    enZona?: string;
+  }): Promise<ApiResponse<{ id: string; propuesta: any }>> {
+    return makeRequest('baterias/comunero/in-zone-no-cost/dentro-10m/1/EFW-5FVM', {
+      method: 'POST',
+      body: JSON.stringify(datosCompletos),
+    });
+  },
+
   // Crear solicitud de propuesta automatizada (caso normal)
   async crearSolicitud(datosCompletos: {
     // Datos del usuario
