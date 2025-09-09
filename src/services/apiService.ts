@@ -273,6 +273,7 @@ export const comuneroService = {
 
   // Validar código de verificación
   async validarCodigo(codigo: string, email?: string): Promise<ApiResponse<{ 
+    propuestaId?: string;
     token: string; 
     comunero: any; 
     enZona: "inZone" | "inZoneWithCost" | "outZone"; 
@@ -327,16 +328,21 @@ export const nuevoComuneroService = {
 export const bateriaService = {
   // Crear solicitud de contacto manual para usuarios que desconocen su unidad
   async contactarAsesorDesconoceUnidad(datosCompletos: {
+    // Identificador global principal
+    propuestaId: string; // ID global de la propuesta
+    
     // Datos principales requeridos
-    contactId: string; // ID del comunero si existe
+    contactId?: string; // ID del comunero si existe (opcional)
     email: string;
-    dealId: string;
     
     // Datos de preguntas adicionales
     tieneInstalacionFV: boolean;
     tipoInstalacion?: string;
     tipoCuadroElectrico?: string;
     requiereContactoManual: boolean;
+    
+    // Foto del disyuntor para análisis por IA (opcional)
+    fotoDisyuntor?: string;
     
     // Datos adicionales del usuario para contexto
     nombre?: string;
@@ -348,7 +354,7 @@ export const bateriaService = {
     
     // Datos de validación
     token?: string;
-    propuestaId?: string;
+    dealId?: string; // Mantener por compatibilidad
     enZona?: string;
   }): Promise<ApiResponse<{ id: string; solicitud: any }>> {
     return makeRequest('baterias/comunero/desconoce-unidad/contactar-asesor', {
@@ -359,10 +365,12 @@ export const bateriaService = {
 
   // Solicitud para instalación dentro de 10m en zona (inZone)
   async solicitudInZoneDentro10m(datosCompletos: {
+    // Identificador global principal
+    propuestaId: string; // ID global de la propuesta
+    
     // Datos principales requeridos
-    contactId: string;
+    contactId?: string;
     email: string;
-    dealId: string;
     
     // Datos de preguntas adicionales
     tieneInstalacionFV: boolean;
@@ -383,7 +391,7 @@ export const bateriaService = {
     
     // Datos de validación
     token?: string;
-    propuestaId?: string;
+    dealId?: string; // Mantener por compatibilidad
     enZona?: string;
   }): Promise<ApiResponse<{ id: string; propuesta: any }>> {
     return makeRequest('baterias/comunero/in-zone-no-cost/dentro-10m/1/EFW-5FVM', {
@@ -392,10 +400,96 @@ export const bateriaService = {
     });
   },
 
+  // Análisis de foto de disyuntor por IA
+  async analizarFotoDisyuntor(fotoData: {
+    // Identificador global principal
+    propuestaId: string; // ID global de la propuesta
+    
+    // Datos principales requeridos
+    contactId?: string;
+    email: string;
+    
+    // Archivo de imagen
+    fotoDisyuntor: File;
+    
+    // Datos adicionales para contexto
+    nombre?: string;
+    telefono?: string;
+    token?: string;
+    dealId?: string; // Mantener por compatibilidad
+  }): Promise<ApiResponse<{ 
+    propuestaId: string;
+    analisisDisyuntor: {
+      tipoInstalacion: 'MONOFASICO' | 'TRIFASICO';
+      descripcion: string;
+      confianza: 'alta' | 'media' | 'baja';
+    };
+    fechaAnalisis: string;
+  }>> {
+    // Crear FormData para envío de archivo
+    const formData = new FormData();
+    formData.append('fotoDisyuntor', fotoData.fotoDisyuntor);
+    formData.append('propuestaId', fotoData.propuestaId); // ID global principal
+    formData.append('email', fotoData.email);
+    
+    if (fotoData.contactId) formData.append('contactId', fotoData.contactId);
+    if (fotoData.dealId) formData.append('dealId', fotoData.dealId);
+    if (fotoData.nombre) formData.append('nombre', fotoData.nombre);
+    if (fotoData.telefono) formData.append('telefono', fotoData.telefono);
+    if (fotoData.token) formData.append('token', fotoData.token);
+    
+    // Hacer request sin JSON, usando FormData
+    const cleanEndpoint = 'baterias/comunero/analizar-disyuntor';
+    const url = `${API_BASE_URL}/${cleanEndpoint}`;
+    
+    try {
+      console.log('📤 Enviando foto para análisis de IA:', {
+        endpoint: cleanEndpoint,
+        propuestaId: fotoData.propuestaId,
+        archivo: fotoData.fotoDisyuntor.name,
+        tamano: fotoData.fotoDisyuntor.size
+      });
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        body: formData, // No incluir Content-Type header, fetch lo manejará automáticamente
+      });
+
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        data = { message: await response.text() };
+      }
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.error || data.message || `Error ${response.status}: ${response.statusText}`,
+        };
+      }
+
+      return {
+        success: true,
+        data: data.data || data,
+        message: data.message
+      };
+    } catch (error) {
+      console.error('Error en análisis de foto:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Error al procesar la imagen',
+      };
+    }
+  },
+
   // Crear solicitud de propuesta automatizada (caso normal)
   async crearSolicitud(datosCompletos: {
+    // Identificador global principal
+    propuestaId: string; // ID global de la propuesta
+    
     // Datos del usuario
-    usuarioId: string;
+    usuarioId?: string;
     nombre: string;
     email: string;
     telefono: string;
@@ -412,7 +506,7 @@ export const bateriaService = {
     requiereContactoManual: boolean;
     // Datos de validación
     token?: string;
-    dealId?: string;
+    dealId?: string; // Mantener por compatibilidad
     enZona?: string;
   }): Promise<ApiResponse<{ id: string; solicitud: any }>> {
     // TODO: Necesito el endpoint correcto para propuesta automatizada

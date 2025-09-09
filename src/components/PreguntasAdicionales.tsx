@@ -26,6 +26,8 @@ const PreguntasAdicionales = () => {
     fotoInversor = null,
     tipoInstalacion = '',
     tipoCuadroElectrico = '',
+    fotoDisyuntor = null,
+    analisisIA = null,
     tieneBaterias = null,
     tipoBaterias = '',
     capacidadCanadian = '',
@@ -120,64 +122,140 @@ const PreguntasAdicionales = () => {
       return;
     }
 
-    // Si selecciona "ninguno" de los cuadros, no puede continuar con propuesta automatizada
+    // Si selecciona "ninguno" de los cuadros, verificar análisis de IA
     if (!tieneInstalacionFV && tipoInstalacion === 'desconozco' && tipoCuadroElectrico === 'ninguno') {
-      try {
-        // Preparar datos completos para el backend según especificaciones
-        const datosCompletos = {
-          // Datos principales requeridos
-          contactId: form.comunero?.id || '', // ID del comunero si existe
-          email: form.comunero?.email || '',
-          dealId: form.dealId || '',
-          
-          // Datos de preguntas adicionales específicas
-          tieneInstalacionFV: false,
-          tipoInstalacion: 'desconozco',
-          tipoCuadroElectrico: 'ninguno',
-          requiereContactoManual: true,
-          
-          // Datos adicionales del usuario para contexto
-          nombre: form.comunero?.nombre || '',
-          telefono: form.comunero?.telefono || '',
-          direccion: form.comunero?.direccion || '',
-          ciudad: form.comunero?.ciudad || '',
-          provincia: form.comunero?.provincia || '',
-          codigoPostal: form.comunero?.codigoPostal || '',
-          
-          // Datos de validación
-          token: form.token || '',
-          propuestaId: form.propuestaId || '',
-          enZona: form.enZona || 'outZone'
-        };        console.log('📤 Enviando solicitud de contacto manual:', {
-          endpoint: '/baterias/comunero/desconoce-unidad/contactar-asesor',
-          datos: datosCompletos
-        });
-
-        // Llamada real al endpoint /baterias/comunero/desconoce-unidad/contactar-asesor
-        const response = await bateriaService.contactarAsesorDesconoceUnidad(datosCompletos);
+      
+      // Si hay una foto y se analizó por IA
+      if (fotoDisyuntor && analisisIA && !analisisIA.procesando) {
+        const { tipoDetectado } = analisisIA;
         
-        if (response.success) {
-          console.log('Solicitud de contacto manual creada:', response.data);
-          showToast('¡Gracias por tu solicitud! Un asesor especializado se pondrá en contacto contigo muy pronto para ayudarte con tu propuesta personalizada.', 'success');
+        if (tipoDetectado === 'desconocido') {
+          // IA no pudo identificar el tipo - contactar asesor
+          try {
+            const datosCompletos = {
+              propuestaId: form.propuestaId || '', // ID global principal
+              contactId: form.comunero?.id || '',
+              email: form.comunero?.email || '',
+              
+              tieneInstalacionFV: false,
+              tipoInstalacion: 'desconozco',
+              tipoCuadroElectrico: 'ninguno',
+              requiereContactoManual: true,
+              
+              ...(fotoDisyuntor && { fotoDisyuntor: fotoDisyuntor.name }),
+              analisisIA: analisisIA,
+              
+              nombre: form.comunero?.nombre || '',
+              telefono: form.comunero?.telefono || '',
+              direccion: form.comunero?.direccion || '',
+              ciudad: form.comunero?.ciudad || '',
+              provincia: form.comunero?.provincia || '',
+              codigoPostal: form.comunero?.codigoPostal || '',
+              
+              token: form.token || '',
+              dealId: form.dealId || '', // Mantener por compatibilidad
+              enZona: form.enZona || 'outZone'
+            };
+
+            console.log('📤 IA no identificó el tipo - Enviando solicitud de contacto manual:', datosCompletos);
+
+            const response = await bateriaService.contactarAsesorDesconoceUnidad(datosCompletos);
+            
+            if (response.success) {
+              showToast('No se pudo reconocer el tipo de cuadro eléctrico. Un asesor especializado se pondrá en contacto contigo pronto para evaluar tu caso específico.', 'info');
+              
+              navigate('/gracias-contacto', { 
+                state: { 
+                  motivo: 'ia-no-reconoce',
+                  conIA: true,
+                  mensaje: 'Nuestro sistema de IA ha analizado tu foto pero no pudo determinar el tipo de cuadro eléctrico. Un especialista revisará tu caso manualmente y te contactará con la evaluación personalizada.'
+                } 
+              });
+            } else {
+              throw new Error(response.error || 'Error al crear la solicitud');
+            }
+            
+            return;
+            
+          } catch (error) {
+            console.error('Error al crear solicitud tras análisis IA:', error);
+            showToast('Error al registrar la información', 'error');
+            setLoading(false);
+            return;
+          }
           
-          // Redirigir a página de agradecimiento con mensaje personalizado
-          navigate('/gracias-contacto', { 
-            state: { 
-              motivo: 'desconoce-unidad',
-              mensaje: 'Hemos recibido tu solicitud. Un especialista en baterías evaluará tu caso específico y te contactará tan pronto como sea posible para ofrecerte la propuesta perfecta que se adapte a tus necesidades.'
-            } 
-          });
         } else {
-          throw new Error(response.error || 'Error al crear la solicitud');
+          // IA identificó el tipo (monofásico o trifásico) - continuar con flujo normal
+          console.log('✅ IA identificó el tipo:', tipoDetectado);
+          
+          // Actualizar el tipo de instalación según lo detectado por IA
+          const tipoInstalacionDetectado = tipoDetectado === 'monofasico' ? 'monofasica' : 'trifasica';
+          setRespuestaPregunta('tipoInstalacion', tipoInstalacionDetectado);
+          
+          // Continuar con la validación como si hubiera seleccionado el tipo manualmente
+          // (el resto del flujo se ejecutará según el tipo detectado)
+          showToast(`Continuando con instalación ${tipoDetectado === 'monofasico' ? 'monofásica' : 'trifásica'} según análisis de IA`, 'success');
+          
+          // NO hacer return aquí - dejar que continúe con el flujo normal
         }
         
-        return;
-        
-      } catch (error) {
-        console.error('Error al crear solicitud de contacto manual:', error);
-        showToast('Error al registrar la información', 'error');
+      } else if (fotoDisyuntor && analisisIA && analisisIA.procesando) {
+        // Análisis en progreso
+        showToast('El análisis de IA está en progreso. Por favor espera...', 'warning');
         setLoading(false);
         return;
+        
+      } else {
+        // No hay foto - contactar asesor directamente
+        try {
+          const datosCompletos = {
+            propuestaId: form.propuestaId || '', // ID global principal
+            contactId: form.comunero?.id || '',
+            email: form.comunero?.email || '',
+            
+            tieneInstalacionFV: false,
+            tipoInstalacion: 'desconozco',
+            tipoCuadroElectrico: 'ninguno',
+            requiereContactoManual: true,
+            
+            nombre: form.comunero?.nombre || '',
+            telefono: form.comunero?.telefono || '',
+            direccion: form.comunero?.direccion || '',
+            ciudad: form.comunero?.ciudad || '',
+            provincia: form.comunero?.provincia || '',
+            codigoPostal: form.comunero?.codigoPostal || '',
+            
+            token: form.token || '',
+            dealId: form.dealId || '', // Mantener por compatibilidad
+            enZona: form.enZona || 'outZone'
+          };
+
+          console.log('📤 Sin foto - Enviando solicitud de contacto manual:', datosCompletos);
+
+          const response = await bateriaService.contactarAsesorDesconoceUnidad(datosCompletos);
+          
+          if (response.success) {
+            showToast('¡Gracias por tu solicitud! Un asesor especializado se pondrá en contacto contigo muy pronto para ayudarte con tu propuesta personalizada.', 'success');
+            
+            navigate('/gracias-contacto', { 
+              state: { 
+                motivo: 'desconoce-unidad',
+                conIA: false,
+                mensaje: 'Hemos recibido tu solicitud. Un especialista en baterías evaluará tu caso específico y te contactará tan pronto como sea posible para ofrecerte la propuesta perfecta que se adapte a tus necesidades.'
+              } 
+            });
+          } else {
+            throw new Error(response.error || 'Error al crear la solicitud');
+          }
+          
+          return;
+          
+        } catch (error) {
+          console.error('Error al crear solicitud de contacto manual:', error);
+          showToast('Error al registrar la información', 'error');
+          setLoading(false);
+          return;
+        }
       }
     }
     
@@ -381,6 +459,114 @@ const PreguntasAdicionales = () => {
       // Validar que sea imagen
       if (file.type.startsWith('image/')) {
         setRespuestaPregunta('fotoInversor', file);
+      } else {
+        showToast('Por favor selecciona una imagen válida', 'error');
+        e.target.value = '';
+      }
+    }
+  };
+
+  const handleDisyuntorFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validar que sea imagen
+      if (file.type.startsWith('image/')) {
+        // Guardar archivo en el store
+        setRespuestaPregunta('fotoDisyuntor', file);
+        
+        // Iniciar análisis de IA
+        setRespuestaPregunta('analisisIA', {
+          tipoDetectado: 'desconocido',
+          procesando: true,
+          mensaje: 'Analizando imagen...'
+        });
+        
+        showToast('Foto cargada. Analizando con IA...', 'info');
+        
+        try {
+          // Preparar datos para el análisis
+          const analisisData = {
+            contactId: form.comunero?.id || '',
+            email: form.comunero?.email || '',
+            dealId: form.dealId || '',
+            fotoDisyuntor: file,
+            nombre: form.comunero?.nombre || '',
+            telefono: form.comunero?.telefono || '',
+            token: form.token || '',
+            propuestaId: form.propuestaId || ''
+          };
+          
+          console.log('🤖 Enviando foto para análisis de IA:', {
+            archivo: file.name,
+            tamano: file.size,
+            tipo: file.type
+          });
+          
+          // Llamar al servicio de análisis de IA
+          const response = await bateriaService.analizarFotoDisyuntor(analisisData);
+          
+          if (response.success && response.data && response.data.analisisDisyuntor) {
+            const { tipoInstalacion, descripcion, confianza } = response.data.analisisDisyuntor;
+            
+            // Convertir el tipo de instalación del backend al formato del frontend
+            const tipoDetectado = tipoInstalacion.toLowerCase() === 'monofasico' ? 'monofasico' : 
+                                 tipoInstalacion.toLowerCase() === 'trifasico' ? 'trifasico' : 'desconocido';
+            
+            // Actualizar el store con el resultado
+            setRespuestaPregunta('analisisIA', {
+              tipoDetectado,
+              confianza: confianza === 'alta' ? 0.9 : confianza === 'media' ? 0.7 : 0.5,
+              mensaje: descripcion,
+              procesando: false
+            });
+            
+            console.log('✅ Análisis de IA completado:', {
+              tipoDetectado,
+              confianza,
+              descripcion
+            });
+            
+            // Mostrar resultado según el tipo detectado
+            if (tipoDetectado === 'desconocido') {
+              showToast('No se pudo identificar el tipo de cuadro eléctrico. Un asesor se pondrá en contacto contigo.', 'warning');
+            } else {
+              const tipoTexto = tipoDetectado === 'monofasico' ? 'monofásico' : 'trifásico';
+              showToast(`¡Excelente! Se detectó un cuadro eléctrico ${tipoTexto}. Continuaremos con tu propuesta.`, 'success');
+              
+              // Mostrar descripción detallada de la IA en un toast largo
+              if (descripcion) {
+                setTimeout(() => {
+                  showToast(`🤖 Análisis de IA: ${descripcion}`, 'info', 20000);
+                }, 1000); // Delay de 1 segundo para que se vea después del primer toast
+              }
+              
+              // Autoseleccionar el tipo de instalación según el análisis
+              setRespuestaPregunta('tipoInstalacion', tipoDetectado === 'monofasico' ? 'monofasica' : 'trifasica');
+            }
+            
+          } else {
+            // Error en el análisis
+            setRespuestaPregunta('analisisIA', {
+              tipoDetectado: 'desconocido',
+              procesando: false,
+              mensaje: response.error || 'Error en el análisis'
+            });
+            
+            showToast(`Error en el análisis: ${response.error || 'No se pudo procesar la imagen'}`, 'error');
+          }
+          
+        } catch (error) {
+          console.error('Error en análisis de IA:', error);
+          
+          setRespuestaPregunta('analisisIA', {
+            tipoDetectado: 'desconocido',
+            procesando: false,
+            mensaje: 'Error al conectar con el servicio de análisis'
+          });
+          
+          showToast('Error al procesar la imagen. Inténtalo de nuevo.', 'error');
+        }
+        
       } else {
         showToast('Por favor selecciona una imagen válida', 'error');
         e.target.value = '';
@@ -784,7 +970,7 @@ const PreguntasAdicionales = () => {
                     <div className="d-flex align-items-center">
                       <span className="me-2">✅</span>
                       <small>
-                        <strong>Excelente.</strong> La proximidad al cuadro eléctrico facilitará la instalación.
+                        <strong>Excelente.</strong> Puedes hacer clic en el siguiente botón.
                       </small>
                     </div>
                   </div>
@@ -881,14 +1067,63 @@ const PreguntasAdicionales = () => {
                   </label>
                 </div>
 
-                {/* Mensaje informativo si selecciona "ninguno" */}
+                {/* Opción de subir foto si selecciona "ninguno" */}
                 {tipoCuadroElectrico === 'ninguno' && (
-                  <div className="alert alert-info border-0 fade-in-result">
-                    <div className="d-flex align-items-center">
-                      <span className="me-2">ℹ️</span>
-                      <small>
-                        <strong>Perfecto.</strong> Nuestro equipo técnico se pondrá en contacto contigo para evaluar tu instalación específica.
-                      </small>
+                  <div className="mt-4">
+                   
+                    
+                    {/* Sección opcional para subir foto */}
+                    <div className="border rounded-3 p-4 bg-light">
+                      <h6 className="fw-bold mb-3">
+                        <span className="me-2">🤖</span>
+                        ¿Quieres acelerar el proceso?
+                      </h6>
+                      <p className="text-muted mb-3 small">
+                        Puedes subir una foto de tu disyuntor para que nuestra IA la analice y te demos una respuesta más rápida.
+                      </p>
+                      
+                      <div className="mb-3">
+                        <label htmlFor="fotoDisyuntor" className="form-label fw-semibold">
+                          Foto del disyuntor (opcional)
+                        </label>
+                        <input
+                          type="file"
+                          className="form-control"
+                          id="fotoDisyuntor"
+                          accept="image/*"
+                          onChange={handleDisyuntorFileChange}
+                        />
+                        <div className="form-text">
+                          <small className="text-muted">
+                            📸 Toma una foto clara de tu cuadro eléctrico principal donde esté el disyuntor general
+                          </small>
+                        </div>
+                      </div>
+                      
+                      {fotoDisyuntor && (
+                        <div className="alert alert-success border-0 fade-in-result">
+                          <div className="d-flex align-items-center">
+                            <span className="me-2">✅</span>
+                            <small>
+                              <strong>Foto cargada:</strong> {fotoDisyuntor.name}
+                            </small>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Indicador de procesamiento */}
+                      {analisisIA && analisisIA.procesando && (
+                        <div className="alert alert-info border-0 fade-in-result">
+                          <div className="d-flex align-items-center">
+                            <div className="spinner-border spinner-border-sm me-2" role="status">
+                              <span className="visually-hidden">Analizando...</span>
+                            </div>
+                            <small>
+                              <strong>Analizando foto...</strong> Nuestra IA está procesando tu imagen
+                            </small>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -909,7 +1144,7 @@ const PreguntasAdicionales = () => {
                     color: 'white'
                   }}
                 >
-                  {loading ? 'Registrando...' : 'Contactar con un asesor'}
+                  {loading ? 'Registrando...' : 'Prefiero que me contacte un asesor'}
                 </button>
               ) : (
                 <button

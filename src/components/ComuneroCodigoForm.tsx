@@ -71,7 +71,7 @@ const ComuneroCodigoForm = () => {
             comunero: response.data.comunero,
             enZona: response.data.enZona,
             motivo: response.data.motivo,
-            // propuestaId: response.data.propuestaId, // Temporalmente comentado por error de TypeScript
+            propuestaId: response.data.propuestaId, // Temporalmente comentado por error de TypeScript
             analisisTratos: response.data.analisisTratos
           };
           

@@ -57,6 +57,13 @@ interface FormState {
     fotoInversor?: File | null;
     tipoInstalacion?: string;
     tipoCuadroElectrico?: string;
+    fotoDisyuntor?: File | null; // Foto del disyuntor para análisis por IA
+    analisisIA?: {
+      tipoDetectado: 'monofasico' | 'trifasico' | 'desconocido';
+      confianza?: number;
+      mensaje?: string;
+      procesando?: boolean;
+    } | null;
     tieneBaterias?: boolean | null;
     tipoBaterias?: string;
     capacidadCanadian?: string;
@@ -106,6 +113,8 @@ const initialState: FormState = {
     fotoInversor: null,
     tipoInstalacion: '',
     tipoCuadroElectrico: '',
+    fotoDisyuntor: null,
+    analisisIA: null,
     tieneBaterias: null,
     tipoBaterias: '',
     capacidadCanadian: '',
