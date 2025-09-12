@@ -1,13 +1,22 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
-import { bateriaService } from '../services/apiService';
+import { bateriaService, comuneroService } from '../services/apiService';
 import { useFormStore } from '../zustand/formStore';
 import { FSM_STATES } from '../types/fsmTypes';
 import PageTransition from './PageTransition';
 
 const PreguntasAdicionales = () => {
   const [loading, setLoading] = useState(false);
+  const [editandoInfo, setEditandoInfo] = useState(false);
+  const [infoEditada, setInfoEditada] = useState({
+    nombre: '',
+    telefono: '',
+    direccion: '',
+    codigoPostal: '',
+    ciudad: '',
+    provincia: ''
+  });
   const navigate = useNavigate();
   const { showToast } = useToast();
   
@@ -294,7 +303,6 @@ const PreguntasAdicionales = () => {
         };
         
         console.log('📤 Enviando solicitud para instalación dentro de 10m (inZone):', {
-          endpoint: '/baterias/comunero/in-zone-no-cost/dentro-10m/1/EFW-5FVM',
           datos: datosCompletos
         });
 
@@ -466,6 +474,97 @@ const PreguntasAdicionales = () => {
     }
   };
 
+  // Funciones para editar información del comunero
+  const iniciarEdicion = () => {
+    if (form.comunero) {
+      setInfoEditada({
+        nombre: form.comunero.nombre || '',
+        telefono: form.comunero.telefono || '',
+        direccion: form.comunero.direccion || '',
+        codigoPostal: form.comunero.codigoPostal || '',
+        ciudad: form.comunero.ciudad || '',
+        provincia: form.comunero.provincia || ''
+      });
+      setEditandoInfo(true);
+    }
+  };
+
+  const guardarEdicion = async () => {
+    if (!form.comunero || !form.propuestaId) {
+      showToast('Error: Faltan datos necesarios para guardar', 'error');
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      // Preparar datos para enviar al backend
+      const datosEdicion = {
+        propuestaId: form.propuestaId,
+        nombre: infoEditada.nombre,
+        telefono: infoEditada.telefono,
+        direccion: infoEditada.direccion,
+        codigoPostal: infoEditada.codigoPostal,
+        ciudad: infoEditada.ciudad,
+        provincia: infoEditada.provincia,
+        token: form.token,
+        comuneroId: form.comunero.id
+      };
+
+      console.log('📤 Enviando datos actualizados al backend:', datosEdicion);
+      
+      // Enviar datos al backend
+      const response = await comuneroService.editarInfoComunero(datosEdicion);
+      
+      if (response.success) {
+        // Actualizar los datos del comunero en el store
+        const comuneroActualizado = {
+          ...form.comunero,
+          ...infoEditada
+        };
+        
+        // Usar setField para actualizar comunero
+        const { setField } = useFormStore.getState();
+        setField('comunero', comuneroActualizado);
+        
+        setEditandoInfo(false);
+        showToast('Información actualizada correctamente', 'success');
+        
+        console.log('✅ Información del comunero actualizada:', comuneroActualizado);
+      } else {
+        throw new Error(response.error || 'Error al actualizar la información');
+      }
+      
+    } catch (error) {
+      console.error('❌ Error al actualizar información del comunero:', error);
+      showToast(
+        error instanceof Error ? error.message : 'Error al actualizar la información',
+        'error'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const cancelarEdicion = () => {
+    setEditandoInfo(false);
+    setInfoEditada({
+      nombre: '',
+      telefono: '',
+      direccion: '',
+      codigoPostal: '',
+      ciudad: '',
+      provincia: ''
+    });
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setInfoEditada(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   const handleDisyuntorFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -577,15 +676,205 @@ const PreguntasAdicionales = () => {
   return (
     <PageTransition>
       <div className="container py-4">
-        <div className="bg-white rounded-4 p-5 shadow-lg border w-100 mx-auto" style={{maxWidth: 600}}>
+        <div className="bg-white rounded-4 p-5 shadow-lg border w-100 mx-auto" style={{maxWidth: 700}}>
           
+          
+
+          {/* Información del comunero */}
+          {form.comunero && (
+            <div className="mb-5">
+              <div className="bg-light rounded-3 p-4 border">
+                <div className="d-flex justify-content-between align-items-start mb-3">
+                  <div>
+                    <h5 className="fw-bold text-secondary mb-1">
+                      <span className="me-2">📋</span>
+                      Esta es la información que tenemos:
+                    </h5>
+                    <small className="text-muted">
+                      Puedes editarla si necesitas hacer algún cambio
+                    </small>
+                  </div>
+                  {!editandoInfo && (
+                    <button
+                      type="button"
+                      className="btn btn-outline-primary btn-sm"
+                      onClick={iniciarEdicion}
+                    >
+                      <span className="me-1">✏️</span>
+                      Editar
+                    </button>
+                  )}
+                </div>
+
+                {editandoInfo ? (
+                  // Modo edición
+                  <div className="row g-3">
+                    <div className="col-12">
+                      <label className="form-label fw-semibold">
+                        <span className="me-2">👤</span>Nombre
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={infoEditada.nombre}
+                        onChange={(e) => handleInputChange('nombre', e.target.value)}
+                      />
+                    </div>
+                    
+                    <div className="col-md-6">
+                      <label className="form-label fw-semibold">
+                        <span className="me-2">📞</span>Teléfono
+                      </label>
+                      <input
+                        type="tel"
+                        className="form-control"
+                        value={infoEditada.telefono}
+                        onChange={(e) => handleInputChange('telefono', e.target.value)}
+                      />
+                    </div>
+                    
+                    <div className="col-md-6">
+                      <label className="form-label fw-semibold">
+                        <span className="me-2">📮</span>Código Postal
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={infoEditada.codigoPostal}
+                        onChange={(e) => handleInputChange('codigoPostal', e.target.value)}
+                      />
+                    </div>
+                    
+                    <div className="col-12">
+                      <label className="form-label fw-semibold">
+                        <span className="me-2">📍</span>Dirección
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={infoEditada.direccion}
+                        onChange={(e) => handleInputChange('direccion', e.target.value)}
+                      />
+                    </div>
+                    
+                    <div className="col-md-6">
+                      <label className="form-label fw-semibold">
+                        <span className="me-2">🏙️</span>Ciudad
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={infoEditada.ciudad}
+                        onChange={(e) => handleInputChange('ciudad', e.target.value)}
+                      />
+                    </div>
+                    
+                    <div className="col-md-6">
+                      <label className="form-label fw-semibold">
+                        <span className="me-2">🗺️</span>Provincia
+                      </label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={infoEditada.provincia}
+                        onChange={(e) => handleInputChange('provincia', e.target.value)}
+                      />
+                    </div>
+                    
+                    <div className="col-12">
+                      <div className="d-flex gap-2 justify-content-end">
+                        <button
+                          type="button"
+                          className="btn btn-outline-secondary btn-sm"
+                          onClick={cancelarEdicion}
+                          disabled={loading}
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-sm"
+                          onClick={guardarEdicion}
+                          disabled={loading}
+                        >
+                          {loading ? (
+                            <>
+                              <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                              Guardando...
+                            </>
+                          ) : (
+                            <>
+                              <span className="me-1">💾</span>
+                              Guardar
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  // Modo visualización
+                  <div className="row g-3">
+                    <div className="col-12">
+                      <div className="d-flex align-items-center">
+                        <span className="me-2">👤</span>
+                        <div>
+                          <small className="text-muted d-block">Nombre</small>
+                          <span className="fw-semibold">{form.comunero.nombre}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="col-md-6">
+                      <div className="d-flex align-items-center">
+                        <span className="me-2">📧</span>
+                        <div>
+                          <small className="text-muted d-block">Email</small>
+                          <span className="fw-semibold">{form.comunero.email}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="col-md-6">
+                      <div className="d-flex align-items-center">
+                        <span className="me-2">📞</span>
+                        <div>
+                          <small className="text-muted d-block">Teléfono</small>
+                          <span className="fw-semibold">{form.comunero.telefono}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="col-12">
+                      <div className="d-flex align-items-start">
+                        <span className="me-2 mt-1">📍</span>
+                        <div>
+                          <small className="text-muted d-block">Dirección</small>
+                          <span className="fw-semibold">{form.comunero.direccion}</span>
+                          {form.comunero.codigoPostal && form.comunero.ciudad && (
+                            <div className="mt-1">
+                              <small className="text-muted">
+                                {form.comunero.codigoPostal} - {form.comunero.ciudad}
+                                {form.comunero.provincia && `, ${form.comunero.provincia}`}
+                              </small>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Banner principal */}
           <div className="text-center mb-5">
             <div className="bg-primary bg-opacity-10 rounded-3 p-4 mb-4">
-              <h1 className="h3 fw-bold text-primary mb-3">
+              <h1 className="h4 fw-bold text-primary mb-3">
                 PARA PODER OFRECERTE UNA PROPUESTA PERSONALIZADA
               </h1>
-              <p className="h5 text-secondary mb-0">
+              <p className="h6 text-secondary mb-0">
                 NECESITAMOS QUE CONTESTES A LAS SIGUIENTES PREGUNTAS
               </p>
             </div>

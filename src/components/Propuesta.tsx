@@ -1,5 +1,5 @@
 import { useUsuario } from '../context/UsuarioContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import BackButton from './BackButton';
 import PageTransition from './PageTransition';
 import logoCS from '../assets/logocircularcs.png';
@@ -7,12 +7,83 @@ import bateriaEcoflow from '../assets/bateriaEcoflow1.png';
 import ecoflowProposalBattery from '../assets/EcoFlowProposalBattery.png';
 import ecoflowLogo from '../assets/ECOFLOWLOGO.png';
 import imagenFondoPropuesta4 from '../assets/imagenFondoPropuesta4.png';
+import { useState } from 'react';
+import { createPortal } from 'react-dom';
+
+// Tipos para los datos de la propuesta
+interface ProductItem {
+  item_id?: string;
+  name?: string;
+  attribute_option_name1?: string;
+  rate?: number;
+  [key: string]: any;
+}
+
+interface PropuestaData {
+  amount: number;
+  productData: {
+    items: ProductItem[];
+    group_name: string;
+    [key: string]: any;
+  };
+  usuario: {
+    nombre: string;
+    email: string;
+    direccion: {
+      calle: string;
+      ciudad: string;
+      provincia: string;
+      codigoPostal: string;
+    };
+  };
+  [key: string]: any;
+}
 
 const Propuesta = () => {
   const { validacionData, usuario } = useUsuario();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Obtener datos de la propuesta del state de navegación
+  const propuestaData: PropuestaData | undefined = location.state?.propuestaData;
+  
+  // Debug: mostrar datos recibidos
+  console.log('📋 Datos de propuesta recibidos:', propuestaData);
+  
+  // Datos por defecto si no hay propuestaData
+  const defaultAmount = 4699;
+  const defaultItems: (ProductItem | string)[] = [
+    { name: "Pack Baterías EcoFlow 5 kWh" },
+    { name: "1x EcoFlow PowerOcean LFP Battery 5kWh" },
+    { name: "1x Inversor Híbrido EcoFlow PowerOcean DC Fit 12kW" },
+    { name: "Instalación profesional completa" },
+    { name: "Garantía extendida de 10 años" },
+    { name: "Monitorización y mantenimiento" }
+  ];
+  
+  // Usar datos de la propuesta o valores por defecto
+  const amount = propuestaData?.amount || defaultAmount;
+  const items: (ProductItem | string)[] = propuestaData?.productData?.items || defaultItems;
+  const usuario_propuesta = propuestaData?.usuario || usuario;
+  const groupName = propuestaData?.productData?.group_name || 'Pack Batería Monofásico EcoFlow 5 kWh con Inversor de 12 kW';
+  
+  // Estado para el modal
+  const [showModal, setShowModal] = useState(false);
+  
+  console.log('💰 Precio a mostrar:', amount);
+  console.log('📦 Items a mostrar:', items);
+  console.log('🏷️ Nombre del grupo:', groupName);
 
-  if (!validacionData || !usuario || validacionData.enZona !== "inZone") {
+  // Funciones para manejar botones
+  const handleContactarAsesor = () => {
+    window.open('https://comunidadsolar.zohobookings.eu/#/108535000004860368', '_blank');
+  };
+
+  const handleComprar = () => {
+    setShowModal(true);
+  };
+
+  if (!validacionData || !usuario_propuesta || (validacionData.enZona !== "inZone" && validacionData.enZona !== "inZoneWithCost")) {
     navigate('/');
     return null;
   }
@@ -54,7 +125,7 @@ const Propuesta = () => {
                   </div>
                 </div>
                 <div className="flex-grow-1">
-                  <h4 className="mb-1 fw-bold">Hola, {usuario.nombre}</h4>
+                  <h4 className="mb-1 fw-bold">Hola, {usuario_propuesta.nombre}</h4>
                   <p className="mb-0 text-secondary">
                     Aquí tienes la propuesta de baterías que mejor se adapta a tu ubicación y necesidades específicas
                   </p>
@@ -79,8 +150,7 @@ const Propuesta = () => {
                     lineHeight: '1.2'
                   }}
                 >
-                  Pack Batería Monofásico<br />
-                  EcoFlow 5 kWh con Inversor de 12 kW
+                  {groupName}
                 </h1>
                 
                 {/* Card con precio y botón */}
@@ -102,7 +172,7 @@ const Propuesta = () => {
                           lineHeight: '1'
                         }}
                       >
-                        4.699€
+                        {amount.toLocaleString('es-ES')}€
                       </span>
                       <span 
                         style={{ 
@@ -136,6 +206,7 @@ const Propuesta = () => {
                         fontSize: '1.2rem',
                         minWidth: '200px'
                       }}
+                      onClick={handleComprar}
                     >
                       COMPRAR
                     </button>
@@ -177,6 +248,7 @@ const Propuesta = () => {
                   border: '2px solid transparent',
                   backgroundClip: 'padding-box'
                 }}
+                onClick={handleContactarAsesor}
               >
                 CONTACTA CON UN ASESOR
               </button>
@@ -209,77 +281,33 @@ const Propuesta = () => {
             </h2>
 
             {/* Grid de componentes incluidos */}
-            <div className="row g-3 mb-4" style={{padding: '0 35px'}}>
-              {/* Fila 1 */}
-              <div className="col-md-3">
-                <div className="bg-white rounded-4 p-3 h-100 text-center shadow-sm" style={{ border: '2px solid #A0D034' }}>
-                  <h6 className="mb-0" style={{ color: '#2A2A2A', fontSize: '0.9rem' }}>
-                    Pack Baterías EcoFlow<br />5 kWh
-                  </h6>
+            <div className={`row g-3 mb-4 ${items.length <= 4 ? 'justify-content-center' : ''}`} style={{padding: '0 35px'}}>
+              {items.map((item: ProductItem | string, index: number) => (
+                <div key={index} className="col-lg-3 col-md-4 col-sm-6">
+                  <div className="bg-white rounded-4 p-3 h-100 text-center shadow-sm" style={{ border: '2px solid #A0D034' }}>
+                    <h6 className="mb-0" style={{ color: '#2A2A2A', fontSize: '0.9rem' }}>
+                      {/* Si el item es un string, usarlo directamente; si es un objeto, usar sus propiedades */}
+                      {typeof item === 'string' 
+                        ? item 
+                        : (item.attribute_option_name1 || item.name || 'Producto sin nombre')
+                      }
+                    </h6>
+                  </div>
                 </div>
-              </div>
-              <div className="col-md-3">
-                <div className="bg-white rounded-4 p-3 h-100 text-center shadow-sm" style={{ border: '2px solid #A0D034' }}>
-                  <h6 className="mb-0" style={{ color: '#2A2A2A', fontSize: '0.9rem' }}>
-                    1x EcoFlow<br />PowerOcean LFP<br />Battery 5kWh
-                  </h6>
-                </div>
-              </div>
-              <div className="col-md-3">
-                <div className="bg-white rounded-4 p-3 h-100 text-center shadow-sm" style={{ border: '2px solid #A0D034' }}>
-                  <h6 className="mb-0" style={{ color: '#2A2A2A', fontSize: '0.9rem' }}>
-                    Sistema de respaldo<br />incorporado (BackUp)
-                  </h6>
-                </div>
-              </div>
-              <div className="col-md-3">
-                <div className="bg-white rounded-4 p-3 h-100 text-center shadow-sm" style={{ border: '2px solid #A0D034' }}>
-                  <h6 className="mb-0" style={{ color: '#2A2A2A', fontSize: '0.9rem' }}>
-                    Instalación profesional<br />certificada
-                  </h6>
-                </div>
-              </div>
-
-              {/* Fila 2 */}
-              <div className="col-md-3">
-                <div className="bg-white rounded-4 p-3 h-100 text-center shadow-sm" style={{ border: '2px solid #A0D034' }}>
-                  <h6 className="mb-0" style={{ color: '#2A2A2A', fontSize: '0.9rem' }}>
-                    Inversor EcoFlow<br />PowerOcean de 12 kW<br />(P3-12kW-DF)
-                  </h6>
-                </div>
-              </div>
-              <div className="col-md-3">
-                <div className="bg-white rounded-4 p-3 h-100 text-center shadow-sm" style={{ border: '2px solid #A0D034' }}>
-                  <h6 className="mb-0" style={{ color: '#2A2A2A', fontSize: '0.9rem' }}>
-                    Material cableado y<br />canalizacion hasta 10m
-                  </h6>
-                </div>
-              </div>
-              <div className="col-md-3">
-                <div className="bg-white rounded-4 p-3 h-100 text-center shadow-sm" style={{ border: '2px solid #A0D034' }}>
-                  <h6 className="mb-0" style={{ color: '#2A2A2A', fontSize: '0.9rem' }}>
-                    Material eléctrico
-                  </h6>
-                </div>
-              </div>
-              <div className="col-md-3">
-                <div className="bg-white rounded-4 p-3 h-100 text-center shadow-sm" style={{ border: '2px solid #A0D034' }}>
-                  <h6 className="mb-0" style={{ color: '#2A2A2A', fontSize: '0.9rem' }}>
-                    Legalización (*Solo si<br />se tiene instalación<br />fotovoltaica)
-                  </h6>
-                </div>
-              </div>
+              ))}
             </div>
 
-            {/* Nota adicional */}
-            <div className="text-center mt-4">
-              <div className="d-flex align-items-center justify-content-center gap-2">
-                <span style={{ color: '#79BC1C', fontSize: '1.2rem' }}>⊕</span>
-                <span className="fw-bold" style={{ color: '#79BC1C' }}>
-                  Extra (*fuera de zona)
-                </span>
+            {/* Nota adicional - Solo mostrar si está fuera de zona o en zona con costo */}
+            {validacionData?.enZona === 'inZoneWithCost' && (
+              <div className="text-center mt-4">
+                <div className="d-flex align-items-center justify-content-center gap-2">
+                  <span style={{ color: '#79BC1C', fontSize: '1.2rem' }}>⊕</span>
+                  <span className="fw-bold" style={{ color: '#79BC1C' }}>
+                    Extra (*fuera de zona)
+                  </span>
+                </div>
               </div>
-            </div>
+            )}
           </div>
           
 
@@ -388,6 +416,7 @@ const Propuesta = () => {
                         fontSize: '1.1rem',
                         minWidth: '220px'
                       }}
+                      onClick={handleComprar}
                     >
                       COMPRAR
                     </button>
@@ -664,6 +693,7 @@ const Propuesta = () => {
                   fontSize: '1.3rem',
                   minWidth: '250px'
                 }}
+                onClick={handleComprar}
               >
                 COMPRAR
               </button>
@@ -787,6 +817,7 @@ const Propuesta = () => {
                 fontSize: '1.3rem',
                 minWidth: '250px'
               }}
+              onClick={handleComprar}
             >
               COMPRAR
             </button>
@@ -854,6 +885,96 @@ const Propuesta = () => {
           }
         }
       `}</style>
+
+      {/* Modal para compra online usando Portal */}
+      {showModal && createPortal(
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 999999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            padding: '20px'
+          }}
+          onClick={() => setShowModal(false)}
+        >
+          <div 
+            className="bg-white border-0 shadow-lg" 
+            style={{
+              borderRadius: '20px',
+              maxWidth: '500px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflow: 'auto'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center p-3" style={{background: 'linear-gradient(135deg, #5CA00E, #B0D83E)', borderRadius: '20px 20px 0 0', position: 'relative'}}>
+              <h4 className="text-white fw-bold mb-0">
+                🚀 ¡Pronto habilitaremos la compra online!
+              </h4>
+              <button 
+                type="button" 
+                className="btn-close btn-close-white position-absolute top-0 end-0 m-3" 
+                aria-label="Close"
+                onClick={() => setShowModal(false)}
+              ></button>
+            </div>
+            <div className="text-center py-4 px-4">
+              <div className="mb-4">
+                <div className="mx-auto mb-3" style={{width: '80px', height: '80px', background: 'linear-gradient(135deg, #5CA00E, #B0D83E)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                  <span style={{fontSize: '2rem'}}>🔔</span>
+                </div>
+                <h5 className="fw-bold text-dark mb-3">Te avisaremos apenas esté disponible</h5>
+                <p className="text-muted mb-0" style={{fontSize: '1.1rem', lineHeight: '1.6'}}>
+                  Estamos trabajando para ofrecerte la mejor experiencia de compra. 
+                  Mientras tanto, puedes contactar con uno de nuestros asesores para obtener más información.
+                </p>
+              </div>
+            </div>
+            <div className="text-center pb-4">
+              <button 
+                type="button" 
+                className="btn btn-lg me-3" 
+                style={{
+                  background: 'linear-gradient(90deg, #5CA00E, #B0D83E)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '25px',
+                  padding: '12px 30px',
+                  fontSize: '1rem',
+                  fontWeight: 'bold'
+                }}
+                onClick={handleContactarAsesor}
+              >
+                Contactar Asesor
+              </button>
+              <button 
+                type="button" 
+                className="btn btn-lg" 
+                style={{
+                  background: 'transparent',
+                  color: '#666',
+                  border: '2px solid #ddd',
+                  borderRadius: '25px',
+                  padding: '12px 30px',
+                  fontSize: '1rem'
+                }}
+                onClick={() => setShowModal(false)}
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </PageTransition>
   );
 };

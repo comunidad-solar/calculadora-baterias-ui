@@ -299,6 +299,24 @@ export const comuneroService = {
       body: JSON.stringify({ codigo, email }),
     });
   },
+
+  // Editar información existente del comunero
+  async editarInfoComunero(datosEdicion: {
+    propuestaId: string;
+    nombre: string;
+    telefono: string;
+    direccion: string;
+    codigoPostal?: string;
+    ciudad?: string;
+    provincia?: string;
+    token?: string;
+    comuneroId?: string;
+  }): Promise<ApiResponse<{ comunero: any }>> {
+    return makeRequest('baterias/comunero/edit-existing-info-comunero', {
+      method: 'POST',
+      body: JSON.stringify(datosEdicion),
+    });
+  },
 };
 
 // Servicios para nuevos comuneros
@@ -394,7 +412,7 @@ export const bateriaService = {
     dealId?: string; // Mantener por compatibilidad
     enZona?: string;
   }): Promise<ApiResponse<{ id: string; propuesta: any }>> {
-    return makeRequest('baterias/comunero/in-zone-no-cost/dentro-10m/1/EFW-5FVM', {
+    return makeRequest('baterias/comunero/create-proposal', {
       method: 'POST',
       body: JSON.stringify(datosCompletos),
     });
