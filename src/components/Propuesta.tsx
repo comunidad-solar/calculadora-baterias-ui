@@ -63,9 +63,21 @@ const Propuesta = () => {
   
   // Usar datos de la propuesta o valores por defecto
   const amount = propuestaData?.amount || defaultAmount;
-  const items: (ProductItem | string)[] = propuestaData?.productData?.items || defaultItems;
+  const baseItems: (ProductItem | string)[] = propuestaData?.productData?.mapped_items || defaultItems;
+  
+  // Items adicionales hardcodeados que siempre se agregan
+  const additionalItems: string[] = [
+    "Instalación profesional certificada",
+    "Material eléctrico", 
+    "Legalización (*Solo si se tiene instalación fotovoltaica)",
+    "Sistema de respaldo incorporado (BackUp)"
+  ];
+  
+  // Combinar items base con items adicionales
+  const items: (ProductItem | string)[] = [...baseItems, ...additionalItems];
+  
   const usuario_propuesta = propuestaData?.usuario || usuario;
-  const groupName = propuestaData?.productData?.group_name || 'Pack Batería Monofásico EcoFlow 5 kWh con Inversor de 12 kW';
+  const groupName = propuestaData?.productData?.name || 'Pack Batería Monofásico EcoFlow 5 kWh con Inversor de 12 kW';
   
   // Estado para el modal
   const [showModal, setShowModal] = useState(false);
@@ -281,20 +293,32 @@ const Propuesta = () => {
             </h2>
 
             {/* Grid de componentes incluidos */}
-            <div className={`row g-3 mb-4 ${items.length <= 4 ? 'justify-content-center' : ''}`} style={{padding: '0 35px'}}>
-              {items.map((item: ProductItem | string, index: number) => (
-                <div key={index} className="col-lg-3 col-md-4 col-sm-6">
-                  <div className="bg-white rounded-4 p-3 h-100 text-center shadow-sm" style={{ border: '2px solid #A0D034' }}>
-                    <h6 className="mb-0" style={{ color: '#2A2A2A', fontSize: '0.9rem' }}>
-                      {/* Si el item es un string, usarlo directamente; si es un objeto, usar sus propiedades */}
-                      {typeof item === 'string' 
-                        ? item 
-                        : (item.attribute_option_name1 || item.name || 'Producto sin nombre')
-                      }
-                    </h6>
+            <div className="mb-4" style={{padding: '0 35px'}}>
+              <div 
+                className="items-container"
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '1rem',
+                  maxWidth: '1000px',
+                  margin: '0 auto',
+                  justifyContent: 'center'
+                }}
+              >
+                {items.map((item: ProductItem | string, index: number) => (
+                  <div key={index} className="item-card" style={{width: '230px', flexShrink: 0}}>
+                    <div className="bg-white rounded-4 p-3 h-100 text-center shadow-sm" style={{ border: '2px solid #A0D034' }}>
+                      <h6 className="mb-0" style={{ color: '#2A2A2A', fontSize: '0.9rem' }}>
+                        {/* Si el item es un string, usarlo directamente; si es un objeto, usar sus propiedades */}
+                        {typeof item === 'string' 
+                          ? item 
+                          : (item.attribute_option_name1 || item.name || 'Producto sin nombre')
+                        }
+                      </h6>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
 
             {/* Nota adicional - Solo mostrar si está fuera de zona o en zona con costo */}
@@ -882,6 +906,42 @@ const Propuesta = () => {
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+          }
+        }
+        
+        /* Contenedor de items con flexbox */
+        .items-container {
+          /* En desktop: calcular para que quepan exactamente 4 cards por fila */
+          max-width: calc(4 * 230px + 3 * 1rem); /* 4 cards + 3 gaps */
+        }
+        
+        .item-card {
+          width: 230px;
+          flex-shrink: 0;
+        }
+        
+        @media (max-width: 992px) {
+          .items-container {
+            max-width: calc(3 * 230px + 2 * 1rem); /* 3 cards + 2 gaps */
+          }
+        }
+        
+        @media (max-width: 768px) {
+          .items-container {
+            max-width: calc(2 * 230px + 1 * 1rem); /* 2 cards + 1 gap */
+          }
+          .item-card {
+            width: 200px;
+          }
+        }
+        
+        @media (max-width: 576px) {
+          .items-container {
+            max-width: 100%;
+          }
+          .item-card {
+            width: 100%;
+            max-width: 300px;
           }
         }
       `}</style>
