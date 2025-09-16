@@ -91,12 +91,22 @@ export const useGooglePlaces = () => {
         return;
       }
 
+      // Validar tipos - no mezclar 'address' con otros tipos
+      let validTypes = options.types || ['address'];
+      if (validTypes.includes('address') && validTypes.length > 1) {
+        console.warn('Google Places: No se puede mezclar "address" con otros tipos. Usando solo "address".');
+        validTypes = ['address'];
+      }
+
       const defaultOptions = {
         input: query,
         componentRestrictions: { country: 'es' }, // Restringir a España
-        types: ['address'], // Solo direcciones
+        types: validTypes, // Usar los tipos validados
         ...options,
       };
+      
+      // Sobrescribir tipos para asegurar que se usen los validados
+      defaultOptions.types = validTypes;
 
       autocompleteService.current.getPlacePredictions(
         defaultOptions,
@@ -104,8 +114,28 @@ export const useGooglePlaces = () => {
           if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
             resolve(predictions);
           } else if (status === window.google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
-            resolve([]);
+            // Si no hay resultados con 'address', intentar con geocode como fallback
+            if (validTypes.includes('address')) {
+              const fallbackOptions = {
+                ...defaultOptions,
+                types: ['geocode'] // Fallback a geocode si address no da resultados
+              };
+              
+              autocompleteService.current.getPlacePredictions(
+                fallbackOptions,
+                (fallbackPredictions: PlacePrediction[] | null, fallbackStatus: any) => {
+                  if (fallbackStatus === window.google.maps.places.PlacesServiceStatus.OK && fallbackPredictions) {
+                    resolve(fallbackPredictions);
+                  } else {
+                    resolve([]);
+                  }
+                }
+              );
+            } else {
+              resolve([]);
+            }
           } else {
+            console.error('Google Places API Status:', status);
             reject(new Error('Error en la búsqueda de lugares'));
           }
         }

@@ -38,7 +38,7 @@ const GoogleAddressInput: React.FC<GoogleAddressInputProps> = ({ value, onChange
         setLoading(true);
         const predictions = await searchPlaces(query, {
           componentRestrictions: { country: 'es' },
-          types: ['address', 'establishment']
+          types: ['address'] // Solo direcciones para evitar el error de mezcla de tipos
         });
         setSuggestions(predictions.slice(0, 5)); // Máximo 5 sugerencias
         setShowDropdown(true);
