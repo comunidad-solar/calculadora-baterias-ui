@@ -257,7 +257,7 @@ export const comuneroService = {
   async crearComunero(email: string, bypass?: boolean): Promise<ApiResponse<{ id: string; comunero: any }>> {
     const requestBody: any = { 
       email,
-      fsmState: DEFAULT_FSM_STATE
+      fsmState: "01_IN_ZONE_LEAD"
     };
     if (bypass !== undefined) {
       requestBody.bypass = bypass;
@@ -342,7 +342,7 @@ export const nuevoComuneroService = {
   async crear(comuneroData: any, bypass?: boolean): Promise<ApiResponse<{ id: string; comunero: any }>> {
     const requestBody = { 
       ...comuneroData,
-      fsmState: comuneroData.fsmState || DEFAULT_FSM_STATE
+      fsmState: comuneroData.fsmState || "01_IN_ZONE_LEAD"
     };
     if (bypass !== undefined) {
       requestBody.bypass = bypass;

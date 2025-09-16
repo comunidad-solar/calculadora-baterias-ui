@@ -80,7 +80,8 @@ const ComuneroForm = () => {
         telefono: form.telefono,
         direccion: form.direccion,
         direccionComplementaria: form.direccionComplementaria,
-        campaignSource: form.campaignSource
+        campaignSource: form.campaignSource,
+        fsmState: "01_IN_ZONE_LEAD" // Estado inicial fijo
       }, bypass);
       
       if (response.success) {
