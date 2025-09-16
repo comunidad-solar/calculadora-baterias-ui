@@ -9,6 +9,7 @@ import PageTransition from './PageTransition';
 const PreguntasAdicionales = () => {
   const [loading, setLoading] = useState(false);
   const [editandoInfo, setEditandoInfo] = useState(false);
+  
   const [infoEditada, setInfoEditada] = useState({
     nombre: '',
     telefono: '',
@@ -41,7 +42,8 @@ const PreguntasAdicionales = () => {
     tipoBaterias = '',
     capacidadCanadian = '',
     capacidadHuawei = '',
-    instalacionCerca10m = null
+    instalacionCerca10m = null,
+    metrosExtra = ''
   } = form.respuestasPreguntas || {};
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -124,10 +126,123 @@ const PreguntasAdicionales = () => {
       return;
     }
 
+    // Si respondió NO a los 10m, validar metros extra
+    if (!tieneInstalacionFV && (tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') && tieneBaterias === false && instalacionCerca10m === false && !metrosExtra) {
+      showToast('Por favor indica cuántos metros extra necesitaríamos', 'error');
+      setLoading(false);
+      return;
+    }
+
     // Si no tiene instalación FV y desconoce el tipo, validar cuadro eléctrico
     if (!tieneInstalacionFV && tipoInstalacion === 'desconozco' && !tipoCuadroElectrico) {
       showToast('Por favor identifica el tipo de cuadro eléctrico o confirma que lo desconoces', 'error');
       setLoading(false);
+      return;
+    }
+
+    // Si requiere contacto con asesor por tipo de baterías "OTRA O LO DESCONOZCO"
+    if (!tieneInstalacionFV && (tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') && 
+        tieneBaterias === true && tipoBaterias === 'otra') {
+      try {
+        const datosCompletos = {
+          propuestaId: form.propuestaId || '',
+          contactId: form.comunero?.id || '',
+          email: form.comunero?.email || '',
+          
+          tieneInstalacionFV: false,
+          tipoInstalacion: tipoInstalacion,
+          tieneBaterias: true,
+          tipoBaterias: 'otra',
+          requiereContactoManual: true,
+          
+          nombre: form.comunero?.nombre || '',
+          telefono: form.comunero?.telefono || '',
+          direccion: form.comunero?.direccion || '',
+          ciudad: form.comunero?.ciudad || '',
+          provincia: form.comunero?.provincia || '',
+          codigoPostal: form.comunero?.codigoPostal || '',
+          
+          token: form.token || '',
+          dealId: form.dealId || '',
+          enZona: form.enZona || 'outZone'
+        };
+
+        console.log('📤 Tipo de baterías "OTRA" requiere asesor - Enviando solicitud de contacto:', datosCompletos);
+
+        const response = await bateriaService.contactarAsesorDesconoceUnidad(datosCompletos);
+        
+        if (response.success) {
+          showToast('¡Gracias por tu solicitud! Un especialista evaluará tu instalación actual de baterías y se contactará contigo para ofrecerte la mejor propuesta de ampliación.', 'success');
+          
+          navigate('/gracias-contacto', { 
+            state: { 
+              motivo: 'tipo-baterias-otra',
+              tipoBaterias: 'otra'
+            }
+          });
+        } else {
+          throw new Error(response.error || 'Error al enviar la solicitud');
+        }
+      } catch (error) {
+        console.error('Error al contactar asesor por tipo de baterías:', error);
+        showToast('Error al enviar la solicitud', 'error');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // Si requiere contacto con asesor por metros extra
+    if (!tieneInstalacionFV && (tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') && 
+        tieneBaterias === false && instalacionCerca10m === false && 
+        (metrosExtra === 'más de 15m' || metrosExtra === 'lo desconoce' || metrosExtra === 'prefiero hablar con un asesor')) {
+      try {
+        const datosCompletos = {
+          propuestaId: form.propuestaId || '',
+          contactId: form.comunero?.id || '',
+          email: form.comunero?.email || '',
+          
+          tieneInstalacionFV: false,
+          tipoInstalacion: tipoInstalacion,
+          tieneBaterias: false,
+          instalacionCerca10m: false,
+          metrosExtra: metrosExtra,
+          requiereContactoManual: true,
+          
+          nombre: form.comunero?.nombre || '',
+          telefono: form.comunero?.telefono || '',
+          direccion: form.comunero?.direccion || '',
+          ciudad: form.comunero?.ciudad || '',
+          provincia: form.comunero?.provincia || '',
+          codigoPostal: form.comunero?.codigoPostal || '',
+          
+          token: form.token || '',
+          dealId: form.dealId || '',
+          enZona: form.enZona || 'outZone'
+        };
+
+        console.log('📤 Metros extra requiere asesor - Enviando solicitud de contacto:', datosCompletos);
+
+        const response = await bateriaService.contactarAsesorDesconoceUnidad(datosCompletos);
+        
+        if (response.success) {
+          showToast('¡Gracias por tu solicitud! Un especialista técnico evaluará tu caso y se contactará contigo pronto para coordinar la instalación.', 'success');
+          
+          navigate('/gracias-contacto', { 
+            state: { 
+              motivo: 'metros-extra-asesor',
+              metrosExtra: metrosExtra
+            }
+          });
+        } else {
+          throw new Error(response.error || 'Error al enviar la solicitud');
+        }
+      } catch (error) {
+        console.error('Error al contactar asesor por metros extra:', error);
+        showToast('Error al enviar la solicitud', 'error');
+      } finally {
+        setLoading(false);
+      }
       return;
     }
 
@@ -268,9 +383,9 @@ const PreguntasAdicionales = () => {
       }
     }
     
-    // Si está en zona (inZone) y puede instalar dentro de 10m
+    // Si está en zona (inZone o inZoneWithCost) y puede instalar dentro de 10m
     if (!tieneInstalacionFV && (tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') && 
-        tieneBaterias === false && instalacionCerca10m === true && form.enZona === 'inZone') {
+        tieneBaterias === false && instalacionCerca10m === true && (form.enZona === 'inZone' || form.enZona === 'inZoneWithCost')) {
       try {
         // Preparar datos para el endpoint específico de instalación dentro de 10m
         const datosCompletos = {
@@ -342,7 +457,7 @@ const PreguntasAdicionales = () => {
       // Preparar datos completos para el backend
       const datosCompletos = {
         // Datos del usuario del store
-        usuarioId: form.comunero?.id || '',
+        contactId: form.comunero?.id || '',
         nombre: form.comunero?.nombre || '',
         email: form.comunero?.email || '',
         telefono: form.comunero?.telefono || '',
@@ -369,7 +484,11 @@ const PreguntasAdicionales = () => {
               tipoBaterias,
               ...(tipoBaterias === 'canadian' ? { capacidadCanadian } : {}),
               ...(tipoBaterias === 'huawei' ? { capacidadHuawei } : {})
-            } : {})
+            } : {
+              // Si NO tiene baterías, incluir datos de instalación y metros extra
+              instalacionCerca10m,
+              ...(instalacionCerca10m === false ? { metrosExtra } : {})
+            })
           } : {})
         }),
         requiereContactoManual: false,
@@ -459,6 +578,10 @@ const PreguntasAdicionales = () => {
 
   const handleInstalacionCerca10mChange = (valor: boolean) => {
     setRespuestaPregunta('instalacionCerca10m', valor);
+    // Si selecciona "Sí", resetear metros extra
+    if (valor === true) {
+      setRespuestaPregunta('metrosExtra', '');
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -472,6 +595,33 @@ const PreguntasAdicionales = () => {
         e.target.value = '';
       }
     }
+  };
+
+  // Función helper para determinar si debe contactar un asesor
+  const debeContactarAsesor = () => {
+    // Caso 1: Si seleccionó "ninguno" de los cuadros eléctricos
+    if (!tieneInstalacionFV && tipoInstalacion === 'desconozco' && tipoCuadroElectrico === 'ninguno') {
+      return true;
+    }
+    
+    // Caso 2: Si respondió NO a los 10m y seleccionó opciones que requieren asesor
+    if (!tieneInstalacionFV && 
+        (tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') && 
+        tieneBaterias === false && 
+        instalacionCerca10m === false &&
+        (metrosExtra === 'más de 15m' || metrosExtra === 'lo desconoce' || metrosExtra === 'prefiero hablar con un asesor')) {
+      return true;
+    }
+    
+    // Caso 3: Si tiene baterías y seleccionó "OTRA O LO DESCONOZCO"
+    if (!tieneInstalacionFV && 
+        (tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') && 
+        tieneBaterias === true && 
+        tipoBaterias === 'otra') {
+      return true;
+    }
+    
+    return false;
   };
 
   // Funciones para editar información del comunero
@@ -1191,11 +1341,11 @@ const PreguntasAdicionales = () => {
             {/* Si seleccionó OTRA O LO DESCONOZCO - Mensaje informativo */}
             {tieneInstalacionFV === false && (tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') && tieneBaterias === true && tipoBaterias === 'otra' && (
               <div className="fade-in-result">
-                <div className="alert alert-info border-0">
+                <div className="alert alert-warning border-0">
                   <div className="d-flex align-items-center">
-                    <span className="me-2">ℹ️</span>
+                    <span className="me-2">👨‍💼</span>
                     <small>
-                      <strong>Perfecto.</strong> Un especialista revisará tu caso específico para ofrecerte la mejor propuesta.
+                      <strong>Entendido.</strong> Un especialista evaluará tu instalación actual de baterías y se contactará contigo para ofrecerte la mejor propuesta de ampliación.
                     </small>
                   </div>
                 </div>
@@ -1273,6 +1423,104 @@ const PreguntasAdicionales = () => {
                         <strong>Sin problema.</strong> Evaluaremos las opciones técnicas para la instalación a mayor distancia.
                       </small>
                     </div>
+                  </div>
+                )}
+
+                {/* Pregunta sobre metros extra - solo si respondió NO a los 10m */}
+                {instalacionCerca10m === false && (
+                  <div className="fade-in-result mt-4">
+                    <label className="form-label h5 fw-bold mb-3">
+                      ¿Cuántos metros extra necesitaríamos? <span className="text-danger">*</span>
+                    </label>
+                    
+                    <div className="row g-2">
+                      <div className="col-6 col-md-4">
+                        <button
+                          type="button"
+                          className={`btn w-100 btn-option ${metrosExtra === '5m extra' ? 'btn-primary' : 'btn-outline-primary'}`}
+                          onClick={() => setRespuestaPregunta('metrosExtra', '5m extra')}
+                        >
+                          5m extra
+                        </button>
+                      </div>
+                      
+                      <div className="col-6 col-md-4">
+                        <button
+                          type="button"
+                          className={`btn w-100 btn-option ${metrosExtra === '10m extra' ? 'btn-primary' : 'btn-outline-primary'}`}
+                          onClick={() => setRespuestaPregunta('metrosExtra', '10m extra')}
+                        >
+                          10m extra
+                        </button>
+                      </div>
+                      
+                      <div className="col-6 col-md-4">
+                        <button
+                          type="button"
+                          className={`btn w-100 btn-option ${metrosExtra === '15m extra' ? 'btn-primary' : 'btn-outline-primary'}`}
+                          onClick={() => setRespuestaPregunta('metrosExtra', '15m extra')}
+                        >
+                          15m extra
+                        </button>
+                      </div>
+                      
+                      <div className="col-6 col-md-4">
+                        <button
+                          type="button"
+                          className={`btn w-100 btn-option ${metrosExtra === 'más de 15m' ? 'btn-primary' : 'btn-outline-primary'}`}
+                          onClick={() => setRespuestaPregunta('metrosExtra', 'más de 15m')}
+                        >
+                          Más de 15m
+                        </button>
+                      </div>
+                      
+                      <div className="col-6 col-md-4">
+                        <button
+                          type="button"
+                          className={`btn w-100 btn-option ${metrosExtra === 'lo desconoce' ? 'btn-primary' : 'btn-outline-primary'}`}
+                          onClick={() => setRespuestaPregunta('metrosExtra', 'lo desconoce')}
+                        >
+                          Lo desconoce
+                        </button>
+                      </div>
+                      
+                      <div className="col-6 col-md-4">
+                        <button
+                          type="button"
+                          className={`btn w-100 btn-option ${metrosExtra === 'prefiero hablar con un asesor' ? 'btn-primary' : 'btn-outline-primary'}`}
+                          onClick={() => setRespuestaPregunta('metrosExtra', 'prefiero hablar con un asesor')}
+                        >
+                           Hablar con un asesor
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Mensaje informativo según la selección de metros extra */}
+                    {metrosExtra && (
+                      <div className="mt-3">
+                        {(metrosExtra === '5m extra' || metrosExtra === '10m extra' || metrosExtra === '15m extra') && (
+                          <div className="alert alert-success border-0 fade-in-result">
+                            <div className="d-flex align-items-center">
+                              <span className="me-2">✅</span>
+                              <small>
+                                <strong>Perfecto.</strong> Continuaremos con tu propuesta considerando los metros extra necesarios.
+                              </small>
+                            </div>
+                          </div>
+                        )}
+                        
+                        {(metrosExtra === 'más de 15m' || metrosExtra === 'lo desconoce' || metrosExtra === 'prefiero hablar con un asesor') && (
+                          <div className="alert alert-warning border-0 fade-in-result">
+                            <div className="d-flex align-items-center">
+                              <span className="me-2">👨‍💼</span>
+                              <small>
+                                <strong>Entendido.</strong> Un especialista técnico evaluará tu caso específico y se contactará contigo pronto.
+                              </small>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -1421,8 +1669,8 @@ const PreguntasAdicionales = () => {
 
             {/* Botón enviar */}
             <div className="d-grid gap-2 mt-4">
-              {/* Si selecciona "ninguno" de los cuadros, mostrar botón diferente */}
-              {(!tieneInstalacionFV && tipoInstalacion === 'desconozco' && tipoCuadroElectrico === 'ninguno') ? (
+              {/* Si necesita contactar asesor, mostrar botón diferente */}
+              {debeContactarAsesor() ? (
                 <button
                   type="submit"
                   className="btn btn-warning btn-lg fw-bold button-hover-result"
@@ -1450,7 +1698,7 @@ const PreguntasAdicionales = () => {
               )}
               
               <small className="text-muted text-center">
-                {(!tieneInstalacionFV && tipoInstalacion === 'desconozco' && tipoCuadroElectrico === 'ninguno') 
+                {debeContactarAsesor()
                   ? 'Un especialista evaluará tu caso específico y te contactará pronto'
                   : 'Esta información nos ayudará a crear una propuesta personalizada para ti'
                 }

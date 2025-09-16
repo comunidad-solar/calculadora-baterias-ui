@@ -32,8 +32,9 @@ const ResultadoValidacion = () => {
         setDireccionOriginalVacia(true);
       }
       
-      // Auto-activar edición si no hay dirección y está en zona
-      if (validacionData?.enZona && usuario && (!usuario.direccion || usuario.direccion.trim() === '')) {
+      // Auto-activar edición si está en zona (inZone o inZoneWithCost) y no hay dirección
+      const isInZone = validacionData?.enZona === "inZone" || validacionData?.enZona === "inZoneWithCost";
+      if (isInZone && usuario && (!usuario.direccion || usuario.direccion.trim() === '')) {
         setEditMode(true);
       }
     }, 150);
@@ -46,8 +47,9 @@ const ResultadoValidacion = () => {
   }
 
   const handleSaveChanges = async () => {
-    // Validar campos obligatorios para usuarios en zona
-    if (validacionData.enZona) {
+    // Validar campos obligatorios para usuarios en zona (inZone o inZoneWithCost)
+    const isInZone = validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost";
+    if (isInZone) {
       if (!editData.direccion || editData.direccion.trim() === '') {
         showToast('Por favor completa tu dirección', 'error');
         return;
@@ -89,7 +91,9 @@ const ResultadoValidacion = () => {
 
   const handleContinuarPropuesta = () => {
     // Verificar que los campos obligatorios estén completos
-    if (validacionData.enZona) {
+    const isInZone = validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost";
+    
+    if (isInZone) {
       if (!usuario.tipoInstalacion) {
         showToast('Por favor completa el tipo de instalación antes de continuar', 'warning');
         setEditMode(true);
@@ -101,7 +105,13 @@ const ResultadoValidacion = () => {
         return;
       }
     }
-    navigate('/propuesta');
+    
+    // Navegar a preguntas adicionales si está en zona (inZone o inZoneWithCost)
+    if (isInZone) {
+      navigate('/preguntas-adicionales', { replace: true });
+    } else {
+      navigate('/propuesta');
+    }
   };
 
   return (
@@ -169,13 +179,13 @@ const ResultadoValidacion = () => {
           
           {/* Header con estado */}
           <div className="text-center mb-4 fade-in-result">
-            <div className={`bg-${validacionData.enZona ? 'success' : (bypass ? 'info' : 'warning')} bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3 status-icon-result`} style={{width: '80px', height: '80px'}}>
+            <div className={`bg-${(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost") ? 'success' : (bypass ? 'info' : 'warning')} bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3 status-icon-result`} style={{width: '80px', height: '80px'}}>
               <span style={{fontSize: '2.5rem'}}>
-                {validacionData.enZona ? '✅' : (bypass ? '📋' : '⚠️')}
+                {(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost") ? '✅' : (bypass ? '📋' : '⚠️')}
               </span>
             </div>
             <h2 className="h4 fw-bold mb-2">
-              {validacionData.enZona 
+              {(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost")
                 ? '¡Genial! Podemos ayudarte' 
                 : (bypass 
                     ? '¡Perfecto! Hemos guardado tus datos'
@@ -183,7 +193,7 @@ const ResultadoValidacion = () => {
                   )
               }
             </h2>
-            {!validacionData.enZona && (
+            {(validacionData.enZona !== "inZone" && validacionData.enZona !== "inZoneWithCost") && (
               <p className="text-muted">
                 {bypass 
                   ? 'Tu solicitud de información ha sido registrada correctamente. Un asesor especializado se pondrá en contacto contigo próximamente para brindarte toda la información sobre nuestras soluciones de energía solar.'
@@ -255,7 +265,7 @@ const ResultadoValidacion = () => {
                     // Si ya tenía dirección, usar input normal con label
                     <>
                       <label className="form-label">
-                        Dirección {validacionData.enZona && <span className="text-danger">*</span>}
+                        Dirección {(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost") && <span className="text-danger">*</span>}
                       </label>
                       <input
                         type="text"
@@ -266,13 +276,13 @@ const ResultadoValidacion = () => {
                       />
                     </>
                   )}
-                  {direccionOriginalVacia && validacionData.enZona && (
+                  {direccionOriginalVacia && (validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost") && (
                     <small className="form-text text-muted">
                       La dirección es necesaria para calcular la propuesta de baterías
                     </small>
                   )}
                 </div>
-                {validacionData.enZona && (
+                {(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost") && (
                   <>
                     <div className="col-md-6 form-field-result">
                       <label className="form-label">
@@ -353,7 +363,7 @@ const ResultadoValidacion = () => {
                   ) : (
                     <div>
                       <span className="text-warning">⚠️ No completada</span>
-                      {validacionData.enZona && (
+                      {(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost") && (
                         <small className="d-block text-muted mt-1">
                           Es necesario completar la dirección para generar una propuesta
                         </small>
@@ -361,7 +371,7 @@ const ResultadoValidacion = () => {
                     </div>
                   )}
                 </div>
-                {validacionData.enZona && (
+                {(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost") && (
                   <>
                     <div className="col-md-6">
                       <strong className="text-muted d-block">Tipo de instalación:</strong>
@@ -389,7 +399,7 @@ const ResultadoValidacion = () => {
 
         {/* Acciones según el estado */}
         <div className="d-grid gap-2 fade-in-result">
-          {validacionData.enZona ? (
+          {(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost") ? (
             <>
               <button 
                 className="btn btn-primary btn-lg button-hover-result"

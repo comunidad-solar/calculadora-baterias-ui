@@ -1,6 +1,9 @@
 // Configuración base para las llamadas a la API
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://calculadora-baterias-api-20084454554.development.catalystserverless.eu/server/api';
 
+// Importar estado FSM por defecto
+import { DEFAULT_FSM_STATE } from '../types/fsmTypes';
+
 // ⚙️ SIMULADOR DE BACKEND PARA DESARROLLO
 // Cambia a false cuando el backend esté disponible
 const SIMULATE_BACKEND = false;
@@ -252,7 +255,10 @@ const makeRequest = async <T = any>(
 export const comuneroService = {
   // Crear comunero (maneja los 3 casos)
   async crearComunero(email: string, bypass?: boolean): Promise<ApiResponse<{ id: string; comunero: any }>> {
-    const requestBody: any = { email };
+    const requestBody: any = { 
+      email,
+      fsmState: DEFAULT_FSM_STATE
+    };
     if (bypass !== undefined) {
       requestBody.bypass = bypass;
     }
@@ -267,7 +273,10 @@ export const comuneroService = {
   async validarEmail(email: string): Promise<ApiResponse<{ codigoEnviado: boolean }>> {
     return makeRequest('baterias/comunero/validar-email', {
       method: 'POST',
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ 
+        email,
+        fsmState: DEFAULT_FSM_STATE
+      }),
     });
   },
 
@@ -296,7 +305,11 @@ export const comuneroService = {
   }>> {
     return makeRequest('baterias/comunero/validar-codigo', {
       method: 'POST',
-      body: JSON.stringify({ codigo, email }),
+      body: JSON.stringify({ 
+        codigo, 
+        email,
+        fsmState: DEFAULT_FSM_STATE
+      }),
     });
   },
 
@@ -311,10 +324,14 @@ export const comuneroService = {
     provincia?: string;
     token?: string;
     comuneroId?: string;
+    fsmState?: string;
   }): Promise<ApiResponse<{ comunero: any }>> {
     return makeRequest('baterias/comunero/edit-existing-info-comunero', {
       method: 'POST',
-      body: JSON.stringify(datosEdicion),
+      body: JSON.stringify({
+        ...datosEdicion,
+        fsmState: datosEdicion.fsmState || DEFAULT_FSM_STATE
+      }),
     });
   },
 };
@@ -323,7 +340,10 @@ export const comuneroService = {
 export const nuevoComuneroService = {
   // Crear nuevo comunero
   async crear(comuneroData: any, bypass?: boolean): Promise<ApiResponse<{ id: string; comunero: any }>> {
-    const requestBody = { ...comuneroData };
+    const requestBody = { 
+      ...comuneroData,
+      fsmState: comuneroData.fsmState || DEFAULT_FSM_STATE
+    };
     if (bypass !== undefined) {
       requestBody.bypass = bypass;
     }
@@ -374,10 +394,14 @@ export const bateriaService = {
     token?: string;
     dealId?: string; // Mantener por compatibilidad
     enZona?: string;
+    fsmState?: string;
   }): Promise<ApiResponse<{ id: string; solicitud: any }>> {
     return makeRequest('baterias/comunero/desconoce-unidad/contactar-asesor', {
       method: 'POST',
-      body: JSON.stringify(datosCompletos),
+      body: JSON.stringify({
+        ...datosCompletos,
+        fsmState: datosCompletos.fsmState || DEFAULT_FSM_STATE
+      }),
     });
   },
 
@@ -397,7 +421,7 @@ export const bateriaService = {
     instalacionCerca10m: boolean;
     
     // Estado FSM
-    fsmState: string;
+    fsmState?: string;
     
     // Datos adicionales del usuario para contexto
     nombre?: string;
@@ -414,7 +438,10 @@ export const bateriaService = {
   }): Promise<ApiResponse<{ id: string; propuesta: any }>> {
     return makeRequest('baterias/comunero/create-proposal', {
       method: 'POST',
-      body: JSON.stringify(datosCompletos),
+      body: JSON.stringify({
+        ...datosCompletos,
+        fsmState: datosCompletos.fsmState || DEFAULT_FSM_STATE
+      }),
     });
   },
 
@@ -435,6 +462,7 @@ export const bateriaService = {
     telefono?: string;
     token?: string;
     dealId?: string; // Mantener por compatibilidad
+    fsmState?: string;
   }): Promise<ApiResponse<{ 
     propuestaId: string;
     analisisDisyuntor: {
@@ -455,6 +483,9 @@ export const bateriaService = {
     if (fotoData.nombre) formData.append('nombre', fotoData.nombre);
     if (fotoData.telefono) formData.append('telefono', fotoData.telefono);
     if (fotoData.token) formData.append('token', fotoData.token);
+    
+    // Agregar fsmState
+    formData.append('fsmState', fotoData.fsmState || DEFAULT_FSM_STATE);
     
     // Hacer request sin JSON, usando FormData
     const cleanEndpoint = 'baterias/comunero/analizar-disyuntor';
@@ -507,7 +538,7 @@ export const bateriaService = {
     propuestaId: string; // ID global de la propuesta
     
     // Datos del usuario
-    usuarioId?: string;
+    contactId?: string;
     nombre: string;
     email: string;
     telefono: string;
@@ -526,11 +557,14 @@ export const bateriaService = {
     token?: string;
     dealId?: string; // Mantener por compatibilidad
     enZona?: string;
+    fsmState?: string;
   }): Promise<ApiResponse<{ id: string; solicitud: any }>> {
-    // TODO: Necesito el endpoint correcto para propuesta automatizada
-    return makeRequest('baterias/comunero/propuesta', {
+    return makeRequest('baterias/comunero/create-proposal', {
       method: 'POST',
-      body: JSON.stringify(datosCompletos),
+      body: JSON.stringify({
+        ...datosCompletos,
+        fsmState: datosCompletos.fsmState || DEFAULT_FSM_STATE
+      }),
     });
   },
 };
@@ -540,3 +574,6 @@ export default {
   nuevoComuneroService,
   bateriaService,
 };
+
+// Exportar funciones helper FSM
+export { getFSMStateForRequest } from '../types/fsmTypes';

@@ -79,23 +79,10 @@ const ComuneroCodigoForm = () => {
           setValidacionData(validacionData);
           
           // Verificar el estado de la zona para redirigir correctamente
-          console.log('🧭 Preparando navegación para enZona:', response.data.enZona);
-          
-          if (response.data.enZona === "inZone") {
-            console.log('✅ Navegando a /preguntas-adicionales (inZone)');
-            // En zona: ir primero a preguntas adicionales antes de la propuesta
+          if (response.data.enZona === "inZone" || response.data.enZona === "inZoneWithCost") {
+            // En zona (con o sin costo): ir a preguntas adicionales
             navigate('/preguntas-adicionales');
-          } else if (response.data.enZona === "inZoneWithCost") {
-            console.log('✅ Navegando a /resultado (inZoneWithCost)');
-            // En zona con costo: ir a resultado con información de costo
-            navigate('/resultado', { 
-              state: { 
-                inZoneWithCost: true,
-                motivo: response.data.motivo 
-              } 
-            });
           } else if (response.data.enZona === "outZone") {
-            console.log('✅ Navegando a /resultado (outZone)');
             // Fuera de zona: ir a página de resultado con mensaje de fuera de zona
             navigate('/resultado', { 
               state: { 
@@ -103,8 +90,6 @@ const ComuneroCodigoForm = () => {
                 motivo: response.data.motivo 
               } 
             });
-          } else {
-            console.log('⚠️ Valor de enZona no reconocido:', response.data.enZona);
           }
         } else {
           // Fallback si no hay data

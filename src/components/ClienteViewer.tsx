@@ -49,8 +49,8 @@ const ClienteViewer = () => {
           // Configurar datos del usuario y validación
           setValidacionData(validacionCompleta);
           
-          // Redirigir al resultado de validación para continuar el flujo
-          navigate('/resultado');
+          // Redirigir directamente a preguntas adicionales para usuarios en zona
+          navigate('/preguntas-adicionales');
         } else {
           setError('No se pudieron cargar los datos del cliente');
           showToast('Cliente no encontrado o datos no válidos', 'error');
