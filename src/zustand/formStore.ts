@@ -10,6 +10,7 @@ interface FormState {
   telefono: string;
   direccion: string;
   direccionComplementaria: string;
+  codigoPostal: string; // Agregado para código postal extraído de Google Places
   proteccionDatos: boolean;
   utm: string;
   campaignSource: string;

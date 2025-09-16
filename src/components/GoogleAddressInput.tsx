@@ -5,13 +5,25 @@ import type { PlacePrediction } from '../hooks/useGooglePlaces';
 interface GoogleAddressInputProps {
   value: string;
   onChange: (address: string) => void;
+  onPostalCodeChange?: (postalCode: string) => void; // Nuevo callback para código postal
 }
 
-const GoogleAddressInput: React.FC<GoogleAddressInputProps> = ({ value, onChange }) => {
+const GoogleAddressInput: React.FC<GoogleAddressInputProps> = ({ value, onChange, onPostalCodeChange }) => {
   const [suggestions, setSuggestions] = useState<PlacePrediction[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const { isLoaded, error: googleError, searchPlaces, getPlaceDetails } = useGooglePlaces();
+
+  // Función helper para extraer código postal de address_components
+  const extractPostalCode = (addressComponents: any[]): string | null => {
+    if (!addressComponents) return null;
+    
+    const postalCodeComponent = addressComponents.find(component => 
+      component.types.includes('postal_code')
+    );
+    
+    return postalCodeComponent ? postalCodeComponent.long_name : null;
+  };
 
   // Debounce function para evitar demasiadas llamadas a la API
   const debounce = (func: Function, wait: number) => {
@@ -95,7 +107,18 @@ const GoogleAddressInput: React.FC<GoogleAddressInputProps> = ({ value, onChange
       // Si es una predicción real de Google, obtener detalles
       if (!prediction.place_id.startsWith('mock')) {
         const placeDetails = await getPlaceDetails(prediction.place_id);
+        
+        // Extraer código postal si está disponible
+        const postalCode = extractPostalCode(placeDetails.address_components || []);
+        
+        // Actualizar dirección
         onChange(placeDetails.formatted_address);
+        
+        // Actualizar código postal si se proporcionó el callback y se encontró el código
+        if (onPostalCodeChange && postalCode) {
+          onPostalCodeChange(postalCode);
+          console.log('📍 Código postal extraído de Google Places:', postalCode);
+        }
       } else {
         // Para sugerencias mock, usar la descripción directamente
         onChange(prediction.description);

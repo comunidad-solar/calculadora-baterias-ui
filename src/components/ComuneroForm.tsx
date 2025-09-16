@@ -81,7 +81,8 @@ const ComuneroForm = () => {
         direccion: form.direccion,
         direccionComplementaria: form.direccionComplementaria,
         campaignSource: form.campaignSource,
-        fsmState: "01_IN_ZONE_LEAD" // Estado inicial fijo
+        fsmState: "01_IN_ZONE_LEAD", // Estado inicial fijo
+        codigoPostal: form.codigoPostal // Nuevo campo de código postal
       }, bypass);
       
       if (response.success) {
@@ -204,6 +205,7 @@ const ComuneroForm = () => {
         <GoogleAddressInput
           value={form.direccion}
           onChange={(address: string) => setField('direccion', address)}
+          onPostalCodeChange={(postalCode: string) => setField('codigoPostal', postalCode)}
         />
         <div>
           <label className="form-label">Dirección complementaria</label>
