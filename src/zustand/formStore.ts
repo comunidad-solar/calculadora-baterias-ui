@@ -11,6 +11,9 @@ interface FormState {
   direccion: string;
   direccionComplementaria: string;
   codigoPostal: string; // Agregado para código postal extraído de Google Places
+  ciudad: string; // Agregado para ciudad extraída de Google Places
+  provincia: string; // Agregado para provincia extraída de Google Places
+  pais: string; // Agregado para país extraído de Google Places
   proteccionDatos: boolean;
   utm: string;
   campaignSource: string;
@@ -100,6 +103,10 @@ const initialState: FormState = {
   telefono: '',
   direccion: '',
   direccionComplementaria: '',
+  codigoPostal: '', // Código postal extraído de Google Places
+  ciudad: '', // Ciudad extraída de Google Places
+  provincia: '', // Provincia extraída de Google Places
+  pais: '', // País extraído de Google Places
   proteccionDatos: false,
   utm: '', // Aquí puedes inicializar con el valor UTM si lo tienes
   campaignSource: '',
