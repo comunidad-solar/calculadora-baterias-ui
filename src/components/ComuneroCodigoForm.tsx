@@ -80,8 +80,13 @@ const ComuneroCodigoForm = () => {
           
           // Verificar el estado de la zona para redirigir correctamente
           if (response.data.enZona === "inZone" || response.data.enZona === "inZoneWithCost") {
+            // Marcar que viene del flujo de validar-codigo para buscar datos actualizados
+            sessionStorage.setItem('fromValidarCodigo', 'true');
+            
             // En zona (con o sin costo): ir a preguntas adicionales
-            navigate('/preguntas-adicionales');
+            navigate('/preguntas-adicionales', {
+              state: { fromValidarCodigo: true }
+            });
           } else if (response.data.enZona === "outZone") {
             // Fuera de zona: ir a página de resultado con mensaje de fuera de zona
             navigate('/resultado', { 

@@ -85,6 +85,7 @@ const Propuesta = () => {
   console.log('💰 Precio a mostrar:', amount);
   console.log('📦 Items a mostrar:', items);
   console.log('🏷️ Nombre del grupo:', groupName);
+  console.log('🔍 PropuestaData completa:', propuestaData);
 
   // Funciones para manejar botones
   const handleContactarAsesor = () => {

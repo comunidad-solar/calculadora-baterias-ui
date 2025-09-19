@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
-import { bateriaService, comuneroService } from '../services/apiService';
+import { bateriaService, comuneroService, nuevoComuneroService } from '../services/apiService';
 import { useFormStore } from '../zustand/formStore';
 import { FSM_STATES } from '../types/fsmTypes';
 import PageTransition from './PageTransition';
@@ -9,6 +9,7 @@ import PageTransition from './PageTransition';
 const PreguntasAdicionales = () => {
   const [loading, setLoading] = useState(false);
   const [editandoInfo, setEditandoInfo] = useState(false);
+  const [loadingDatosActualizados, setLoadingDatosActualizados] = useState(false);
   
   const [infoEditada, setInfoEditada] = useState({
     nombre: '',
@@ -19,13 +20,15 @@ const PreguntasAdicionales = () => {
     provincia: ''
   });
   const navigate = useNavigate();
+  const location = useLocation();
   const { showToast } = useToast();
   
   // Usar formStore principal para persistir datos con Redux DevTools
   const { 
     form, 
     setRespuestaPregunta, 
-    setFsmState 
+    setFsmState,
+    setField
   } = useFormStore();
   
   // Obtener respuestas de preguntas del store principal
@@ -45,6 +48,127 @@ const PreguntasAdicionales = () => {
     instalacionCerca10m = null,
     metrosExtra = ''
   } = form.respuestasPreguntas || {};
+
+  // Efecto para buscar datos actualizados si viene del flujo de validar-codigo
+  useEffect(() => {
+    const buscarDatosActualizados = async () => {
+      // Verificar si viene del flujo de validar-codigo
+      const vieneDeValidarCodigo = location.state?.fromValidarCodigo || 
+                                   sessionStorage.getItem('fromValidarCodigo') === 'true';
+      
+      if (!vieneDeValidarCodigo || !form.propuestaId) {
+        return;
+      }
+
+      console.log('🔄 Detectado flujo desde validar-codigo, buscando datos actualizados...');
+      
+      // Iniciar loading inmediatamente
+      setLoadingDatosActualizados(true);
+      
+      // Limpiar el flag para evitar llamadas repetidas
+      sessionStorage.removeItem('fromValidarCodigo');
+      
+      // Esperar 3 segundos antes de hacer la llamada
+      setTimeout(async () => {
+        try {
+          if (!form.propuestaId) {
+            console.warn('⚠️ No hay propuestaId disponible');
+            return;
+          }
+          
+          console.log('📡 Llamando al endpoint de datos actualizados para propuesta:', form.propuestaId);
+          
+          const response = await nuevoComuneroService.obtenerDatosActualizadosPostValidacion(form.propuestaId);
+          
+          if (response.success && response.data) {
+            const { comuneroActualizado, fuenteDatos } = response.data;
+            
+            if (fuenteDatos === 'base_datos') {
+              console.log('✅ Datos actualizados encontrados:', response.data);
+              
+              let datosActualizados = false;
+              
+              // Actualizar datos del comunero si están disponibles
+              if (comuneroActualizado && Object.keys(comuneroActualizado).length > 0) {
+                const datosLimpiosComunero: Partial<typeof comuneroActualizado> = {};
+                
+                // Verificar cada campo del comunero específicamente
+                if (comuneroActualizado.nombre && comuneroActualizado.nombre.trim() !== '') {
+                  datosLimpiosComunero.nombre = comuneroActualizado.nombre.trim();
+                }
+                if (comuneroActualizado.telefono && comuneroActualizado.telefono.trim() !== '') {
+                  datosLimpiosComunero.telefono = comuneroActualizado.telefono.trim();
+                }
+                if (comuneroActualizado.direccion && comuneroActualizado.direccion.trim() !== '') {
+                  datosLimpiosComunero.direccion = comuneroActualizado.direccion.trim();
+                }
+                if (comuneroActualizado.codigoPostal && comuneroActualizado.codigoPostal.trim() !== '') {
+                  datosLimpiosComunero.codigoPostal = comuneroActualizado.codigoPostal.trim();
+                }
+                if (comuneroActualizado.ciudad && comuneroActualizado.ciudad.trim() !== '') {
+                  datosLimpiosComunero.ciudad = comuneroActualizado.ciudad.trim();
+                }
+                if (comuneroActualizado.provincia && comuneroActualizado.provincia.trim() !== '') {
+                  datosLimpiosComunero.provincia = comuneroActualizado.provincia.trim();
+                }
+                
+                // Actualizar datos del comunero si hay cambios válidos
+                if (Object.keys(datosLimpiosComunero).length > 0) {
+                  setField('comunero', {
+                    ...form.comunero,
+                    ...datosLimpiosComunero
+                  });
+                  datosActualizados = true;
+                  console.log('📋 Datos del comunero actualizados:', datosLimpiosComunero);
+                }
+                
+                // Actualizar zona si viene en comuneroActualizado y es diferente
+                if (comuneroActualizado.enZona && comuneroActualizado.enZona !== form.enZona) {
+                  setField('enZona', comuneroActualizado.enZona);
+                  datosActualizados = true;
+                  console.log('🗺️ Zona actualizada:', { anterior: form.enZona, nueva: comuneroActualizado.enZona });
+                }
+                
+                // Actualizar campaignSource si viene en comuneroActualizado
+                if (comuneroActualizado.campaignSource && comuneroActualizado.campaignSource.trim() !== '') {
+                  setField('campaignSource', comuneroActualizado.campaignSource.trim());
+                  datosActualizados = true;
+                  console.log('📢 Campaign source actualizado:', comuneroActualizado.campaignSource);
+                }
+                
+                // Actualizar fsmState si viene en comuneroActualizado y es diferente
+                if (comuneroActualizado.fsmState && comuneroActualizado.fsmState !== form.fsmState) {
+                  setField('fsmState', comuneroActualizado.fsmState);
+                  datosActualizados = true;
+                  console.log('🔄 FSM State actualizado:', { anterior: form.fsmState, nuevo: comuneroActualizado.fsmState });
+                }
+              }
+              
+              // Mostrar toast solo si realmente se actualizó algún dato
+              if (datosActualizados) {
+                showToast('Información actualizada desde la base de datos', 'success');
+                console.log('✅ Datos actualizados aplicados en el store');
+              } else {
+                console.log('ℹ️ No hay datos válidos para actualizar, manteniendo información existente');
+              }
+              
+            } else {
+              console.log('ℹ️ No se encontraron datos más recientes, manteniendo información del proceso de validar-codigo');
+            }
+          } else {
+            console.log('ℹ️ Backend no devolvió información, manteniendo datos existentes del proceso de validar-codigo');
+          }
+        } catch (error) {
+          console.error('❌ Error al buscar datos actualizados:', error);
+          console.log('ℹ️ Manteniendo información existente del proceso de validar-codigo debido a error en la consulta');
+        } finally {
+          setLoadingDatosActualizados(false);
+        }
+      }, 3000);
+    };
+
+    buscarDatosActualizados();
+  }, [form.propuestaId, location.state, setField, setLoadingDatosActualizados, showToast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -505,8 +629,13 @@ const PreguntasAdicionales = () => {
         console.log('Datos adicionales enviados:', response.data);
         showToast('¡Información guardada correctamente!', 'success');
         
-        // Redirigir a la página de propuesta o dashboard
-        navigate('/propuesta');
+        // Redirigir a la página de propuesta con los datos recibidos
+        navigate('/propuesta', {
+          state: { 
+            propuestaData: response.data,
+            tipoSolicitud: 'formulario-completo'
+          } 
+        });
       } else {
         throw new Error(response.error || 'Error al guardar la información');
       }
@@ -843,8 +972,22 @@ const PreguntasAdicionales = () => {
                     <small className="text-muted">
                       Puedes editarla si necesitas hacer algún cambio
                     </small>
+                    
+                    {/* Loading de búsqueda de datos actualizados */}
+                    {loadingDatosActualizados && (
+                      <div className="alert alert-info border-0 mt-2 mb-0 py-2">
+                        <div className="d-flex align-items-center">
+                          <div className="spinner-border spinner-border-sm me-2" role="status">
+                            <span className="visually-hidden">Buscando...</span>
+                          </div>
+                          <small>
+                            <strong>Estamos buscando la información más reciente...</strong>
+                          </small>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  {!editandoInfo && (
+                  {!editandoInfo && !loadingDatosActualizados && (
                     <button
                       type="button"
                       className="btn btn-outline-primary btn-sm"

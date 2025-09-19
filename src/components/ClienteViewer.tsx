@@ -1,15 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useUsuario } from '../context/UsuarioContext';
 import { useToast } from '../context/ToastContext';
-import { nuevoComuneroService } from '../services/apiService';
+import { cargarComuneroPorId } from '../services/apiService';
+import { useFormStore } from '../zustand/formStore';
 import PageTransition from './PageTransition';
 
 const ClienteViewer = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { setValidacionData } = useUsuario();
   const { showToast } = useToast();
+  const formStore = useFormStore(); // Obtener el store completo para pasarlo a la función
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const hasLoadedRef = useRef(false);
@@ -33,26 +33,26 @@ const ClienteViewer = () => {
       
       try {
         console.log(`🔍 Cargando datos para cliente: ${id}`);
-        const response = await nuevoComuneroService.obtenerPorId(id);
         
-        if (response.success && response.data) {
-          // Crear estructura de validación completa como si viniera del backend
-          const validacionCompleta = {
-            token: 'cliente-viewer-token', // Token simulado para navegación
-            comunero: response.data.comunero,
-            enZona: "inZone" as const, // Asumir que está en zona
-            motivo: undefined,
-            propuestaId: undefined,
-            analisisTratos: undefined
-          };
+        // Usar la nueva función que carga automáticamente en Zustand
+        const resultado = await cargarComuneroPorId(id, formStore);
+        
+        if (resultado.success && resultado.datosGuardados) {
+          console.log('✅ Datos cargados automáticamente en Zustand');
+          console.log(`🧭 Navegando a: ${resultado.rutaNavegacion} para fsmState: ${resultado.fsmState}`);
           
-          // Configurar datos del usuario y validación
-          setValidacionData(validacionCompleta);
+          // Navegar a la vista correcta según el fsmState
+          navigate(resultado.rutaNavegacion);
           
-          // Redirigir directamente a preguntas adicionales para usuarios en zona
-          navigate('/preguntas-adicionales');
+        } else if (resultado.success) {
+          console.warn(`⚠️ fsmState ${resultado.fsmState} no implementado, usando navegación manual`);
+          showToast(`Estado ${resultado.fsmState} no implementado completamente`, 'warning');
+          
+          // Para estados no implementados, navegar a home o manejar manualmente
+          navigate(resultado.rutaNavegacion);
+          
         } else {
-          setError('No se pudieron cargar los datos del cliente');
+          setError(resultado.error || 'No se pudieron cargar los datos del cliente');
           showToast('Cliente no encontrado o datos no válidos', 'error');
         }
       } catch (err) {

@@ -354,8 +354,81 @@ export const nuevoComuneroService = {
     });
   },
   
+  // Obtener datos actualizados después de validación de código
+  async obtenerDatosActualizadosPostValidacion(propuestaId: string): Promise<ApiResponse<{
+    comuneroActualizado: {
+      id: string;
+      nombre: string;
+      email: string;
+      telefono: string;
+      direccion: string;
+      codigoPostal: string;
+      ciudad: string;
+      provincia: string;
+      enZona?: 'inZone' | 'inZoneWithCost' | 'outZone';
+      campaignSource?: string;
+      fsmState?: string;
+    } | null;
+    fuenteDatos: 'base_datos' | 'sin_cambios';
+    fechaActualizacion?: string;
+    mensaje?: string;
+  }>> {
+    return makeRequest(`baterias/comunero/just-created-after-code-validation/${propuestaId}`, {
+      method: 'GET',
+    });
+  },
+
   // Obtener datos de comunero por ID único
-  async obtenerPorId(clienteId: string): Promise<ApiResponse<{ comunero: any }>> {
+  async obtenerPorId(clienteId: string): Promise<ApiResponse<{
+    mpk_log_id: string;
+    contact_id: string;
+    deal_id: string;
+    fsmState: string;
+    data: {
+      comunero: {
+        id: string;
+        nombre: string;
+        email: string;
+        telefono: string;
+        direccion: string;
+        codigoPostal: string;
+        ciudad: string;
+        provincia: string;
+      };
+      token: string;
+      enZona: "inZone" | "inZoneWithCost" | "outZone";
+      propuestaId: string;
+      dealId: string;
+      analisisTratos: {
+        tieneTratoCerradoGanado: boolean;
+        hasInversor: {
+          marca: string;
+          modelo: string;
+          numero: number;
+        };
+        tratoGanadoBaterias: boolean;
+        bateriaInicial: {
+          modeloCapacidad: string;
+        };
+        tieneAmpliacionBaterias: boolean;
+        bateriaAmpliacion: any | null;
+      };
+      respuestasPreguntas: {
+        tieneInstalacionFV: boolean | null;
+        tieneInversorHuawei: string;
+        tipoInversorHuawei: string;
+        tipoInstalacion: string;
+        tipoCuadroElectrico: string;
+        tieneBaterias: boolean | null;
+        tipoBaterias: string;
+        capacidadCanadian: string;
+        capacidadHuawei: string;
+        instalacionCerca10m: boolean | null;
+        metrosExtra: string;
+        requiereContactoManual: boolean;
+      };
+    };
+  }>> {
     return makeRequest(`baterias/comunero/${clienteId}`, {
       method: 'GET',
     });
@@ -577,3 +650,338 @@ export default {
 
 // Exportar funciones helper FSM
 export { getFSMStateForRequest } from '../types/fsmTypes';
+
+// Hook personalizado para usar en componentes React (debe importarse en el componente)
+// NOTA: Este debe ser usado dentro de un componente React, no como función standalone
+export const createCargarComuneroHook = () => {
+  // Esta función debe ser llamada dentro de un componente para acceder a los hooks
+  const cargarComuneroConNavegacion = async (
+    clienteId: string, 
+    formStore: any, 
+    navigate: (path: string) => void
+  ) => {
+    const resultado = await cargarComuneroPorId(clienteId, formStore);
+    
+    if (resultado.success && resultado.datosGuardados) {
+      console.log(`🧭 Navegando automáticamente a: ${resultado.rutaNavegacion}`);
+      navigate(resultado.rutaNavegacion);
+      return { 
+        success: true, 
+        fsmState: resultado.fsmState,
+        ruta: resultado.rutaNavegacion 
+      };
+    } else if (resultado.success) {
+      console.warn(`⚠️ fsmState ${resultado.fsmState} no implementado, navegación manual requerida`);
+      return { 
+        success: true, 
+        fsmState: resultado.fsmState,
+        ruta: resultado.rutaNavegacion,
+        requiresManualProcessing: true
+      };
+    }
+    
+    return { 
+      success: false, 
+      error: resultado.error,
+      fsmState: null,
+      ruta: '/home'
+    };
+  };
+  
+  return { cargarComuneroConNavegacion };
+};
+
+// Helper function para procesar la respuesta de obtenerPorId y cargarla en el form store
+export const procesarRespuestaComunero = (respuesta: any) => {
+  if (!respuesta.success || !respuesta.data) {
+    throw new Error('Respuesta inválida del servidor');
+  }
+
+  const { data } = respuesta;
+  const { fsmState, data: comuneroData } = data;
+
+  // Preparar datos para el form store
+  const datosParaStore = {
+    // Datos básicos del formulario
+    nombre: comuneroData.comunero.nombre || '',
+    mail: comuneroData.comunero.email || '',
+    telefono: comuneroData.comunero.telefono || '',
+    direccion: comuneroData.comunero.direccion || '',
+    codigoPostal: comuneroData.comunero.codigoPostal || '',
+    ciudad: comuneroData.comunero.ciudad || '',
+    provincia: comuneroData.comunero.provincia || '',
+    
+    // Estado FSM
+    fsmState: fsmState,
+    
+    // Datos de validación
+    token: comuneroData.token,
+    enZona: comuneroData.enZona,
+    propuestaId: comuneroData.propuestaId,
+    dealId: comuneroData.dealId,
+    
+    // Datos del comunero
+    comunero: {
+      id: comuneroData.comunero.id,
+      nombre: comuneroData.comunero.nombre,
+      email: comuneroData.comunero.email,
+      telefono: comuneroData.comunero.telefono,
+      direccion: comuneroData.comunero.direccion,
+      codigoPostal: comuneroData.comunero.codigoPostal,
+      ciudad: comuneroData.comunero.ciudad,
+      provincia: comuneroData.comunero.provincia,
+    },
+    
+    // Análisis de tratos
+    analisisTratos: comuneroData.analisisTratos,
+    
+    // Respuestas a preguntas
+    respuestasPreguntas: comuneroData.respuestasPreguntas || {},
+  };
+
+  console.log('📋 Datos procesados para el store:', datosParaStore);
+  
+  return {
+    datosParaStore,
+    fsmState,
+    rawResponse: data
+  };
+};
+
+// Helper function para determinar la ruta/vista basada en el fsmState
+export const obtenerRutaPorFsmState = (fsmState: string): string => {
+  const rutasPorEstado: Record<string, string> = {
+    'initial': '/home',
+    '01_IN_ZONE_LEAD': '/preguntas-adicionales',
+    '02_IN_ZONE_WITH_COST': '/preguntas-adicionales', // Podría ser una vista diferente
+    '03_OUT_ZONE': '/fuera-zona', // Vista para usuarios fuera de zona
+    '04_MONO_DESCONOCE_A': '/preguntas-adicionales',
+    '05_MONO_DESCONOCE_M': '/preguntas-adicionales', 
+    '06_TRI_DESCONOCE_A': '/preguntas-adicionales',
+    '07_TRI_DESCONOCE_M': '/preguntas-adicionales',
+    // Agregar más estados según se definan
+  };
+
+  const ruta = rutasPorEstado[fsmState];
+  
+  if (!ruta) {
+    console.warn(`⚠️ No se encontró ruta para fsmState: ${fsmState}, usando /home por defecto`);
+    return '/home';
+  }
+
+  console.log(`🧭 Navegando a: ${ruta} para fsmState: ${fsmState}`);
+  return ruta;
+};
+
+// Helper function para cargar un comunero por ID y preparar la navegación
+// IMPORTANTE: Esta función debe ser llamada desde un componente React para acceder al store
+export const cargarComuneroPorId = async (clienteId: string, useFormStore?: any) => {
+  try {
+    console.log(`🔍 Cargando comunero con ID: ${clienteId}`);
+    
+    // Obtener datos del comunero
+    const respuesta = await nuevoComuneroService.obtenerPorId(clienteId);
+    
+    if (!respuesta.success) {
+      throw new Error(respuesta.error || 'Error al obtener datos del comunero');
+    }
+
+    // Procesar la respuesta según el fsmState
+    const { fsmState } = respuesta.data!; // El ! es seguro porque ya verificamos success
+    
+    let datosParaStore;
+    let rutaNavegacion;
+    
+    // Procesar según el estado FSM (actualmente solo implementado para 01_IN_ZONE_LEAD)
+    if (fsmState === '01_IN_ZONE_LEAD') {
+      const procesado = procesarRespuestaComunero(respuesta);
+      datosParaStore = procesado.datosParaStore;
+      rutaNavegacion = obtenerRutaPorFsmState(fsmState);
+      
+      // Si se proporciona el store, cargar los datos automáticamente
+      if (useFormStore) {
+        console.log('💾 Cargando datos en Zustand store...');
+        
+        // Cargar datos básicos
+        const { setField, setValidacionData, setRespuestasPreguntas, setFsmState } = useFormStore;
+        
+        // Datos básicos del formulario
+        setField('nombre', datosParaStore.nombre);
+        setField('mail', datosParaStore.mail);
+        setField('telefono', datosParaStore.telefono);
+        setField('direccion', datosParaStore.direccion);
+        setField('codigoPostal', datosParaStore.codigoPostal);
+        setField('ciudad', datosParaStore.ciudad);
+        setField('provincia', datosParaStore.provincia);
+        
+        // Estado FSM
+        setFsmState(datosParaStore.fsmState);
+        
+        // Datos de validación completos
+        setValidacionData({
+          token: datosParaStore.token,
+          comunero: datosParaStore.comunero,
+          enZona: datosParaStore.enZona,
+          propuestaId: datosParaStore.propuestaId,
+          dealId: datosParaStore.dealId,
+          analisisTratos: datosParaStore.analisisTratos
+        });
+        
+        // Respuestas a preguntas previas
+        setRespuestasPreguntas(datosParaStore.respuestasPreguntas);
+        
+        console.log('✅ Datos cargados en Zustand:', {
+          fsmState: datosParaStore.fsmState,
+          comunero: datosParaStore.comunero.nombre,
+          respuestas: Object.keys(datosParaStore.respuestasPreguntas)
+        });
+      }
+    } else {
+      // Para otros estados FSM, implementar según sea necesario
+      console.warn(`⚠️ Estado FSM ${fsmState} no implementado aún`);
+      datosParaStore = null;
+      rutaNavegacion = obtenerRutaPorFsmState(fsmState);
+    }
+    
+    return {
+      success: true,
+      datosParaStore,
+      fsmState,
+      rutaNavegacion,
+      rawResponse: respuesta.data,
+      datosGuardados: !!useFormStore // Indica si se guardaron en el store
+    };
+    
+  } catch (error) {
+    console.error('❌ Error al cargar comunero:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error desconocido',
+      datosParaStore: null,
+      fsmState: null,
+      rutaNavegacion: '/home',
+      datosGuardados: false
+    };
+  }
+};
+
+/*
+EJEMPLO DE USO ACTUALIZADO:
+
+// En un componente React
+import { cargarComuneroPorId } from '../services/apiService';
+import { useFormStore } from '../zustand/formStore';
+import { useNavigate } from 'react-router-dom';
+
+const MiComponente = () => {
+  const navigate = useNavigate();
+  const formStore = useFormStore(); // Obtener todo el store
+  
+  const cargarCliente = async (clienteId: string) => {
+    // Opción 1: Cargar automáticamente en el store
+    const resultado = await cargarComuneroPorId(clienteId, formStore);
+    
+    if (resultado.success && resultado.datosGuardados) {
+      console.log('✅ Datos cargados automáticamente en Zustand');
+      // Navegar a la vista correcta
+      navigate(resultado.rutaNavegacion);
+    } else if (resultado.success) {
+      console.log('⚠️ Datos obtenidos pero no guardados (fsmState no implementado)');
+      // Manejar caso donde el fsmState no está implementado
+    } else {
+      console.error('❌ Error:', resultado.error);
+    }
+    
+    // Opción 2: Solo obtener datos sin guardar
+    // const resultado = await cargarComuneroPorId(clienteId);
+    // Luego procesar manualmente los datos si se necesita lógica custom
+  };
+};
+
+// ALTERNATIVA: Hook personalizado para simplificar el uso
+export const useCargarComunero = () => {
+  const navigate = useNavigate();
+  const formStore = useFormStore();
+  
+  const cargarComunero = async (clienteId: string) => {
+    const resultado = await cargarComuneroPorId(clienteId, formStore);
+    
+    if (resultado.success && resultado.datosGuardados) {
+      navigate(resultado.rutaNavegacion);
+      return { success: true, fsmState: resultado.fsmState };
+    }
+    
+    return { success: false, error: resultado.error };
+  };
+  
+  return { cargarComunero };
+};
+
+RESPUESTA ESPERADA del backend para fsmState "01_IN_ZONE_LEAD":
+{
+  "success": true,
+  "data": {
+    "id": "...",
+    "fsmState": "01_IN_ZONE_LEAD",
+    "data": {
+      "comunero": { ... },
+      "token": "...",
+      "enZona": "inZone",
+      "propuestaId": "...",
+      "dealId": "...",
+      "analisisTratos": { ... },
+      "respuestasPreguntas": { ... }
+    }
+  }
+}
+
+/*
+GUÍA PARA AGREGAR SOPORTE A NUEVOS FSM STATES:
+
+1. **Agregar mapeo de ruta en obtenerRutaPorFsmState():**
+   ```typescript
+   const rutasPorEstado: Record<string, string> = {
+     '01_IN_ZONE_LEAD': '/preguntas-adicionales',
+     '02_IN_ZONE_WITH_COST': '/preguntas-con-costo', // ← Nueva ruta
+     '03_OUT_ZONE': '/fuera-zona',
+     // ... agregar más según necesidad
+   };
+   ```
+
+2. **Agregar procesamiento en cargarComuneroPorId():**
+   ```typescript
+   if (fsmState === '01_IN_ZONE_LEAD') {
+     // Lógica existente
+   } else if (fsmState === '02_IN_ZONE_WITH_COST') {
+     // ← Agregar nueva lógica aquí
+     const procesado = procesarRespuestaConCosto(respuesta); // Nueva función
+     datosParaStore = procesado.datosParaStore;
+     // Cargar en Zustand usando useFormStore
+   } else if (fsmState === '03_OUT_ZONE') {
+     // ← Agregar lógica para usuarios fuera de zona
+   }
+   ```
+
+3. **Crear función procesadora específica si es necesario:**
+   ```typescript
+   export const procesarRespuestaConCosto = (respuesta: any) => {
+     // Procesar estructura específica para este estado
+     return { datosParaStore, fsmState, rawResponse };
+   };
+   ```
+
+4. **Actualizar tipos TypeScript si la estructura cambia**
+
+ESTADO ACTUAL:
+✅ Implementado: 01_IN_ZONE_LEAD → Carga automática en Zustand + navegación
+⚠️  Pendiente: Todos los demás estados FSM
+
+FLUJO ACTUAL PARA 01_IN_ZONE_LEAD:
+1. Cliente llama: cargarComuneroPorId(clienteId, formStore)
+2. Función hace GET /comunero/:id
+3. Backend responde con fsmState: "01_IN_ZONE_LEAD"
+4. Se procesan los datos con procesarRespuestaComunero()
+5. Se cargan automáticamente en Zustand store
+6. Se navega a /preguntas-adicionales
+7. Usuario ve la vista con todos sus datos precargados
+*/
