@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
 import { bateriaService, comuneroService, nuevoComuneroService } from '../services/apiService';
 import { useFormStore } from '../zustand/formStore';
-import { FSM_STATES } from '../types/fsmTypes';
 import PageTransition from './PageTransition';
 
 const PreguntasAdicionales = () => {
@@ -402,7 +401,8 @@ const PreguntasAdicionales = () => {
               
               token: form.token || '',
               dealId: form.dealId || '', // Mantener por compatibilidad
-              enZona: form.enZona || 'outZone'
+              enZona: form.enZona || 'outZone',
+              fsmState: '03_DESCONOCE_TENSION'
             };
 
             console.log('📤 IA no identificó el tipo - Enviando solicitud de contacto manual:', datosCompletos);
@@ -475,7 +475,8 @@ const PreguntasAdicionales = () => {
             
             token: form.token || '',
             dealId: form.dealId || '', // Mantener por compatibilidad
-            enZona: form.enZona || 'outZone'
+            enZona: form.enZona || 'outZone',
+            fsmState: '03_DESCONOCE_TENSION'
           };
 
           console.log('📤 Sin foto - Enviando solicitud de contacto manual:', datosCompletos);
@@ -524,8 +525,8 @@ const PreguntasAdicionales = () => {
           tieneBaterias: false,
           instalacionCerca10m: true,
           
-          // Estado FSM para transición a negociación
-          fsmState: FSM_STATES.CALC_TO_NEGOCIACION,
+          // Estado FSM para datos recogidos
+          fsmState: '04_DATOS_RECOGIDOS',
           
           // Datos adicionales del usuario para contexto
           nombre: form.comunero?.nombre || '',
@@ -552,7 +553,7 @@ const PreguntasAdicionales = () => {
           console.log('✅ Solicitud dentro de 10m procesada:', response.data);
           
           // Actualizar el estado FSM en el store
-          setFsmState(FSM_STATES.CALC_TO_NEGOCIACION);
+          setFsmState('04_DATOS_RECOGIDOS');
           
           showToast('¡Propuesta generada correctamente!', 'success');
           
@@ -619,7 +620,8 @@ const PreguntasAdicionales = () => {
         // Datos de validación del store
         token: form.token || '',
         propuestaId: form.propuestaId || '',
-        enZona: form.enZona || 'inZone'
+        enZona: form.enZona || 'inZone',
+        fsmState: '04_DATOS_RECOGIDOS'
       };
 
       // Llamada real al endpoint /baterias/crea

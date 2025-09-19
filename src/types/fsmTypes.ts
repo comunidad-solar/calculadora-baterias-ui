@@ -16,6 +16,7 @@ export type FSMState =
   | '01_IN_ZONE_LEAD'
   | '02_OUT_ZONE_LEAD'
   | '03_DESCONOCE_TENSION'
+  | '04_DATOS_RECOGIDOS'
   | '04_MONO_MAS15_M'
   | '05_MONO_DESCONOCE_M'
   | '06_TRI_MAS15_M'
@@ -40,6 +41,7 @@ export const isValidFSMState = (state: string): state is FSMState => {
     '01_IN_ZONE_LEAD',
     '02_OUT_ZONE_LEAD',
     '03_DESCONOCE_TENSION',
+    '04_DATOS_RECOGIDOS',
     '04_MONO_MAS15_M',
     '05_MONO_DESCONOCE_M',
     '06_TRI_MAS15_M',
@@ -146,6 +148,7 @@ export const FSM_TRANSITIONS: Record<FSMState, FSMState[]> = {
   '01_IN_ZONE_LEAD': ['success', 'error'],
   '02_OUT_ZONE_LEAD': ['success', 'error'],
   '03_DESCONOCE_TENSION': ['04_MONO_MAS15_M', '05_MONO_DESCONOCE_M', '06_TRI_MAS15_M', '07_TRI_DESCONOCE_M', 'success', 'error'],
+  '04_DATOS_RECOGIDOS': ['success', 'error'],
   '04_MONO_MAS15_M': ['success', 'error'],
   '05_MONO_DESCONOCE_M': ['success', 'error'],
   '06_TRI_MAS15_M': ['success', 'error'],
@@ -157,6 +160,7 @@ export type BatteryFSMState =
   | '01_IN_ZONE_LEAD'
   | '02_OUT_ZONE_LEAD' 
   | '03_DESCONOCE_TENSION'
+  | '04_DATOS_RECOGIDOS'
   | '04_MONO_MAS15_M'
   | '05_MONO_DESCONOCE_M'
   | '06_TRI_MAS15_M'
@@ -194,6 +198,7 @@ export const FSM_STATE_DESCRIPTIONS: Record<FSMState, string> = {
   '01_IN_ZONE_LEAD': 'Lead en zona - Instalación estándar',
   '02_OUT_ZONE_LEAD': 'Lead fuera de zona - Requiere evaluación',
   '03_DESCONOCE_TENSION': 'Desconoce tensión - Requiere identificación',
+  '04_DATOS_RECOGIDOS': 'Datos recogidos - Propuesta lista',
   '04_MONO_MAS15_M': 'Monofásico más de 15m - Requiere asesor',
   '05_MONO_DESCONOCE_M': 'Monofásico metros desconocidos - Requiere asesor',
   '06_TRI_MAS15_M': 'Trifásico más de 15m - Requiere asesor',
