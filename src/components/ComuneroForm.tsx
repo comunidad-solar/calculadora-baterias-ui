@@ -172,9 +172,11 @@ const ComuneroForm = () => {
               setField('propuestaId', (response.data as any).propuestaId);
               console.log('🆔 PropuestaId guardado:', (response.data as any).propuestaId);
             }
-            if ((response.data as any).enZona !== undefined) {
-              setField('enZona', (response.data as any).enZona);
-              console.log('📍 EnZona guardado:', (response.data as any).enZona);
+            // Buscar enZona en la estructura correcta: conditions.enZona
+            const enZonaValue = (response.data as any).conditions?.enZona || (response.data as any).enZona;
+            if (enZonaValue !== undefined) {
+              setField('enZona', enZonaValue);
+              console.log('📍 EnZona guardado:', enZonaValue, 'tipo:', typeof enZonaValue);
             }
           }
           

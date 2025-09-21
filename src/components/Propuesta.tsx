@@ -51,6 +51,7 @@ const Propuesta = () => {
   
   // Debug: mostrar datos recibidos
   console.log('📋 Datos de propuesta recibidos:', propuestaData);
+  console.log('📋 Estructura completa de propuestaData:', JSON.stringify(propuestaData, null, 2));
   console.log('📋 Datos del UsuarioContext:', { validacionData, usuario });
   console.log('📋 Datos del FormStore:', { comunero: form.comunero, enZona: form.enZona });
   
@@ -126,9 +127,41 @@ const Propuesta = () => {
   console.log('  - fallbackValidacionData:', fallbackValidacionData);
   console.log('  - usuario_propuesta:', usuario_propuesta);
   console.log('  - fallbackValidacionData.enZona:', fallbackValidacionData?.enZona);
+  console.log('  - propuestaData?.conditions?.enZona:', propuestaData?.conditions?.enZona);
   console.log('  - ¿fallbackValidacionData existe?', !!fallbackValidacionData);
   console.log('  - ¿usuario_propuesta existe?', !!usuario_propuesta);
-  console.log('  - ¿enZona es válida?', fallbackValidacionData?.enZona === "inZone" || fallbackValidacionData?.enZona === "inZoneWithCost");
+  
+  // Obtener enZona desde múltiples fuentes posibles (solo strings válidos)
+  const enZonaFromPropuesta = propuestaData?.conditions?.enZona;
+  const enZonaFromFallback = fallbackValidacionData?.enZona;
+  const enZonaFromNestedData = propuestaData?.data?.conditions?.enZona;
+  
+  console.log('  - enZonaFromPropuesta:', enZonaFromPropuesta, typeof enZonaFromPropuesta);
+  console.log('  - enZonaFromFallback:', enZonaFromFallback, typeof enZonaFromFallback);
+  console.log('  - enZonaFromNestedData:', enZonaFromNestedData, typeof enZonaFromNestedData);
+  
+  // Validar enZona - solo acepta los 3 valores válidos como strings
+  const valoresValidosEnZona = ["inZone", "inZoneWithCost", "outZone"];
+  const enZonaParaValidar = enZonaFromPropuesta || enZonaFromFallback || enZonaFromNestedData;
+  
+  console.log('  - enZonaParaValidar:', enZonaParaValidar, typeof enZonaParaValidar);
+  
+  const enZonaValida = !enZonaParaValidar || 
+                      (typeof enZonaParaValidar === 'string' && 
+                       (enZonaParaValidar === "inZone" || enZonaParaValidar === "inZoneWithCost"));
+  
+  console.log('  - ¿enZona es válida?', enZonaValida);
+  
+  // Debug adicional: si enZona no es válida, mostrar por qué
+  if (!enZonaValida) {
+    console.error('🚫 enZona INVÁLIDA - Análisis detallado:');
+    console.error('   - Valor recibido:', enZonaParaValidar);
+    console.error('   - Tipo:', typeof enZonaParaValidar);
+    console.error('   - ¿Es string?', typeof enZonaParaValidar === 'string');
+    console.error('   - ¿Es inZone?', enZonaParaValidar === "inZone");
+    console.error('   - ¿Es inZoneWithCost?', enZonaParaValidar === "inZoneWithCost");
+    console.error('   - Valores válidos esperados:', valoresValidosEnZona);
+  }
 
   // Funciones para manejar botones
   const handleContactarAsesor = () => {
@@ -152,13 +185,9 @@ const Propuesta = () => {
     return null;
   }
   
-  // Hacer la validación de enZona más permisiva - permitir undefined/null como válido
-  const enZonaValida = !fallbackValidacionData?.enZona || 
-                      fallbackValidacionData.enZona === "inZone" || 
-                      fallbackValidacionData.enZona === "inZoneWithCost";
-  
   if (!enZonaValida && !isDebugMode) {
-    console.error('❌ enZona no es válida:', fallbackValidacionData?.enZona, 'redirigiendo a home');
+    console.error('❌ enZona no es válida, redirigiendo a home');
+    console.error('   Valor analizado:', enZonaParaValidar);
     navigate('/');
     return null;
   }
