@@ -9,6 +9,7 @@ import ecoflowLogo from '../assets/ECOFLOWLOGO.png';
 import imagenFondoPropuesta4 from '../assets/imagenFondoPropuesta4.png';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useFormStore } from '../zustand/formStore';
 
 // Tipos para los datos de la propuesta
 interface ProductItem {
@@ -41,6 +42,7 @@ interface PropuestaData {
 
 const Propuesta = () => {
   const { validacionData, usuario } = useUsuario();
+  const { form } = useFormStore();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -49,6 +51,12 @@ const Propuesta = () => {
   
   // Debug: mostrar datos recibidos
   console.log('📋 Datos de propuesta recibidos:', propuestaData);
+  console.log('📋 Datos del UsuarioContext:', { validacionData, usuario });
+  console.log('📋 Datos del FormStore:', { comunero: form.comunero, enZona: form.enZona });
+  
+  // Debug para servidor: verificar si estamos en modo debug
+  const isDebugMode = new URLSearchParams(window.location.search).get('debug') === 'true';
+  console.log('🔧 Modo debug:', isDebugMode);
   
   // Datos por defecto si no hay propuestaData
   const defaultAmount = 4699;
@@ -76,7 +84,32 @@ const Propuesta = () => {
   // Combinar items base con items adicionales
   const items: (ProductItem | string)[] = [...baseItems, ...additionalItems];
   
-  const usuario_propuesta = propuestaData?.usuario || usuario;
+  // Crear datos de fallback usando el store de Zustand si UsuarioContext no tiene datos
+  const fallbackValidacionData = validacionData || {
+    token: form.token || '',
+    comunero: form.comunero || {
+      id: '',
+      nombre: '',
+      email: '',
+      telefono: '',
+      direccion: ''
+    },
+    enZona: form.enZona || 'inZone'
+  };
+  
+  // Crear usuario de fallback con datos más completos
+  const fallbackUsuario = usuario || (form.comunero ? {
+    id: form.comunero.id || '',
+    nombre: form.comunero.nombre || '',
+    email: form.comunero.email || '',
+    telefono: form.comunero.telefono || '',
+    direccion: form.comunero.direccion || '',
+    codigoPostal: form.comunero.codigoPostal,
+    ciudad: form.comunero.ciudad,
+    provincia: form.comunero.provincia
+  } : null);
+  
+  const usuario_propuesta = propuestaData?.usuario || fallbackUsuario;
   const groupName = propuestaData?.productData?.name || 'Pack Batería Monofásico EcoFlow 5 kWh con Inversor de 12 kW';
   
   // Estado para el modal
@@ -87,6 +120,16 @@ const Propuesta = () => {
   console.log('🏷️ Nombre del grupo:', groupName);
   console.log('🔍 PropuestaData completa:', propuestaData);
 
+  // Debug adicional para identificar problemas en servidor
+  console.log('🔍 Debug validaciones:');
+  console.log('  - validacionData (original):', validacionData);
+  console.log('  - fallbackValidacionData:', fallbackValidacionData);
+  console.log('  - usuario_propuesta:', usuario_propuesta);
+  console.log('  - fallbackValidacionData.enZona:', fallbackValidacionData?.enZona);
+  console.log('  - ¿fallbackValidacionData existe?', !!fallbackValidacionData);
+  console.log('  - ¿usuario_propuesta existe?', !!usuario_propuesta);
+  console.log('  - ¿enZona es válida?', fallbackValidacionData?.enZona === "inZone" || fallbackValidacionData?.enZona === "inZoneWithCost");
+
   // Funciones para manejar botones
   const handleContactarAsesor = () => {
     window.open('https://comunidadsolar.zohobookings.eu/#/108535000004860368', '_blank');
@@ -96,10 +139,42 @@ const Propuesta = () => {
     setShowModal(true);
   };
 
-  if (!validacionData || !usuario_propuesta || (validacionData.enZona !== "inZone" && validacionData.enZona !== "inZoneWithCost")) {
+  if (!fallbackValidacionData && !isDebugMode) {
+    console.error('❌ No hay fallbackValidacionData, redirigiendo a home');
     navigate('/');
     return null;
   }
+  
+  if ((!usuario_propuesta || !usuario_propuesta.nombre) && !isDebugMode) {
+    console.error('❌ No hay usuario_propuesta válido, redirigiendo a home');
+    console.error('   usuario_propuesta:', usuario_propuesta);
+    navigate('/');
+    return null;
+  }
+  
+  // Hacer la validación de enZona más permisiva - permitir undefined/null como válido
+  const enZonaValida = !fallbackValidacionData?.enZona || 
+                      fallbackValidacionData.enZona === "inZone" || 
+                      fallbackValidacionData.enZona === "inZoneWithCost";
+  
+  if (!enZonaValida && !isDebugMode) {
+    console.error('❌ enZona no es válida:', fallbackValidacionData?.enZona, 'redirigiendo a home');
+    navigate('/');
+    return null;
+  }
+  
+  if (isDebugMode) {
+    console.log('🔧 Modo debug activo - saltando validaciones');
+  }
+  
+  console.log('✅ Todas las validaciones pasaron, renderizando propuesta');
+
+  // Crear usuario de display con datos de fallback para el render
+  const usuarioDisplay = usuario_propuesta || {
+    nombre: 'Usuario',
+    email: 'usuario@ejemplo.com',
+    direccion: 'Dirección no disponible'
+  };
 
   return (
     <PageTransition>
@@ -138,7 +213,7 @@ const Propuesta = () => {
                   </div>
                 </div>
                 <div className="flex-grow-1">
-                  <h4 className="mb-1 fw-bold">Hola, {usuario_propuesta.nombre}</h4>
+                  <h4 className="mb-1 fw-bold">Hola, {usuarioDisplay.nombre}</h4>
                   <p className="mb-0 text-secondary">
                     Aquí tienes la propuesta de baterías que mejor se adapta a tu ubicación y necesidades específicas
                   </p>
