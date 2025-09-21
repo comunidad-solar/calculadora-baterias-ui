@@ -30,6 +30,18 @@ const PreguntasAdicionales = () => {
     setField
   } = useFormStore();
   
+  // Log para debugging - verificar datos disponibles al cargar el componente
+  useEffect(() => {
+    console.log('🔍 Estado del store al cargar PreguntasAdicionales:', {
+      comunero: form.comunero,
+      token: form.token,
+      propuestaId: form.propuestaId,
+      enZona: form.enZona,
+      fsmState: form.fsmState,
+      fullForm: form
+    });
+  }, []);
+  
   // Obtener respuestas de preguntas del store principal
   const {
     tieneInstalacionFV = null,
