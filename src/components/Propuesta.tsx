@@ -10,6 +10,7 @@ import imagenFondoPropuesta4 from '../assets/imagenFondoPropuesta4.png';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useFormStore } from '../zustand/formStore';
+import { bateriaService, comuneroService } from '../services/apiService';
 
 // Tipos para los datos de la propuesta
 interface ProductItem {
@@ -42,7 +43,7 @@ interface PropuestaData {
 
 const Propuesta = () => {
   const { validacionData, usuario } = useUsuario();
-  const { form } = useFormStore();
+  const { form, setField } = useFormStore();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -113,8 +114,9 @@ const Propuesta = () => {
   const usuario_propuesta = propuestaData?.usuario || fallbackUsuario;
   const groupName = propuestaData?.productData?.name || 'Pack Batería Monofásico EcoFlow 5 kWh con Inversor de 12 kW';
   
-  // Estado para el modal
+  // Estado para los modales
   const [showModal, setShowModal] = useState(false);
+  const [showVisitaTecnicaModal, setShowVisitaTecnicaModal] = useState(false);
   
   console.log('💰 Precio a mostrar:', amount);
   console.log('📦 Items a mostrar:', items);
@@ -168,8 +170,112 @@ const Propuesta = () => {
     window.open('https://comunidadsolar.zohobookings.eu/#/108535000004860368', '_blank');
   };
 
-  const handleComprar = () => {
-    setShowModal(true);
+  const handleSolicitarVisitaTecnica = async () => {
+    try {
+      // Obtener propuestaId del store (ya guardada previamente)
+      const propuestaIdFromStore = form.propuestaId;
+      
+      if (!propuestaIdFromStore) {
+        console.error('❌ No se encontró propuestaId para la solicitud');
+        alert('Error: No se puede procesar la solicitud. Contacta con soporte.');
+        return;
+      }
+
+      console.log('📞 Solicitando visita técnica para propuestaId:', propuestaIdFromStore);
+
+      // Extraer datos de direccion si es un objeto
+      let direccionTexto = '';
+      let ciudad = '';
+      let provincia = '';
+      let codigoPostal = '';
+      
+      if (typeof usuarioDisplay.direccion === 'string') {
+        direccionTexto = usuarioDisplay.direccion;
+      } else if (usuarioDisplay.direccion && typeof usuarioDisplay.direccion === 'object') {
+        const dir = usuarioDisplay.direccion as any;
+        direccionTexto = dir.calle || '';
+        ciudad = dir.ciudad || '';
+        provincia = dir.provincia || '';
+        codigoPostal = dir.codigoPostal || '';
+      }
+
+      // Preparar datos para la solicitud
+      const datosVisitaTecnica = {
+        propuestaId: propuestaIdFromStore,
+        email: usuarioDisplay.email,
+        nombre: usuarioDisplay.nombre,
+        telefono: (usuarioDisplay as any).telefono || '',
+        direccion: direccionTexto,
+        ciudad: ciudad || (usuarioDisplay as any).ciudad || '',
+        provincia: provincia || (usuarioDisplay as any).provincia || '',
+        codigoPostal: codigoPostal || (usuarioDisplay as any).codigoPostal || '',
+        contactId: fallbackValidacionData?.comunero?.id,
+        token: fallbackValidacionData?.token,
+        dealId: (fallbackValidacionData as any)?.dealId,
+        enZona: fallbackValidacionData?.enZona,
+        tipoSolicitud: 'visita_tecnica' as const,
+        motivo: 'Solicitud de visita técnica desde propuesta de baterías'
+      };
+
+      console.log('📋 Datos para enviar:', datosVisitaTecnica);
+
+      // Llamar al servicio
+      const resultado = await bateriaService.solicitarVisitaTecnica(datosVisitaTecnica);
+
+      if (resultado.success) {
+        console.log('✅ Visita técnica solicitada exitosamente:', resultado);
+        setShowVisitaTecnicaModal(true);
+      } else {
+        console.error('❌ Error al solicitar visita técnica:', resultado.error);
+        alert('Error al procesar tu solicitud. Por favor, inténtalo de nuevo o contacta con soporte.');
+      }
+    } catch (error) {
+      console.error('❌ Error inesperado:', error);
+      alert('Error inesperado. Por favor, inténtalo de nuevo más tarde.');
+    }
+  };
+
+  const handleComprar = async () => {
+    try {
+      // Obtener propuestaId del store (ya guardada previamente)
+      const propuestaIdFromStore = form.propuestaId;
+      
+      if (!propuestaIdFromStore) {
+        console.error('❌ No se encontró propuestaId para el proceso de compra');
+        alert('Error: No se puede procesar la compra. Contacta con soporte.');
+        return;
+      }
+
+      console.log('🛒 Iniciando proceso de compra para propuestaId:', propuestaIdFromStore);
+
+      // Enviar código de validación usando el propuestaId
+      const resultado = await comuneroService.enviarCodigoPorPropuestaId(propuestaIdFromStore);
+
+      if (resultado.success) {
+        console.log('✅ Código enviado exitosamente para compra');
+        
+        // Asegurar que el propuestaId esté guardado en el formStore
+        if (form.propuestaId !== propuestaIdFromStore) {
+          setField('propuestaId', propuestaIdFromStore);
+        }
+        
+        // Redirigir a la página de validación de código
+        navigate('/comunero/validar', { 
+          state: { 
+            fromCompra: true,
+            propuestaId: propuestaIdFromStore,
+            email: usuarioDisplay.email,
+            flujo: 'compra'
+          } 
+        });
+      } else {
+        console.error('❌ Error al enviar código para compra:', resultado.error);
+        alert('Error al procesar la compra. Por favor, inténtalo de nuevo o contacta con soporte.');
+      }
+    } catch (error) {
+      console.error('❌ Error inesperado en compra:', error);
+      alert('Error inesperado. Por favor, inténtalo de nuevo más tarde.');
+    }
   };
 
   if (!fallbackValidacionData && !isDebugMode) {
@@ -197,6 +303,10 @@ const Propuesta = () => {
   }
   
   console.log('✅ Todas las validaciones pasaron, renderizando propuesta');
+
+  // La propuestaId ya está gestionada centralmente en Zustand
+  // No necesitamos extraerla de otras fuentes para evitar conflictos
+  console.log('💾 PropuestaId actual en store:', form.propuestaId);
 
   // Crear usuario de display con datos de fallback para el render
   const usuarioDisplay = usuario_propuesta || {
@@ -325,7 +435,7 @@ const Propuesta = () => {
                       }}
                       onClick={handleComprar}
                     >
-                      COMPRAR
+                      CONTRATAR
                     </button>
                   </div>
                 </div>
@@ -350,7 +460,22 @@ const Propuesta = () => {
           </div>
           
           {/* Botones adicionales */}
-          <div className="mt-4 d-flex justify-content-end align-items-center">
+          <div className="mt-4 d-flex justify-content-between align-items-center">
+            <div className="d-flex align-items-center">
+              <button 
+                className="btn px-4 py-2 gradient-border-btn"
+                style={{
+                  background: 'white',
+                  color: '#79BC1C',
+                  borderRadius: '100px',
+                  border: '2px solid transparent',
+                  backgroundClip: 'padding-box'
+                }}
+                onClick={handleSolicitarVisitaTecnica}
+              >
+                SOLICITAR VISITA TÉCNICA
+              </button>
+            </div>
             <div className="d-flex align-items-center gap-3">
               <div className="d-flex align-items-center gap-2">
                 <span style={{ color: '#79BC1C' }}>ℹ️</span>
@@ -547,7 +672,7 @@ const Propuesta = () => {
                       }}
                       onClick={handleComprar}
                     >
-                      COMPRAR
+                      CONTRATAR
                     </button>
                   </div>
                 </div>
@@ -824,7 +949,7 @@ const Propuesta = () => {
                 }}
                 onClick={handleComprar}
               >
-                COMPRAR
+                CONTRATAR
               </button>
             </div>
           </div>
@@ -948,7 +1073,7 @@ const Propuesta = () => {
               }}
               onClick={handleComprar}
             >
-              COMPRAR
+              CONTRATAR
             </button>
           </div>
         </div>
@@ -1134,6 +1259,105 @@ const Propuesta = () => {
                 onClick={() => setShowModal(false)}
               >
                 Cerrar
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Modal para visita técnica usando Portal */}
+      {showVisitaTecnicaModal && createPortal(
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 999999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            padding: '20px'
+          }}
+          onClick={() => setShowVisitaTecnicaModal(false)}
+        >
+          <div 
+            className="bg-white border-0 shadow-lg" 
+            style={{
+              borderRadius: '20px',
+              maxWidth: '500px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflow: 'auto'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center p-3" style={{background: 'linear-gradient(135deg, #5CA00E, #B0D83E)', borderRadius: '20px 20px 0 0', position: 'relative'}}>
+              <h4 className="text-white fw-bold mb-0">
+                ✅ ¡Visita Técnica Solicitada!
+              </h4>
+              <button 
+                type="button" 
+                className="btn-close btn-close-white position-absolute top-0 end-0 m-3" 
+                aria-label="Close"
+                onClick={() => setShowVisitaTecnicaModal(false)}
+              ></button>
+            </div>
+            <div className="text-center py-4 px-4">
+              <div className="mb-4">
+                <div className="mx-auto mb-3" style={{width: '80px', height: '80px', background: 'linear-gradient(135deg, #5CA00E, #B0D83E)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                  <span style={{fontSize: '2rem'}}>🏠</span>
+                </div>
+                <h5 className="fw-bold text-dark mb-3">Tu solicitud ha sido registrada</h5>
+                <p className="text-muted mb-3" style={{fontSize: '1.1rem', lineHeight: '1.6'}}>
+                  ¡Perfecto! Nuestro equipo técnico se pondrá en contacto contigo en las próximas 24-48 horas 
+                  para coordinar la visita y evaluar tu instalación.
+                </p>
+                <div className="text-start">
+                  <h6 className="fw-bold text-dark mb-2">📋 Próximos pasos:</h6>
+                  <ul className="text-muted" style={{fontSize: '0.95rem', lineHeight: '1.5'}}>
+                    <li>Recibirás una llamada de confirmación</li>
+                    <li>Coordinaremos la fecha y hora que mejor te convenga</li>
+                    <li>El técnico evaluará tu instalación actual</li>
+                    <li>Te proporcionará un presupuesto personalizado</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div className="text-center pb-4">
+              <button 
+                type="button" 
+                className="btn btn-lg me-3" 
+                style={{
+                  background: 'linear-gradient(90deg, #5CA00E, #B0D83E)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '25px',
+                  padding: '12px 30px',
+                  fontSize: '1rem',
+                  fontWeight: 'bold'
+                }}
+                onClick={handleContactarAsesor}
+              >
+                Contactar Asesor
+              </button>
+              <button 
+                type="button" 
+                className="btn btn-lg" 
+                style={{
+                  background: 'transparent',
+                  color: '#666',
+                  border: '2px solid #ddd',
+                  borderRadius: '25px',
+                  padding: '12px 30px',
+                  fontSize: '1rem'
+                }}
+                onClick={() => setShowVisitaTecnicaModal(false)}
+              >
+                Entendido
               </button>
             </div>
           </div>

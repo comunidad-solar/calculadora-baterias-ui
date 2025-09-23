@@ -4,6 +4,7 @@ import { useToast } from '../context/ToastContext';
 import { bateriaService, comuneroService, nuevoComuneroService } from '../services/apiService';
 import { useFormStore } from '../zustand/formStore';
 import PageTransition from './PageTransition';
+import GoogleAddressInput from './GoogleAddressInput';
 
 const PreguntasAdicionales = () => {
   const [loading, setLoading] = useState(false);
@@ -60,6 +61,16 @@ const PreguntasAdicionales = () => {
     metrosExtra = ''
   } = form.respuestasPreguntas || {};
 
+  // Verificar si tenemos código postal para habilitar las preguntas
+  const comuneroActual = form.comunero;
+  const codigoPostalDisponible = !!(form.codigoPostal || comuneroActual?.codigoPostal);
+  
+  console.log('🔍 Estado código postal:', {
+    codigoPostalForm: form.codigoPostal,
+    codigoPostalComunero: comuneroActual?.codigoPostal,
+    codigoPostalDisponible
+  });
+
   // Efecto para buscar datos actualizados si viene del flujo de validar-codigo
   useEffect(() => {
     const buscarDatosActualizados = async () => {
@@ -67,7 +78,15 @@ const PreguntasAdicionales = () => {
       const vieneDeValidarCodigo = location.state?.fromValidarCodigo || 
                                    sessionStorage.getItem('fromValidarCodigo') === 'true';
       
-      if (!vieneDeValidarCodigo || !form.propuestaId) {
+      // Verificar si ya hicimos esta llamada para evitar repeticiones
+      const yaHizoLlamada = sessionStorage.getItem('datosActualizadosObtenidos') === 'true';
+      
+      if (!vieneDeValidarCodigo || !form.propuestaId || yaHizoLlamada) {
+        console.log('🚫 Saltando obtenerDatosActualizados:', {
+          vieneDeValidarCodigo,
+          propuestaId: !!form.propuestaId,
+          yaHizoLlamada
+        });
         return;
       }
 
@@ -75,6 +94,9 @@ const PreguntasAdicionales = () => {
       
       // Iniciar loading inmediatamente
       setLoadingDatosActualizados(true);
+      
+      // Marcar que ya hicimos esta llamada para evitar repeticiones
+      sessionStorage.setItem('datosActualizadosObtenidos', 'true');
       
       // Limpiar el flag para evitar llamadas repetidas
       sessionStorage.removeItem('fromValidarCodigo');
@@ -174,6 +196,40 @@ const PreguntasAdicionales = () => {
           console.log('ℹ️ Manteniendo información existente del proceso de validar-codigo debido a error en la consulta');
         } finally {
           setLoadingDatosActualizados(false);
+          
+          // Validar después de la llamada si tenemos código postal
+          setTimeout(() => {
+            const comuneroActual = form.comunero;
+            const codigoPostalActual = form.codigoPostal || comuneroActual?.codigoPostal;
+            
+            console.log('🔍 Validando código postal después de datos actualizados:', {
+              codigoPostalForm: form.codigoPostal,
+              codigoPostalComunero: comuneroActual?.codigoPostal,
+              codigoPostalFinal: codigoPostalActual
+            });
+            
+            // Si no tenemos código postal, activar modo edición automáticamente
+            if (!codigoPostalActual || codigoPostalActual.trim() === '') {
+              console.log('⚠️ No se encontró código postal, activando modo edición para que el usuario complete la información');
+              
+              // Usar iniciarEdicion() para prellenar datos correctamente
+              if (form.comunero) {
+                setInfoEditada({
+                  nombre: form.comunero.nombre || '',
+                  telefono: form.comunero.telefono || '',
+                  direccion: form.comunero.direccion || '',
+                  codigoPostal: form.comunero.codigoPostal || form.codigoPostal || '',
+                  ciudad: form.comunero.ciudad || form.ciudad || '',
+                  provincia: form.comunero.provincia || form.provincia || ''
+                });
+                setEditandoInfo(true);
+              }
+              
+              showToast('Por favor, completa tu dirección con código postal para continuar', 'warning');
+            } else {
+              console.log('✅ Código postal disponible, continuando con el flujo normal');
+            }
+          }, 500); // Pequeño delay para asegurar que los datos estén actualizados
         }
       }, 3000);
     };
@@ -184,6 +240,13 @@ const PreguntasAdicionales = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
+    // Validar código postal primero
+    if (!codigoPostalDisponible) {
+      showToast('Por favor completa tu dirección con código postal antes de continuar', 'error');
+      setLoading(false);
+      return;
+    }
 
     // Validaciones
     if (tieneInstalacionFV === null) {
@@ -520,9 +583,9 @@ const PreguntasAdicionales = () => {
       }
     }
     
-    // Si está en zona (inZone o inZoneWithCost) y puede instalar dentro de 10m
+    // Si está en zona (inZone, inZoneWithCost o NoCPAvailable) y puede instalar dentro de 10m
     if (!tieneInstalacionFV && (tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') && 
-        tieneBaterias === false && instalacionCerca10m === true && (form.enZona === 'inZone' || form.enZona === 'inZoneWithCost')) {
+        tieneBaterias === false && instalacionCerca10m === true && (form.enZona === 'inZone' || form.enZona === 'inZoneWithCost' || form.enZona === 'NoCPAvailable')) {
       try {
         // Preparar datos para el endpoint específico de instalación dentro de 10m
         const datosCompletos = {
@@ -642,6 +705,15 @@ const PreguntasAdicionales = () => {
       if (response.success) {
         console.log('Datos adicionales enviados:', response.data);
         showToast('¡Información guardada correctamente!', 'success');
+        
+        // Actualizar propuestaId en el store si el backend devuelve una nueva/actualizada
+        if (response.data?.propuestaId && response.data.propuestaId !== form.propuestaId) {
+          console.log('💾 Actualizando propuestaId en store:', response.data.propuestaId);
+          setField('propuestaId', response.data.propuestaId);
+        }
+        
+        // Limpiar flags de sesión al completar el proceso exitosamente
+        sessionStorage.removeItem('datosActualizadosObtenidos');
         
         // Redirigir a la página de propuesta con los datos recibidos
         navigate('/propuesta', {
@@ -769,22 +841,42 @@ const PreguntasAdicionales = () => {
 
   // Funciones para editar información del comunero
   const iniciarEdicion = () => {
-    if (form.comunero) {
-      setInfoEditada({
-        nombre: form.comunero.nombre || '',
-        telefono: form.comunero.telefono || '',
-        direccion: form.comunero.direccion || '',
-        codigoPostal: form.comunero.codigoPostal || '',
-        ciudad: form.comunero.ciudad || '',
-        provincia: form.comunero.provincia || ''
-      });
-      setEditandoInfo(true);
-    }
+    // Prellenar con datos disponibles tanto del comunero como del form principal
+    setInfoEditada({
+      nombre: form.comunero?.nombre || form.nombre || '',
+      telefono: form.comunero?.telefono || form.telefono || '',
+      direccion: form.comunero?.direccion || form.direccion || '',
+      codigoPostal: form.comunero?.codigoPostal || form.codigoPostal || '',
+      ciudad: form.comunero?.ciudad || form.ciudad || '',
+      provincia: form.comunero?.provincia || form.provincia || ''
+    });
+    setEditandoInfo(true);
   };
 
   const guardarEdicion = async () => {
     if (!form.comunero || !form.propuestaId) {
       showToast('Error: Faltan datos necesarios para guardar', 'error');
+      return;
+    }
+
+    // Validaciones obligatorias
+    if (!infoEditada.direccion || infoEditada.direccion.trim() === '') {
+      showToast('La dirección es obligatoria', 'error');
+      return;
+    }
+
+    if (!infoEditada.codigoPostal || infoEditada.codigoPostal.trim() === '') {
+      showToast('El código postal es obligatorio para generar la propuesta', 'error');
+      return;
+    }
+
+    if (!infoEditada.nombre || infoEditada.nombre.trim() === '') {
+      showToast('El nombre es obligatorio', 'error');
+      return;
+    }
+
+    if (!infoEditada.telefono || infoEditada.telefono.trim() === '') {
+      showToast('El teléfono es obligatorio', 'error');
       return;
     }
 
@@ -810,20 +902,32 @@ const PreguntasAdicionales = () => {
       const response = await comuneroService.editarInfoComunero(datosEdicion);
       
       if (response.success) {
-        // Actualizar los datos del comunero en el store
+        // Actualizar los datos del comunero en el store con la información actualizada del backend
         const comuneroActualizado = {
           ...form.comunero,
           ...infoEditada
         };
         
+        // Si el backend devuelve información actualizada, usarla
+        if (response.data && response.data.updatedInfo) {
+          Object.assign(comuneroActualizado, response.data.updatedInfo);
+        }
+        
         // Usar setField para actualizar comunero
         const { setField } = useFormStore.getState();
         setField('comunero', comuneroActualizado);
+        
+        // Si el backend devuelve nueva información de zona, actualizarla también
+        if (response.data && response.data.updatedInfo && response.data.updatedInfo.enZona) {
+          setField('enZona', response.data.updatedInfo.enZona);
+          console.log('🎯 Zona actualizada:', response.data.updatedInfo.enZona);
+        }
         
         setEditandoInfo(false);
         showToast('Información actualizada correctamente', 'success');
         
         console.log('✅ Información del comunero actualizada:', comuneroActualizado);
+        console.log('📍 Respuesta completa del backend:', response.data);
       } else {
         throw new Error(response.error || 'Error al actualizar la información');
       }
@@ -1000,6 +1104,18 @@ const PreguntasAdicionales = () => {
                         </div>
                       </div>
                     )}
+                    
+                    {/* Alerta de código postal faltante */}
+                    {!loadingDatosActualizados && !codigoPostalDisponible && (
+                      <div className="alert alert-warning border-0 mt-2 mb-0 py-2">
+                        <div className="d-flex align-items-center">
+                          <span className="me-2">⚠️</span>
+                          <small>
+                            <strong>Código postal requerido:</strong> Completa tu dirección para continuar con la propuesta
+                          </small>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   {!editandoInfo && !loadingDatosActualizados && (
                     <button
@@ -1018,50 +1134,66 @@ const PreguntasAdicionales = () => {
                   <div className="row g-3">
                     <div className="col-12">
                       <label className="form-label fw-semibold">
-                        <span className="me-2">👤</span>Nombre
+                        <span className="me-2">👤</span>Nombre <span className="text-danger">*</span>
                       </label>
                       <input
                         type="text"
                         className="form-control"
                         value={infoEditada.nombre}
                         onChange={(e) => handleInputChange('nombre', e.target.value)}
+                        required
                       />
                     </div>
                     
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">
-                        <span className="me-2">📞</span>Teléfono
+                        <span className="me-2">📞</span>Teléfono <span className="text-danger">*</span>
                       </label>
                       <input
                         type="tel"
                         className="form-control"
                         value={infoEditada.telefono}
                         onChange={(e) => handleInputChange('telefono', e.target.value)}
+                        required
                       />
                     </div>
                     
                     <div className="col-md-6">
                       <label className="form-label fw-semibold">
-                        <span className="me-2">📮</span>Código Postal
+                        <span className="me-2">📮</span>Código Postal <span className="text-danger">*</span>
                       </label>
                       <input
                         type="text"
                         className="form-control"
                         value={infoEditada.codigoPostal}
                         onChange={(e) => handleInputChange('codigoPostal', e.target.value)}
+                        required
                       />
                     </div>
                     
                     <div className="col-12">
-                      <label className="form-label fw-semibold">
-                        <span className="me-2">📍</span>Dirección
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control"
+                      <GoogleAddressInput
                         value={infoEditada.direccion}
-                        onChange={(e) => handleInputChange('direccion', e.target.value)}
+                        onChange={(newAddress) => handleInputChange('direccion', newAddress)}
+                        onPostalCodeChange={(codigoPostal) => {
+                          if (codigoPostal && codigoPostal.trim() !== '') {
+                            handleInputChange('codigoPostal', codigoPostal);
+                          }
+                        }}
+                        onCityChange={(ciudad) => {
+                          if (ciudad && ciudad.trim() !== '') {
+                            handleInputChange('ciudad', ciudad);
+                          }
+                        }}
+                        onProvinceChange={(provincia) => {
+                          if (provincia && provincia.trim() !== '') {
+                            handleInputChange('provincia', provincia);
+                          }
+                        }}
                       />
+                      <small className="form-text text-muted">
+                        <strong>Importante:</strong> La dirección debe incluir código postal para generar la propuesta
+                      </small>
                     </div>
                     
                     <div className="col-md-6">
@@ -1086,6 +1218,15 @@ const PreguntasAdicionales = () => {
                         value={infoEditada.provincia}
                         onChange={(e) => handleInputChange('provincia', e.target.value)}
                       />
+                    </div>
+                    
+                    <div className="col-12">
+                      <div className="alert alert-info py-2">
+                        <small>
+                          <strong>Nota:</strong> Los campos marcados con <span className="text-danger">*</span> son obligatorios. 
+                          El código postal es especialmente importante para generar una propuesta precisa.
+                        </small>
+                      </div>
                     </div>
                     
                     <div className="col-12">
@@ -1127,7 +1268,7 @@ const PreguntasAdicionales = () => {
                         <span className="me-2">👤</span>
                         <div>
                           <small className="text-muted d-block">Nombre</small>
-                          <span className="fw-semibold">{form.comunero.nombre}</span>
+                          <span className="fw-semibold">{form.comunero?.nombre || form.nombre || 'No especificado'}</span>
                         </div>
                       </div>
                     </div>
@@ -1137,7 +1278,7 @@ const PreguntasAdicionales = () => {
                         <span className="me-2">📧</span>
                         <div>
                           <small className="text-muted d-block">Email</small>
-                          <span className="fw-semibold">{form.comunero.email}</span>
+                          <span className="fw-semibold">{form.comunero?.email || form.mail || 'No especificado'}</span>
                         </div>
                       </div>
                     </div>
@@ -1147,7 +1288,7 @@ const PreguntasAdicionales = () => {
                         <span className="me-2">📞</span>
                         <div>
                           <small className="text-muted d-block">Teléfono</small>
-                          <span className="fw-semibold">{form.comunero.telefono}</span>
+                          <span className="fw-semibold">{form.comunero?.telefono || form.telefono || 'No especificado'}</span>
                         </div>
                       </div>
                     </div>
@@ -1157,12 +1298,12 @@ const PreguntasAdicionales = () => {
                         <span className="me-2 mt-1">📍</span>
                         <div>
                           <small className="text-muted d-block">Dirección</small>
-                          <span className="fw-semibold">{form.comunero.direccion}</span>
-                          {form.comunero.codigoPostal && form.comunero.ciudad && (
+                          <span className="fw-semibold">{form.comunero?.direccion || form.direccion || 'No especificada'}</span>
+                          {(form.comunero?.codigoPostal || form.codigoPostal) && (form.comunero?.ciudad || form.ciudad) && (
                             <div className="mt-1">
                               <small className="text-muted">
-                                {form.comunero.codigoPostal} - {form.comunero.ciudad}
-                                {form.comunero.provincia && `, ${form.comunero.provincia}`}
+                                {form.comunero?.codigoPostal || form.codigoPostal} - {form.comunero?.ciudad || form.ciudad}
+                                {(form.comunero?.provincia || form.provincia) && `, ${form.comunero?.provincia || form.provincia}`}
                               </small>
                             </div>
                           )}
@@ -1191,8 +1332,14 @@ const PreguntasAdicionales = () => {
             
             {/* Pregunta 1: ¿Tienes instalación fotovoltaica? */}
             <div>
-              <label className="form-label h5 fw-bold mb-3">
+              <label className={`form-label h5 fw-bold mb-3 ${!codigoPostalDisponible ? 'text-muted' : ''}`}>
                 ¿Tienes instalación fotovoltaica instalada? <span className="text-danger">*</span>
+                {!codigoPostalDisponible && (
+                  <small className="d-block text-warning mt-1">
+                    <i className="fas fa-lock me-1"></i>
+                    Completa tu dirección en la sección "Esta es la información que tenemos" para continuar
+                  </small>
+                )}
               </label>
               <div className="d-flex gap-4">
                 <div className="form-check">
@@ -1203,8 +1350,9 @@ const PreguntasAdicionales = () => {
                     id="instalacionSi"
                     checked={tieneInstalacionFV === true}
                     onChange={() => handleInstalacionChange(true)}
+                    disabled={!codigoPostalDisponible}
                   />
-                  <label className="form-check-label fw-semibold" htmlFor="instalacionSi">
+                  <label className={`form-check-label fw-semibold ${!codigoPostalDisponible ? 'text-muted' : ''}`} htmlFor="instalacionSi">
                     Sí
                   </label>
                 </div>
@@ -1216,8 +1364,9 @@ const PreguntasAdicionales = () => {
                     id="instalacionNo"
                     checked={tieneInstalacionFV === false}
                     onChange={() => handleInstalacionChange(false)}
+                    disabled={!codigoPostalDisponible}
                   />
-                  <label className="form-check-label fw-semibold" htmlFor="instalacionNo">
+                  <label className={`form-check-label fw-semibold ${!codigoPostalDisponible ? 'text-muted' : ''}`} htmlFor="instalacionNo">
                     No
                   </label>
                 </div>
@@ -1844,20 +1993,27 @@ const PreguntasAdicionales = () => {
                 <button
                   type="submit"
                   className="btn btn-primary btn-lg fw-bold button-hover-result"
-                  disabled={loading}
+                  disabled={loading || !codigoPostalDisponible}
                   style={{
-                    background: 'linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%)',
-                    border: 'none'
+                    background: !codigoPostalDisponible 
+                      ? 'linear-gradient(135deg, #6c757d 0%, #5a6268 100%)'
+                      : 'linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%)',
+                    border: 'none',
+                    opacity: !codigoPostalDisponible ? 0.6 : 1
                   }}
                 >
-                  {loading ? 'Guardando...' : 'Continuar con mi propuesta'}
+                  {loading ? 'Guardando...' : 
+                   !codigoPostalDisponible ? 'Completa tu dirección para continuar' :
+                   'Continuar con mi propuesta'}
                 </button>
               )}
               
               <small className="text-muted text-center">
-                {debeContactarAsesor()
-                  ? 'Un especialista evaluará tu caso específico y te contactará pronto'
-                  : 'Esta información nos ayudará a crear una propuesta personalizada para ti'
+                {!codigoPostalDisponible 
+                  ? 'Necesitamos tu código postal para generar una propuesta precisa'
+                  : debeContactarAsesor()
+                    ? 'Un especialista evaluará tu caso específico y te contactará pronto'
+                    : 'Esta información nos ayudará a crear una propuesta personalizada para ti'
                 }
               </small>
             </div>

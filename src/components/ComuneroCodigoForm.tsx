@@ -17,8 +17,13 @@ const ComuneroCodigoForm = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const email = location.state?.email;
+  const fromCompra = location.state?.fromCompra;
+  const propuestaIdFromState = location.state?.propuestaId;
   const { showToast } = useToast();
-  const { setValidacionData } = useFormStore();
+  const { setValidacionData, form } = useFormStore();
+
+  // Usar propuestaId del store si está disponible, sino usar la del state
+  const propuestaId = form.propuestaId || propuestaIdFromState;
 
   // Cooldown timer effect
   useEffect(() => {
@@ -51,59 +56,85 @@ const ComuneroCodigoForm = () => {
     setError('');
     
     try {
-      const response = await comuneroService.validarCodigo(codigo, email);
+      let response;
       
-      console.log('🌐 Response from validarCodigo:', response);
-      if (response.success) {
-        // Log específico para analisisTratos
-        if (response.data?.analisisTratos) {
-          console.log('📊 Análisis de tratos:', response.data.analisisTratos);
+      if (fromCompra && propuestaId) {
+        // Flujo de compra/contratación: usar endpoint de contratación
+        console.log('🛒 Validando código para contratación con propuestaId:', propuestaId);
+        response = await comuneroService.validarCodigoContratacion(codigo, propuestaId);
+        
+        // Para flujo de contratación, esperamos solo {codigoValido: true}
+        if (response.success && response.data?.codigoValido === true) {
+          console.log('✅ Código válido para contratación, redirigiendo a firma de contrato');
+          showToast('¡Código validado correctamente!', 'success');
+          
+          // Redirigir directamente a firma de contrato
+          navigate('/contratacion/firma-contrato', {
+            state: { 
+              propuestaId: propuestaId,
+              fromValidacion: true
+            }
+          });
+          return;
+        } else {
+          throw new Error('Código de verificación incorrecto para contratación');
         }
+      } else {
+        // Flujo normal de comunero: usar endpoint estándar
+        console.log('🔍 Validando código estándar con email:', email);
+        response = await comuneroService.validarCodigo(codigo, email);
         
-        console.log('🔍 Estado de enZona:', response.data?.enZona);
-        
-        showToast('¡Código validado correctamente!', 'success');
-        // Guardar los datos de validación en el contexto
-        if (response.data) {
-          // Asegurarnos de que tiene la estructura correcta
+        // Para flujo normal, esperamos estructura completa
+        if (response.success && response.data) {
+          console.log('✅ Código validado para flujo normal');
+          showToast('¡Código validado correctamente!', 'success');
+          
+          // Log específico para analisisTratos
+          if (response.data?.analisisTratos) {
+            console.log('📊 Análisis de tratos:', response.data.analisisTratos);
+          }
+          
+          console.log('🔍 Estado de enZona:', response.data?.enZona);
+          
+          // Guardar datos de validación en el contexto
           const validacionData = {
             token: response.data.token,
             comunero: response.data.comunero,
             enZona: response.data.enZona,
             motivo: response.data.motivo,
-            propuestaId: response.data.propuestaId, // Temporalmente comentado por error de TypeScript
+            propuestaId: response.data.propuestaId,
             analisisTratos: response.data.analisisTratos
           };
           
           console.log('💾 Guardando validacionData:', validacionData);
           setValidacionData(validacionData);
           
-          // Verificar el estado de la zona para redirigir correctamente
-          if (response.data.enZona === "inZone" || response.data.enZona === "inZoneWithCost") {
-            // Marcar que viene del flujo de validar-codigo para buscar datos actualizados
+          // Redirigir según el estado de la zona
+          if (response.data.enZona === "inZone" || response.data.enZona === "inZoneWithCost" || response.data.enZona === "NoCPAvailable") {
+            // Limpiar flags previos y establecer nuevo flag de validación
+            sessionStorage.removeItem('datosActualizadosObtenidos');
             sessionStorage.setItem('fromValidarCodigo', 'true');
-            
-            // En zona (con o sin costo): ir a preguntas adicionales
             navigate('/preguntas-adicionales', {
-              state: { fromValidarCodigo: true }
+              state: { 
+                fromValidarCodigo: true,
+                validacionData: validacionData // Backup en state
+              }
             });
           } else if (response.data.enZona === "outZone") {
-            // Fuera de zona: ir a página de resultado con mensaje de fuera de zona
             navigate('/resultado', { 
               state: { 
                 fueraDeZona: true, 
-                motivo: response.data.motivo 
+                motivo: response.data.motivo,
+                validacionData: validacionData // Backup en state
               } 
             });
+          } else {
+            navigate('/resultado');
           }
+          return;
         } else {
-          // Fallback si no hay data
-          navigate('/resultado');
+          throw new Error('Código incorrecto. Inténtalo de nuevo.');
         }
-      } else {
-        const errorMsg = response.error || 'Código incorrecto. Inténtalo de nuevo.';
-        setError(errorMsg);
-        showToast(errorMsg, 'error');
       }
     } catch (err) {
       const errorMsg = 'No se pudo conectar con el servidor. Comprueba tu conexión a internet.';
@@ -146,9 +177,14 @@ const ComuneroCodigoForm = () => {
         <div className="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style={{width: '60px', height: '60px'}}>
           <span style={{fontSize: '24px'}}>📧</span>
         </div>
-        <h2 className="h4 fw-bold mb-2">Introduce el código de validación</h2>
+        <h2 className="h4 fw-bold mb-2">
+          {fromCompra ? 'Confirma tu compra' : 'Introduce el código de validación'}
+        </h2>
         <p className="text-muted mb-0">
-          Hemos enviado un código de 6 dígitos a tu correo electrónico
+          {fromCompra 
+            ? 'Para proceder con la compra, introduce el código de 6 dígitos que hemos enviado a tu correo electrónico'
+            : 'Hemos enviado un código de 6 dígitos a tu correo electrónico'
+          }
         </p>
       </div>
       <form className="d-grid gap-4" onSubmit={handleSubmit}>
@@ -166,7 +202,10 @@ const ComuneroCodigoForm = () => {
           className="btn btn-dark btn-lg w-100 fw-bold" 
           disabled={loading || codigo.length !== 6}
         >
-          {loading ? 'Validando...' : 'Validar código'}
+          {loading 
+            ? (fromCompra ? 'Procesando compra...' : 'Validando...') 
+            : (fromCompra ? 'Confirmar compra' : 'Validar código')
+          }
         </button>
         
         <div className="text-center">

@@ -4,6 +4,7 @@ import BackButton from './BackButton';
 import PageTransition from './PageTransition';
 import { comuneroService } from '../services/apiService';
 import { useToast } from '../context/ToastContext';
+import { useFormStore } from '../zustand/formStore';
 
 const ComuneroEmailForm = () => {
   const [email, setEmail] = useState('');
@@ -13,6 +14,7 @@ const ComuneroEmailForm = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { showToast } = useToast();
+  const { setField } = useFormStore();
 
   // Pre-rellenar email si viene desde error de duplicado
   useEffect(() => {
@@ -46,6 +48,9 @@ const ComuneroEmailForm = () => {
       const response = await comuneroService.validarEmail(email);
       
       if (response.success) {
+        // Guardar el email en el store de Zustand
+        setField('mail', email);
+        
         showToast('¡Código enviado! Revisa tu correo electrónico.', 'success');
         navigate('/comunero/validar', { state: { email } });
       } else {
