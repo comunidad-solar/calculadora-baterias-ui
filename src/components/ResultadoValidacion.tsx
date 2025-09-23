@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useUsuario } from '../context/UsuarioContext';
 import type { Usuario } from '../context/UsuarioContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
 import BackButton from './BackButton';
 import PageTransition from './PageTransition';
@@ -9,7 +9,7 @@ import GoogleAddressInput from './GoogleAddressInput';
 import { useFormStore } from '../zustand/formStore';
 
 const ResultadoValidacion = () => {
-  const { validacionData, usuario, updateUsuario } = useUsuario();
+  const { validacionData, usuario, updateUsuario, setValidacionData } = useUsuario();
   const { form } = useFormStore();
   const [editMode, setEditMode] = useState(false);
   const [editData, setEditData] = useState<Usuario>(usuario || {} as Usuario);
@@ -18,8 +18,18 @@ const ResultadoValidacion = () => {
   const [cardAnimated, setCardAnimated] = useState(false);
   const [direccionOriginalVacia, setDireccionOriginalVacia] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { showToast } = useToast();
   const bypass = form.bypass;
+
+  // Efecto para cargar datos desde navigation state si el contexto está vacío
+  useEffect(() => {
+    // Si no hay datos en el contexto pero sí en location.state, cargarlos
+    if ((!validacionData || !usuario) && location.state?.validacionData) {
+      console.log('🔄 Cargando datos desde location.state:', location.state.validacionData);
+      setValidacionData(location.state.validacionData);
+    }
+  }, [validacionData, usuario, location.state, setValidacionData]);
 
   // Animaciones de entrada y auto-edición si falta dirección
   useEffect(() => {
@@ -32,9 +42,11 @@ const ResultadoValidacion = () => {
         setDireccionOriginalVacia(true);
       }
       
-      // Auto-activar edición si está en zona (inZone o inZoneWithCost) y no hay dirección
-      const isInZone = validacionData?.enZona === "inZone" || validacionData?.enZona === "inZoneWithCost";
-      if (isInZone && usuario && (!usuario.direccion || usuario.direccion.trim() === '')) {
+      // Auto-activar edición si está en zona (inZone, inZoneWithCost o NoCPAvailable) y no hay dirección
+      const isInZoneOrNeedsAddress = validacionData?.enZona === "inZone" || 
+                                     validacionData?.enZona === "inZoneWithCost" || 
+                                     validacionData?.enZona === "NoCPAvailable";
+      if (isInZoneOrNeedsAddress && usuario && (!usuario.direccion || usuario.direccion.trim() === '')) {
         setEditMode(true);
       }
     }, 150);
@@ -42,14 +54,18 @@ const ResultadoValidacion = () => {
   }, [validacionData, usuario]);
 
   if (!validacionData || !usuario) {
-    navigate('/');
+    console.log("validacionDData", validacionData);
+    console.log("usuario", usuario);
+     navigate('/');
     return null;
   }
 
   const handleSaveChanges = async () => {
-    // Validar campos obligatorios para usuarios en zona (inZone o inZoneWithCost)
-    const isInZone = validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost";
-    if (isInZone) {
+    // Validar campos obligatorios para usuarios en zona (inZone, inZoneWithCost o NoCPAvailable)
+    const needsCompleteData = validacionData.enZona === "inZone" || 
+                              validacionData.enZona === "inZoneWithCost" || 
+                              validacionData.enZona === "NoCPAvailable";
+    if (needsCompleteData) {
       if (!editData.direccion || editData.direccion.trim() === '') {
         showToast('Por favor completa tu dirección', 'error');
         return;
@@ -91,9 +107,11 @@ const ResultadoValidacion = () => {
 
   const handleContinuarPropuesta = () => {
     // Verificar que los campos obligatorios estén completos
-    const isInZone = validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost";
+    const needsCompleteData = validacionData.enZona === "inZone" || 
+                              validacionData.enZona === "inZoneWithCost" || 
+                              validacionData.enZona === "NoCPAvailable";
     
-    if (isInZone) {
+    if (needsCompleteData) {
       if (!usuario.tipoInstalacion) {
         showToast('Por favor completa el tipo de instalación antes de continuar', 'warning');
         setEditMode(true);
@@ -106,8 +124,8 @@ const ResultadoValidacion = () => {
       }
     }
     
-    // Navegar a preguntas adicionales si está en zona (inZone o inZoneWithCost)
-    if (isInZone) {
+    // Navegar a preguntas adicionales si necesita datos completos (inZone, inZoneWithCost o NoCPAvailable)
+    if (needsCompleteData) {
       navigate('/preguntas-adicionales', { replace: true });
     } else {
       navigate('/propuesta');
@@ -179,13 +197,13 @@ const ResultadoValidacion = () => {
           
           {/* Header con estado */}
           <div className="text-center mb-4 fade-in-result">
-            <div className={`bg-${(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost") ? 'success' : (bypass ? 'info' : 'warning')} bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3 status-icon-result`} style={{width: '80px', height: '80px'}}>
+            <div className={`bg-${(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost" || validacionData.enZona === "NoCPAvailable") ? 'success' : (bypass ? 'info' : 'warning')} bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3 status-icon-result`} style={{width: '80px', height: '80px'}}>
               <span style={{fontSize: '2.5rem'}}>
-                {(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost") ? '✅' : (bypass ? '📋' : '⚠️')}
+                {(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost" || validacionData.enZona === "NoCPAvailable") ? '✅' : (bypass ? '📋' : '⚠️')}
               </span>
             </div>
             <h2 className="h4 fw-bold mb-2">
-              {(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost")
+              {(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost" || validacionData.enZona === "NoCPAvailable")
                 ? '¡Genial! Podemos ayudarte' 
                 : (bypass 
                     ? '¡Perfecto! Hemos guardado tus datos'
@@ -193,7 +211,7 @@ const ResultadoValidacion = () => {
                   )
               }
             </h2>
-            {(validacionData.enZona !== "inZone" && validacionData.enZona !== "inZoneWithCost") && (
+            {(validacionData.enZona !== "inZone" && validacionData.enZona !== "inZoneWithCost" && validacionData.enZona !== "NoCPAvailable") && (
               <p className="text-muted">
                 {bypass 
                   ? 'Tu solicitud de información ha sido registrada correctamente. Un asesor especializado se pondrá en contacto contigo próximamente para brindarte toda la información sobre nuestras soluciones de energía solar.'
@@ -265,7 +283,7 @@ const ResultadoValidacion = () => {
                     // Si ya tenía dirección, usar input normal con label
                     <>
                       <label className="form-label">
-                        Dirección {(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost") && <span className="text-danger">*</span>}
+                        Dirección {(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost" || validacionData.enZona === "NoCPAvailable") && <span className="text-danger">*</span>}
                       </label>
                       <input
                         type="text"
@@ -276,13 +294,13 @@ const ResultadoValidacion = () => {
                       />
                     </>
                   )}
-                  {direccionOriginalVacia && (validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost") && (
+                  {direccionOriginalVacia && (validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost" || validacionData.enZona === "NoCPAvailable") && (
                     <small className="form-text text-muted">
                       La dirección es necesaria para calcular la propuesta de baterías
                     </small>
                   )}
                 </div>
-                {(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost") && (
+                {(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost" || validacionData.enZona === "NoCPAvailable") && (
                   <>
                     <div className="col-md-6 form-field-result">
                       <label className="form-label">
@@ -363,7 +381,7 @@ const ResultadoValidacion = () => {
                   ) : (
                     <div>
                       <span className="text-warning">⚠️ No completada</span>
-                      {(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost") && (
+                      {(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost" || validacionData.enZona === "NoCPAvailable") && (
                         <small className="d-block text-muted mt-1">
                           Es necesario completar la dirección para generar una propuesta
                         </small>
@@ -371,7 +389,7 @@ const ResultadoValidacion = () => {
                     </div>
                   )}
                 </div>
-                {(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost") && (
+                {(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost" || validacionData.enZona === "NoCPAvailable") && (
                   <>
                     <div className="col-md-6">
                       <strong className="text-muted d-block">Tipo de instalación:</strong>
@@ -399,7 +417,7 @@ const ResultadoValidacion = () => {
 
         {/* Acciones según el estado */}
         <div className="d-grid gap-2 fade-in-result">
-          {(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost") ? (
+          {(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost" || validacionData.enZona === "NoCPAvailable") ? (
             <>
               <button 
                 className="btn btn-primary btn-lg button-hover-result"

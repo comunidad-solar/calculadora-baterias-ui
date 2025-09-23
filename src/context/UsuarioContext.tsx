@@ -17,7 +17,7 @@ export interface Usuario {
 export interface ValidacionResponse {
   token: string;
   comunero: Usuario;
-  enZona: "inZone" | "inZoneWithCost" | "outZone";
+  enZona: "inZone" | "inZoneWithCost" | "outZone" | "NoCPAvailable";
   motivo?: string;
   propuestaId?: string;
   analisisTratos?: {
@@ -62,19 +62,46 @@ export const UsuarioProvider = ({ children }: UsuarioProviderProps) => {
   const [validacionData, setValidacionDataState] = useState<ValidacionResponse | null>(null);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
 
+  // Efecto para cargar datos desde sessionStorage al inicializar
+  useEffect(() => {
+    try {
+      const savedValidacionData = sessionStorage.getItem('validacionData');
+      const savedUsuario = sessionStorage.getItem('usuario');
+      
+      if (savedValidacionData) {
+        const parsedValidacionData = JSON.parse(savedValidacionData);
+        setValidacionDataState(parsedValidacionData);
+      }
+      
+      if (savedUsuario) {
+        const parsedUsuario = JSON.parse(savedUsuario);
+        setUsuario(parsedUsuario);
+      }
+    } catch (error) {
+      console.error('Error al cargar datos desde sessionStorage:', error);
+      // Si hay error, limpiar sessionStorage
+      sessionStorage.removeItem('validacionData');
+      sessionStorage.removeItem('usuario');
+    }
+  }, []);
+
   const setValidacionData = (data: ValidacionResponse) => {
     setValidacionDataState(data);
     setUsuario(data.comunero);
-    // Guardar en localStorage para persistencia
-    localStorage.setItem('validacionData', JSON.stringify(data));
-    localStorage.setItem('usuario', JSON.stringify(data.comunero));
+    
+    // Guardar en sessionStorage para persistir entre navegaciones
+    try {
+      sessionStorage.setItem('validacionData', JSON.stringify(data));
+      sessionStorage.setItem('usuario', JSON.stringify(data.comunero));
+    } catch (error) {
+      console.error('Error al guardar en sessionStorage:', error);
+    }
   };
 
   const updateUsuario = (userData: Partial<Usuario>) => {
     if (usuario) {
       const updatedUsuario = { ...usuario, ...userData };
       setUsuario(updatedUsuario);
-      localStorage.setItem('usuario', JSON.stringify(updatedUsuario));
       
       // También actualizar en validacionData si existe
       if (validacionData) {
@@ -83,7 +110,14 @@ export const UsuarioProvider = ({ children }: UsuarioProviderProps) => {
           comunero: updatedUsuario
         };
         setValidacionDataState(updatedValidacion);
-        localStorage.setItem('validacionData', JSON.stringify(updatedValidacion));
+        
+        // Actualizar sessionStorage
+        try {
+          sessionStorage.setItem('validacionData', JSON.stringify(updatedValidacion));
+          sessionStorage.setItem('usuario', JSON.stringify(updatedUsuario));
+        } catch (error) {
+          console.error('Error al actualizar sessionStorage:', error);
+        }
       }
     }
   };
@@ -91,24 +125,16 @@ export const UsuarioProvider = ({ children }: UsuarioProviderProps) => {
   const logout = () => {
     setValidacionDataState(null);
     setUsuario(null);
-    localStorage.removeItem('validacionData');
-    localStorage.removeItem('usuario');
+    // Limpiar sessionStorage
+    sessionStorage.removeItem('validacionData');
+    sessionStorage.removeItem('usuario');
   };
 
-  // Restaurar datos al cargar (si existen)
+  // Limpiar localStorage existente para evitar conflictos con Zustand
   useEffect(() => {
-    const savedValidacion = localStorage.getItem('validacionData');
-    const savedUsuario = localStorage.getItem('usuario');
-    
-    if (savedValidacion && savedUsuario) {
-      try {
-        setValidacionDataState(JSON.parse(savedValidacion));
-        setUsuario(JSON.parse(savedUsuario));
-      } catch (error) {
-        console.error('Error al restaurar datos del usuario:', error);
-        logout();
-      }
-    }
+    // Limpiar datos antiguos de localStorage para evitar conflictos
+    localStorage.removeItem('validacionData');
+    localStorage.removeItem('usuario');
   }, []);
 
   const value = {

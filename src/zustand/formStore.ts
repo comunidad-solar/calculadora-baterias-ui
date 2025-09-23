@@ -32,7 +32,7 @@ interface FormState {
     ciudad?: string;
     provincia?: string;
   };
-  enZona?: "inZone" | "inZoneWithCost" | "outZone";
+  enZona?: "inZone" | "inZoneWithCost" | "outZone" | "NoCPAvailable";
   motivo?: string;
   dealId?: string;
   propuestaId?: string;
@@ -85,7 +85,7 @@ interface FormStore {
   setValidacionData: (data: {
     token: string;
     comunero: any;
-    enZona: "inZone" | "inZoneWithCost" | "outZone";
+    enZona: "inZone" | "inZoneWithCost" | "outZone" | "NoCPAvailable";
     motivo?: string;
     dealId?: string;
     propuestaId?: string;

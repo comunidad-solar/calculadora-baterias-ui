@@ -11,6 +11,7 @@ import PreguntasAdicionales from '../components/PreguntasAdicionales';
 import EmailDuplicado from '../components/EmailDuplicado';
 import GraciasContacto from '../components/GraciasContacto';
 import ClienteViewer from '../components/ClienteViewer';
+import FirmaContrato from '../components/FirmaContrato';
 
 const AppRoutes = ({ onSelect }: { onSelect: (isComunero: boolean) => void }) => (
 	<Routes>
@@ -27,6 +28,7 @@ const AppRoutes = ({ onSelect }: { onSelect: (isComunero: boolean) => void }) =>
 		<Route path="/preguntas-adicionales" element={<PreguntasAdicionales />} />
 		<Route path="/gracias-contacto" element={<GraciasContacto />} />
 		<Route path="/comunero/:id" element={<ClienteViewer />} />
+		<Route path="/contratacion/firma-contrato" element={<FirmaContrato />} />
 		<Route path="/nuevo-comunero" element={
 			<div className="w-100" style={{ maxWidth: 700 }}>
 				<ComuneroForm />

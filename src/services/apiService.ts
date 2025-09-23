@@ -4,18 +4,6 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://calculadora-b
 // Importar estado FSM por defecto
 import { DEFAULT_FSM_STATE } from '../types/fsmTypes';
 
-// ⚙️ SIMULADOR DE BACKEND PARA DESARROLLO
-// Cambia a false cuando el backend esté disponible
-const SIMULATE_BACKEND = false;
-
-// Lista de endpoints que ya están listos (no simular)
-const REAL_ENDPOINTS = [
-  'baterias/comunero/validar-email',
-  'baterias/comunero/validar-codigo',
-  'baterias/comunero',
-  'baterias/comunero/desconoce-unidad/contactar-asesor'
-];
-
 // Tipo para las respuestas de la API
 interface ApiResponse<T = any> {
   success: boolean;
@@ -23,9 +11,6 @@ interface ApiResponse<T = any> {
   error?: string;
   message?: string;
 }
-
-// Función para simular delay de red
-const simulateDelay = (ms: number = 800) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Función helper para hacer requests HTTP
 const makeRequest = async <T = any>(
@@ -36,172 +21,7 @@ const makeRequest = async <T = any>(
   // Limpiar endpoint (remover / inicial si existe)
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
   
-  // Verificar si este endpoint debe usar el backend real
-  const useRealBackend = REAL_ENDPOINTS.some(realEndpoint => cleanEndpoint === realEndpoint);
-  
-  console.log('🔍 Debug API:', {
-    endpoint,
-    cleanEndpoint,
-    useRealBackend,
-    REAL_ENDPOINTS,
-    SIMULATE_BACKEND
-  });
-  
-  // Si estamos simulando el backend Y no es un endpoint real
-  if (SIMULATE_BACKEND && !useRealBackend) {
-    console.log('📦 Usando simulación para:', cleanEndpoint);
-    await simulateDelay();
-    
-    // Simular respuestas según el endpoint
-    if (cleanEndpoint.includes('baterias/comunero/validar-email')) {
-      return {
-        success: true,
-        data: { codigoEnviado: true } as T
-      };
-    }
-    
-    if (cleanEndpoint.includes('baterias/comunero/validar-codigo')) {
-      // Simular diferentes escenarios según el código
-      const body = JSON.parse(options.body as string);
-      const codigo = body.codigo;
-      
-      // Simular comunero fuera de zona (códigos que empiecen con 0)
-      if (codigo.startsWith('0')) {
-        return {
-          success: true,
-          data: { 
-            token: 'token-fuera-zona',
-            comunero: {
-              id: '1',
-              nombre: 'Juan Pérez García',
-              email: body.email || 'juan@example.com',
-              telefono: '654321987',
-              direccion: 'Calle Mayor 123, 28801 Alcalá de Henares, Madrid',
-              codigoPostal: '28801',
-              ciudad: 'Alcalá de Henares',
-              provincia: 'Madrid'
-            },
-            enZona: "outZone",
-            motivo: 'Tu ubicación está fuera de nuestra área de cobertura actual.',
-            analisisTratos: {
-              tieneTratoCerradoGanado: false,
-              hasInversor: null,
-              tratoGanadoBaterias: false,
-              bateriaInicial: null,
-              tieneAmpliacionBaterias: false,
-              bateriaAmpliacion: null
-            }
-          } 
-        } as ApiResponse<T>;
-      }
-      
-      // Simular caso con inversor con datos vacíos (códigos que empiecen con 1)
-      if (codigo.startsWith('1')) {
-        return {
-          success: true,
-          data: { 
-            token: 'token-inversor-vacio',
-            comunero: {
-              id: '2',
-              nombre: 'Ana López Martín',
-              email: body.email || 'ana@example.com',
-              telefono: '677888999',
-              direccion: 'Plaza España 10, 28013 Madrid',
-              codigoPostal: '28013',
-              ciudad: 'Madrid',
-              provincia: 'Madrid'
-            },
-            enZona: "inZone",
-            dealId: 'propuesta-456',
-            analisisTratos: {
-              tieneTratoCerradoGanado: true,
-              hasInversor: {
-                marca: "",
-                modelo: "",
-                numero: ""
-              },
-              tratoGanadoBaterias: false,
-              bateriaInicial: null,
-              tieneAmpliacionBaterias: false,
-              bateriaAmpliacion: null
-            }
-          } 
-        } as ApiResponse<T>;
-      }
-      
-      // Simular comunero en zona válida
-      return {
-        success: true,
-        data: { 
-          token: 'token-en-zona',
-          comunero: {
-            id: '1',
-            nombre: 'María González López',
-            email: body.email || 'maria@example.com',
-            telefono: '666789123',
-            direccion: 'Avenida de América 45, 28028 Madrid',
-            codigoPostal: '28028',
-            ciudad: 'Madrid',
-            provincia: 'Madrid'
-          },
-          enZona: "inZone",
-          dealId: 'propuesta-123',
-          analisisTratos: {
-            tieneTratoCerradoGanado: true,
-            hasInversor: {
-              marca: "Huawei",
-              modelo: "Huawei 4KTL-L1", 
-              numero: 2
-            },
-            tratoGanadoBaterias: true,
-            bateriaInicial: {
-              modeloCapacidad: "6,6 kWh - Batería EP Cube de Canadian Solar"
-            },
-            tieneAmpliacionBaterias: false,
-            bateriaAmpliacion: null
-          }
-        } 
-      } as ApiResponse<T>;
-    }
-    
-    if (cleanEndpoint.includes('baterias/comunero') && options.method === 'POST') {
-      const body = JSON.parse(options.body as string);
-      const email = body.email;
-      
-      // Simular los 3 casos basándose en el email
-      if (email.includes('local')) {
-        // Caso 1: Email existe en tabla local
-        return {
-          success: false,
-          error: 'Ya existe un registro con este email'
-        } as ApiResponse<T>;
-      }
-      
-      if (email.includes('zoho')) {
-        // Caso 2: Email existe en Zoho CRM
-        return {
-          success: false,
-          error: 'Ya existe un contacto con este email en Zoho CRM'
-        } as ApiResponse<T>;
-      }
-      
-      // Caso 3: Email NO existe en ningún lado - Crear comunero
-      return {
-        success: true,
-        data: { 
-          id: 'new-comunero-123', 
-          comunero: { 
-            id: '1', 
-            email: email,
-            nombre: 'Nuevo Comunero',
-            codigoEnviado: true 
-          } 
-        } as T
-      };
-    }
-  }
-
-  console.log('🌐 Usando API real para:', cleanEndpoint);
+  console.log('🌐 Haciendo request a:', cleanEndpoint);
   
   try {
     const url = `${API_BASE_URL}/${cleanEndpoint}`;
@@ -280,6 +100,17 @@ export const comuneroService = {
     });
   },
 
+  // Enviar código de validación usando propuestaId (para flujo de compra)
+  async enviarCodigoPorPropuestaId(propuestaId: string): Promise<ApiResponse<{ codigoEnviado: boolean }>> {
+    return makeRequest('baterias/comunero/enviar-codigo-por-propuesta', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        propuestaId,
+        fsmState: DEFAULT_FSM_STATE
+      }),
+    });
+  },
+
   // Validar código de verificación
   async validarCodigo(codigo: string, email?: string): Promise<ApiResponse<{ 
     propuestaId?: string;
@@ -313,6 +144,33 @@ export const comuneroService = {
     });
   },
 
+  // Validar código para contratación (flujo de compra)
+  async validarCodigoContratacion(codigo: string, propuestaId: string): Promise<ApiResponse<{ 
+    codigoValido: boolean;
+    propuestaId: string;
+    token?: string;
+  }>> {
+    return makeRequest('baterias/comunero/validate-code-contratacion', {
+      method: 'POST',
+      body: JSON.stringify({ 
+        codigo,
+        propuestaId,
+        fsmState: DEFAULT_FSM_STATE
+      }),
+    });
+  },
+
+  // Obtener URL de firma de contrato
+  async obtenerUrlFirmaContrato(propuestaId: string): Promise<ApiResponse<{ 
+    signUrl: string;
+    propuestaId: string;
+    status: string;
+  }>> {
+    return makeRequest(`baterias/comunero/get-sign-url/${propuestaId}`, {
+      method: 'GET',
+    });
+  },
+
   // Editar información existente del comunero
   async editarInfoComunero(datosEdicion: {
     propuestaId: string;
@@ -325,7 +183,19 @@ export const comuneroService = {
     token?: string;
     comuneroId?: string;
     fsmState?: string;
-  }): Promise<ApiResponse<{ comunero: any }>> {
+  }): Promise<ApiResponse<{ 
+    propuestaId: string;
+    updatedInfo: {
+      nombre: string;
+      telefono: string;
+      direccion: string;
+      ciudad?: string;
+      codigoPostal?: string;
+      provincia?: string;
+      enZona?: "inZone" | "inZoneWithCost" | "outZone" | "NoCPAvailable";
+    };
+    lastUpdated: string;
+  }>> {
     return makeRequest('baterias/comunero/edit-existing-info-comunero', {
       method: 'POST',
       body: JSON.stringify({
@@ -470,6 +340,42 @@ export const bateriaService = {
     fsmState?: string;
   }): Promise<ApiResponse<{ id: string; solicitud: any }>> {
     return makeRequest('baterias/comunero/desconoce-unidad/contactar-asesor', {
+      method: 'POST',
+      body: JSON.stringify({
+        ...datosCompletos,
+        fsmState: datosCompletos.fsmState || DEFAULT_FSM_STATE
+      }),
+    });
+  },
+
+  // Solicitar visita técnica desde la propuesta
+  async solicitarVisitaTecnica(datosCompletos: {
+    // Identificador global principal
+    propuestaId: string; // ID global de la propuesta
+    
+    // Datos principales requeridos
+    contactId?: string; // ID del comunero si existe (opcional)
+    email: string;
+    
+    // Datos adicionales del usuario para contexto
+    nombre?: string;
+    telefono?: string;
+    direccion?: string;
+    ciudad?: string;
+    provincia?: string;
+    codigoPostal?: string;
+    
+    // Datos de validación
+    token?: string;
+    dealId?: string; // Mantener por compatibilidad
+    enZona?: string;
+    fsmState?: string;
+    
+    // Tipo de solicitud
+    tipoSolicitud: 'visita_tecnica';
+    motivo?: string;
+  }): Promise<ApiResponse<{ id: string; solicitud: any }>> {
+    return makeRequest('baterias/comunero/solicitar-visita-tecnica', {
       method: 'POST',
       body: JSON.stringify({
         ...datosCompletos,
@@ -631,7 +537,7 @@ export const bateriaService = {
     dealId?: string; // Mantener por compatibilidad
     enZona?: string;
     fsmState?: string;
-  }): Promise<ApiResponse<{ id: string; solicitud: any }>> {
+  }): Promise<ApiResponse<{ id: string; solicitud: any; propuestaId: string }>> {
     return makeRequest('baterias/comunero/create-proposal', {
       method: 'POST',
       body: JSON.stringify({
