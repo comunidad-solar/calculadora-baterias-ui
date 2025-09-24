@@ -116,7 +116,7 @@ export const comuneroService = {
     propuestaId?: string;
     token: string; 
     comunero: any; 
-    enZona: "inZone" | "inZoneWithCost" | "outZone"; 
+    enZona: "inZone" | "inZoneWithCost" | "outZone" | "NoCPAvailable"; 
     dealId?: string;
     motivo?: string;
     analisisTratos?: {
