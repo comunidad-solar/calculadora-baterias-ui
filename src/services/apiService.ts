@@ -654,6 +654,47 @@ export const procesarRespuestaComunero = (respuesta: any) => {
   };
 };
 
+// Helper function para procesar respuesta de propuesta contratada (fsmState: "12_CONTRATA")
+export const procesarRespuestaContratada = (respuesta: any) => {
+  if (!respuesta.success || !respuesta.data) {
+    throw new Error('Respuesta inválida del servidor');
+  }
+
+  const { data } = respuesta;
+  const { fsmState, data: propuestaData } = data;
+
+  // Estructura esperada para propuesta contratada
+  const datosContratada = {
+    fsmState: fsmState,
+    propuesta: {
+      id: propuestaData.propuesta?.id || propuestaData.propuestaId,
+      estado: propuestaData.propuesta?.estado || 'Contrato Generado - Esperando Firma',
+      producto: {
+        nombre: propuestaData.propuesta?.producto?.nombre || propuestaData.producto?.nombre || 'Batería Solar',
+        modelo: propuestaData.propuesta?.producto?.modelo || propuestaData.producto?.modelo || '',
+        capacidad: propuestaData.propuesta?.producto?.capacidad || propuestaData.producto?.capacidad || '',
+        precio: propuestaData.propuesta?.producto?.precio || propuestaData.producto?.precio || 0,
+        moneda: propuestaData.propuesta?.producto?.moneda || propuestaData.producto?.moneda || 'EUR'
+      },
+      fechaContratacion: propuestaData.propuesta?.fechaGeneracion || propuestaData.fechaGeneracion || propuestaData.propuesta?.fechaContratacion || propuestaData.fechaContratacion || new Date().toISOString(),
+      numeroContrato: propuestaData.propuesta?.numeroContrato || propuestaData.numeroContrato
+    },
+    comunero: {
+      nombre: propuestaData.comunero?.nombre || '',
+      email: propuestaData.comunero?.email || '',
+      telefono: propuestaData.comunero?.telefono || ''
+    }
+  };
+
+  console.log('📋 Datos procesados para propuesta contratada:', datosContratada);
+  
+  return {
+    datosContratada,
+    fsmState,
+    rawResponse: data
+  };
+};
+
 // Helper function para determinar la ruta/vista basada en el fsmState
 export const obtenerRutaPorFsmState = (fsmState: string): string => {
   const rutasPorEstado: Record<string, string> = {
@@ -665,6 +706,7 @@ export const obtenerRutaPorFsmState = (fsmState: string): string => {
     '05_MONO_DESCONOCE_M': '/preguntas-adicionales', 
     '06_TRI_DESCONOCE_A': '/preguntas-adicionales',
     '07_TRI_DESCONOCE_M': '/preguntas-adicionales',
+    '12_CONTRATA': '/propuesta-contratada', // Nueva vista para propuestas contratadas
     // Agregar más estados según se definan
   };
 
@@ -698,7 +740,7 @@ export const cargarComuneroPorId = async (clienteId: string, useFormStore?: any)
     let datosParaStore;
     let rutaNavegacion;
     
-    // Procesar según el estado FSM (actualmente solo implementado para 01_IN_ZONE_LEAD)
+    // Procesar según el estado FSM
     if (fsmState === '01_IN_ZONE_LEAD') {
       const procesado = procesarRespuestaComunero(respuesta);
       datosParaStore = procesado.datosParaStore;
@@ -742,6 +784,16 @@ export const cargarComuneroPorId = async (clienteId: string, useFormStore?: any)
           respuestas: Object.keys(datosParaStore.respuestasPreguntas)
         });
       }
+    } else if (fsmState === '12_CONTRATA') {
+      const procesado = procesarRespuestaContratada(respuesta);
+      datosParaStore = procesado.datosContratada;
+      rutaNavegacion = 'propuesta-contratada'; // Ruta especial para renderizar en el mismo componente
+      
+      console.log('✅ Datos de propuesta contratada procesados:', {
+        fsmState: procesado.fsmState,
+        propuesta: procesado.datosContratada.propuesta.id,
+        producto: procesado.datosContratada.propuesta.producto.nombre
+      });
     } else {
       // Para otros estados FSM, implementar según sea necesario
       console.warn(`⚠️ Estado FSM ${fsmState} no implementado aún`);
@@ -837,6 +889,38 @@ RESPUESTA ESPERADA del backend para fsmState "01_IN_ZONE_LEAD":
       "dealId": "...",
       "analisisTratos": { ... },
       "respuestasPreguntas": { ... }
+    }
+  }
+}
+
+RESPUESTA ESPERADA del backend para fsmState "12_CONTRATA":
+{
+  "success": true,
+  "data": {
+    "mpk_log_id": "string",
+    "contact_id": "string", 
+    "deal_id": "string",
+    "fsmState": "12_CONTRATA",
+    "data": {
+      "propuestaId": "string",
+      "propuesta": {
+        "id": "string",
+        "estado": "Contrato Generado - Esperando Firma",
+        "producto": {
+          "nombre": "Batería EcoFlow Pro",
+          "modelo": "DELTA Pro 3600Wh",
+          "capacidad": "3.6kWh",
+          "precio": 2499,
+          "moneda": "EUR"
+        },
+        "fechaGeneracion": "2024-01-15T10:30:00Z",
+        "numeroContrato": "CT-2024-001234"
+      },
+      "comunero": {
+        "nombre": "Juan Pérez",
+        "email": "juan@email.com",
+        "telefono": "+34 600 123 456"
+      }
     }
   }
 }

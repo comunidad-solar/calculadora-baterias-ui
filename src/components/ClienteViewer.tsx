@@ -4,6 +4,7 @@ import { useToast } from '../context/ToastContext';
 import { cargarComuneroPorId } from '../services/apiService';
 import { useFormStore } from '../zustand/formStore';
 import PageTransition from './PageTransition';
+import PropuestaContratada from './PropuestaContratada';
 
 const ClienteViewer = () => {
   const { id } = useParams<{ id: string }>();
@@ -12,6 +13,7 @@ const ClienteViewer = () => {
   const formStore = useFormStore(); // Obtener el store completo para pasarlo a la función
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [propuestaContratadaData, setPropuestaContratadaData] = useState<any>(null);
   const hasLoadedRef = useRef(false);
 
   useEffect(() => {
@@ -37,7 +39,13 @@ const ClienteViewer = () => {
         // Usar la nueva función que carga automáticamente en Zustand
         const resultado = await cargarComuneroPorId(id, formStore);
         
-        if (resultado.success && resultado.datosGuardados) {
+        if (resultado.success && resultado.fsmState === '12_CONTRATA') {
+          console.log('✅ Propuesta contratada detectada, renderizando vista específica');
+          
+          // Para fsmState "12_CONTRATA", mostrar vista específica en lugar de navegar
+          setPropuestaContratadaData(resultado.datosParaStore);
+          
+        } else if (resultado.success && resultado.datosGuardados) {
           console.log('✅ Datos cargados automáticamente en Zustand');
           console.log(`🧭 Navegando a: ${resultado.rutaNavegacion} para fsmState: ${resultado.fsmState}`);
           
@@ -260,28 +268,34 @@ const ClienteViewer = () => {
     );
   }
 
-  if (error) {
+  // Si tenemos datos de propuesta contratada, renderizar vista específica
+  if (propuestaContratadaData) {
+    return <PropuestaContratada data={propuestaContratadaData} />;
   }
 
-  return (
-    <PageTransition>
-      <div className="container py-5">
-        <div className="text-center">
-          <div className="bg-danger bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style={{width: '80px', height: '80px'}}>
-            <span style={{fontSize: '2.5rem'}}>⚠️</span>
+  if (error) {
+    return (
+      <PageTransition>
+        <div className="container py-5">
+          <div className="text-center">
+            <div className="bg-danger bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style={{width: '80px', height: '80px'}}>
+              <span style={{fontSize: '2.5rem'}}>⚠️</span>
+            </div>
+            <h2 className="h4 fw-bold mb-3">No se pudo cargar la información</h2>
+            <p className="text-muted mb-4">{error}</p>
+            <button 
+              className="btn btn-primary"
+              onClick={() => navigate('/')}
+            >
+              Volver al inicio
+            </button>
           </div>
-          <h2 className="h4 fw-bold mb-3">No se pudo cargar la información</h2>
-          <p className="text-muted mb-4">{error}</p>
-          <button 
-            className="btn btn-primary"
-            onClick={() => navigate('/')}
-          >
-            Volver al inicio
-          </button>
         </div>
-      </div>
-    </PageTransition>
-  );
+      </PageTransition>
+    );
+  }
+
+  return null;
 };
 
 export default ClienteViewer;
