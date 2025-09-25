@@ -1,7 +1,5 @@
 import { useParams } from 'react-router-dom';
 import { useFormStore } from '../zustand/formStore';
-import Header from './Header';
-import Footer from './Footer';
 import PageTransition from './PageTransition';
 
 const ContratoFirmado = () => {
@@ -57,15 +55,24 @@ const ContratoFirmado = () => {
     fuente: contractData ? 'sessionStorage' : 'store'
   });
 
+  // Debug: detectar múltiples renderizados
+  console.log('� RENDER ContratoFirmado:', {
+    propuestaId,
+    contractData,
+    nombreComunero,
+    emailComunero,
+    fuente: contractData ? 'sessionStorage' : 'store',
+    timestamp: new Date().toISOString()
+  });
+
+  // Debug: verificar si Header/Footer se están renderizando múltiples veces
+  console.log('📱 Header y Footer deberían aparecer solo una vez cada uno');
+
   return (
     <PageTransition>
-      <div className="min-vh-100 d-flex flex-column">
-        <Header />
-        
-        <div className="flex-grow-1">
-          <div className="container py-5">
-            <div className="row justify-content-center">
-              <div className="col-lg-8">
+      <div className="container py-5">
+        <div className="row justify-content-center">
+          <div className="col-lg-8">
                 
                 {/* Encabezado de éxito */}
                 <div className="text-center mb-5">
@@ -222,10 +229,6 @@ const ContratoFirmado = () => {
               </div>
             </div>
           </div>
-        </div>
-        
-        <Footer />
-      </div>
     </PageTransition>
   );
 };
