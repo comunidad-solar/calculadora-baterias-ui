@@ -161,12 +161,13 @@ export const comuneroService = {
   },
 
   // Obtener URL de firma de contrato
-  async obtenerUrlFirmaContrato(propuestaId: string): Promise<ApiResponse<{ 
+  async obtenerUrlFirmaContrato(propuestaId: string, callbackUrl?: string): Promise<ApiResponse<{ 
     signUrl: string;
     propuestaId: string;
     status: string;
   }>> {
-    return makeRequest(`baterias/comunero/get-sign-url/${propuestaId}`, {
+    const params = callbackUrl ? `?callbackUrl=${encodeURIComponent(callbackUrl)}` : '';
+    return makeRequest(`baterias/comunero/get-sign-url/${propuestaId}${params}`, {
       method: 'GET',
     });
   },

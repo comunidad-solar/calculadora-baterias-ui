@@ -38,7 +38,12 @@ const FirmaContrato = () => {
             setPreparingContract(false); // Termina la fase de preparación
             console.log('📄 Generando URL de firma para propuestaId:', propuestaId);
             
-            const response = await comuneroService.obtenerUrlFirmaContrato(propuestaId);
+            // Generar URL de callback para redirección después de firma exitosa
+            const currentOrigin = window.location.origin;
+            const callbackUrl = `${currentOrigin}/contrato/${propuestaId}/firmado`;
+            console.log('🔄 URL de callback configurada:', callbackUrl);
+            
+            const response = await comuneroService.obtenerUrlFirmaContrato(propuestaId, callbackUrl);
             
             if (response.success && response.data?.signUrl) {
               console.log('✅ URL de firma obtenida:', response.data.signUrl);
@@ -123,9 +128,9 @@ const FirmaContrato = () => {
             <h1 className="fw-bold mb-2" style={{ color: '#2A2A2A', fontSize: '2.5rem' }}>
               Firma de Contrato
             </h1>
-            <p className="text-muted" style={{ fontSize: '1.1rem' }}>
+            {/* <p className="text-muted" style={{ fontSize: '1.1rem' }}>
               Revisa y firma tu contrato para completar la compra de tu sistema de baterías
-            </p>
+            </p> */}
           </div>
 
           {/* Contenedor del iframe o estados de carga/error */}
@@ -251,7 +256,8 @@ const FirmaContrato = () => {
                   </h6>
                   <ul className="text-muted mb-0" style={{ fontSize: '0.95rem' }}>
                     <li>Revisa cuidadosamente todos los términos y condiciones</li>
-                    <li>Una vez firmado, recibirás una copia del contrato por email</li>
+                    <li>Una vez firmado, serás redirigido automáticamente a la página de confirmación</li>
+                    <li>Recibirás una copia del contrato por email</li>
                     <li>Nuestro equipo se pondrá en contacto contigo para coordinar la instalación</li>
                     <li>Si tienes dudas, puedes contactar con nuestros asesores antes de firmar</li>
                   </ul>
@@ -268,6 +274,7 @@ const FirmaContrato = () => {
               </div>
             </div>
           </div>
+
         </div>
       </div>
     </PageTransition>
