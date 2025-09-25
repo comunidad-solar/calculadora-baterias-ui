@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useFormStore } from '../zustand/formStore';
 import Header from './Header';
 import Footer from './Footer';
@@ -6,12 +6,7 @@ import PageTransition from './PageTransition';
 
 const ContratoFirmado = () => {
   const { propuestaId } = useParams<{ propuestaId: string }>();
-  const navigate = useNavigate();
   const { form } = useFormStore();
-
-  const volverAlInicio = () => {
-    navigate('/');
-  };
 
   const descargarContrato = () => {
     // Lógica para descargar el contrato firmado

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import BackButton from './BackButton';
 import PageTransition from './PageTransition';
@@ -15,6 +15,7 @@ const FirmaContrato = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { form } = useFormStore();
+  const iframeRef = useRef<HTMLIFrameElement>(null);
   
   // Usar propuestaId del store si está disponible, sino usar la del state
   const propuestaId = form.propuestaId || location.state?.propuestaId;
@@ -38,12 +39,7 @@ const FirmaContrato = () => {
             setPreparingContract(false); // Termina la fase de preparación
             console.log('📄 Generando URL de firma para propuestaId:', propuestaId);
             
-            // Generar URL de callback para redirección después de firma exitosa
-            const currentOrigin = window.location.origin;
-            const callbackUrl = `${currentOrigin}/contrato/${propuestaId}/firmado`;
-            console.log('🔄 URL de callback configurada:', callbackUrl);
-            
-            const response = await comuneroService.obtenerUrlFirmaContrato(propuestaId, callbackUrl);
+            const response = await comuneroService.obtenerUrlFirmaContrato(propuestaId);
             
             if (response.success && response.data?.signUrl) {
               console.log('✅ URL de firma obtenida:', response.data.signUrl);
@@ -82,6 +78,26 @@ const FirmaContrato = () => {
     });
   };
 
+    useLayoutEffect(() => {
+    let timerId: NodeJS.Timeout;
+    const handleListener = (e: MessageEvent<any>) => {
+
+      if (e.data.isRedirecting) {
+        timerId = setTimeout(() => {
+            navigate(`/contrato/${propuestaId}/firmado`);
+         
+        }, 2500);
+      }
+    };
+
+    window.addEventListener('message', handleListener);
+
+    return () => {
+      clearTimeout(timerId);
+      window.removeEventListener('message', handleListener);
+    };
+  }, [iframeRef]);
+
   if (!propuestaId) {
     return (
       <PageTransition>
@@ -116,7 +132,7 @@ const FirmaContrato = () => {
   return (
     <PageTransition>
       <div className="min-vh-100" style={{ backgroundColor: '#FAFAF5' }}>
-        <div className="container-fluid py-4" style={{ maxWidth: '1200px' }}>
+        <div className="container-fluid py-3" style={{ maxWidth: '1400px' }}>
           
           {/* Header con botón volver */}
           <div className="position-relative mb-4">
@@ -124,17 +140,17 @@ const FirmaContrato = () => {
           </div>
 
           {/* Título principal */}
-          <div className="text-center mb-4">
-            <h1 className="fw-bold mb-2" style={{ color: '#2A2A2A', fontSize: '2.5rem' }}>
+          <div className="text-center mb-3">
+            <h1 className="fw-bold mb-1" style={{ color: '#2A2A2A', fontSize: '2rem' }}>
               Firma de Contrato
             </h1>
-            {/* <p className="text-muted" style={{ fontSize: '1.1rem' }}>
-              Revisa y firma tu contrato para completar la compra de tu sistema de baterías
-            </p> */}
+            <p className="text-muted mb-0" style={{ fontSize: '1rem' }}>
+              Revisa y firma tu contrato para completar la compra
+            </p>
           </div>
 
           {/* Contenedor del iframe o estados de carga/error */}
-          <div className="bg-white rounded-4 shadow-lg overflow-hidden" style={{ minHeight: '600px' }}>
+          <div className="bg-white rounded-4 shadow-lg overflow-hidden" style={{ minHeight: '80vh' }}>
             {preparingContract && (
               <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '600px' }}>
                 <div className="text-center">
@@ -226,14 +242,16 @@ const FirmaContrato = () => {
             )}
 
             {signUrl && !loading && !error && !preparingContract && (
-              <div style={{ height: '600px', position: 'relative' }}>
+              <div style={{ height: 'calc(85vh - 100px)', position: 'relative', minHeight: '750px' }}>
                 <iframe
                   src={signUrl}
+                   ref={iframeRef}
                   style={{
                     width: '100%',
                     height: '100%',
                     border: 'none',
-                    borderRadius: '20px'
+                    borderRadius: '0',
+                    display: 'block'
                   }}
                   title="Documento de firma de contrato"
                   onLoad={() => console.log('📄 Iframe de firma cargado correctamente')}
@@ -246,34 +264,30 @@ const FirmaContrato = () => {
             )}
           </div>
 
-          {/* Información adicional */}
-          <div className="mt-4">
-            <div className="bg-white rounded-4 p-4 shadow-sm">
-              <div className="row">
-                <div className="col-md-8">
-                  <h6 className="fw-bold mb-2" style={{ color: '#5CA00E' }}>
-                    ℹ️ Información importante
-                  </h6>
-                  <ul className="text-muted mb-0" style={{ fontSize: '0.95rem' }}>
-                    <li>Revisa cuidadosamente todos los términos y condiciones</li>
-                    <li>Una vez firmado, serás redirigido automáticamente a la página de confirmación</li>
-                    <li>Recibirás una copia del contrato por email</li>
-                    <li>Nuestro equipo se pondrá en contacto contigo para coordinar la instalación</li>
-                    <li>Si tienes dudas, puedes contactar con nuestros asesores antes de firmar</li>
-                  </ul>
-                </div>
-                <div className="col-md-4 text-md-end">
-                  <button 
-                    className="btn btn-outline-primary"
-                    style={{ borderRadius: '20px' }}
-                    onClick={() => window.open('https://comunidadsolar.zohobookings.eu/#/108535000004860368', '_blank')}
-                  >
-                    📞 Contactar Asesor
-                  </button>
+          {/* Información adicional compacta */}
+          {signUrl && !loading && !error && !preparingContract && (
+            <div className="mt-3">
+              <div className="bg-light rounded-3 p-3">
+                <div className="row align-items-center">
+                  <div className="col-md-9">
+                    <small className="text-muted d-block">
+                      <strong>💡 Importante:</strong> Revisa todos los términos antes de firmar. 
+                      Una vez completada la firma, serás redirigido automáticamente y recibirás una copia por email.
+                    </small>
+                  </div>
+                  <div className="col-md-3 text-md-end mt-2 mt-md-0">
+                    <button 
+                      className="btn btn-outline-primary btn-sm"
+                      style={{ borderRadius: '15px', fontSize: '0.85rem' }}
+                      onClick={() => window.open('https://comunidadsolar.zohobookings.eu/#/108535000004860368', '_blank')}
+                    >
+                      📞 Contactar Asesor
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
         </div>
       </div>
