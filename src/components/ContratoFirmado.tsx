@@ -8,21 +8,53 @@ const ContratoFirmado = () => {
   const { propuestaId } = useParams<{ propuestaId: string }>();
   const { form } = useFormStore();
 
-//   const descargarContrato = () => {
-//     // Lógica para descargar el contrato firmado
-//     console.log('Solicitando descarga de contrato para propuestaId:', propuestaId);
-//     // En una implementación futura, aquí se haría una llamada al backend para generar/descargar el PDF
-//   };
+  // Obtener datos del sessionStorage específicos para este contrato
+  const getContractData = () => {
+    if (!propuestaId) return null;
+    
+    try {
+      const contractData = sessionStorage.getItem(`contrato_firmado_${propuestaId}`);
+      return contractData ? JSON.parse(contractData) : null;
+    } catch (error) {
+      console.error('Error al leer datos del contrato:', error);
+      return null;
+    }
+  };
 
-  // Usar los datos del store si están disponibles
-  const nombreComunero = form.comunero?.nombre || form.nombre || 'Usuario';
-  const emailComunero = form.comunero?.email || form.mail || '';
-  const fechaActual = new Date().toLocaleDateString('es-ES', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+  const contractData = getContractData();
+  
+  // Usar los datos del sessionStorage con fallback al store
+  const nombreComunero = contractData?.nombreComunero || form.comunero?.nombre || form.nombre || 'Usuario';
+  const emailComunero = contractData?.emailComunero || form.comunero?.email || form.mail || '';
+  
+  const fechaFirma = contractData?.fechaFirma 
+    ? new Date(contractData.fechaFirma).toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    : new Date().toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+
+  // Limpiar datos específicos del contrato después de cargar (para no afectar otros contratos)
+  if (contractData && propuestaId) {
+    sessionStorage.removeItem(`contrato_firmado_${propuestaId}`);
+  }
+
+  // Debug: mostrar fuente de datos
+  console.log('📋 Datos en ContratoFirmado:', {
+    propuestaId,
+    contractData,
+    nombreComunero,
+    emailComunero,
+    fuente: contractData ? 'sessionStorage' : 'store'
   });
 
   return (
@@ -71,7 +103,7 @@ const ContratoFirmado = () => {
                       
                       <div className="col-md-6">
                         <label className="form-label fw-semibold text-muted">Fecha de Firma</label>
-                        <p className="mb-0">{fechaActual}</p>
+                        <p className="mb-0">{fechaFirma}</p>
                       </div>
                       
                       <div className="col-md-6">

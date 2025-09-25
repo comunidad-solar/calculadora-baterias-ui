@@ -30,22 +30,42 @@
         
         if (propuestaId) {
             const targetUrl = `/contrato/${propuestaId}/firmado`;
-            console.log('🎯 Redirigiendo a:', targetUrl);
+            console.log('🎯 Enviando mensaje para redirigir a:', targetUrl);
             
-            // Si estamos dentro de un iframe, redirigir la página padre
+            // Si estamos dentro de un iframe, enviar mensaje a la página padre
             if (window.parent && window.parent !== window) {
-                console.log('📱 Detectado iframe, redirigiendo página padre');
-                window.parent.location.href = targetUrl;
+                console.log('📱 Detectado iframe, enviando PostMessage a página padre');
+                
+                // Enviar mensaje a la página padre para que haga la navegación
+                window.parent.postMessage({
+                    type: 'ZOHO_CONTRACT_SIGNED',
+                    propuestaId: propuestaId,
+                    targetUrl: targetUrl,
+                    timestamp: Date.now()
+                }, '*');
+                
+                // Mostrar mensaje de éxito por un momento
+                setTimeout(() => {
+                    console.log('🔄 Enviando mensaje de backup...');
+                    window.parent.postMessage({
+                        type: 'CONTRACT_COMPLETED',
+                        propuestaId: propuestaId
+                    }, '*');
+                }, 1000);
+                
             } else {
-                // Si no estamos en iframe, redirección normal
-                console.log('🌍 Redirección normal');
+                // Si no estamos en iframe, redirección normal (fallback)
+                console.log('🌍 No está en iframe, redirección normal');
                 window.location.href = targetUrl;
             }
         } else {
             console.error('❌ No se pudo extraer propuestaId de la URL');
-            // Fallback: redirigir al inicio
+            // Enviar mensaje de error
             if (window.parent && window.parent !== window) {
-                window.parent.location.href = '/';
+                window.parent.postMessage({
+                    type: 'ZOHO_CONTRACT_ERROR',
+                    error: 'No se pudo extraer propuestaId'
+                }, '*');
             } else {
                 window.location.href = '/';
             }
