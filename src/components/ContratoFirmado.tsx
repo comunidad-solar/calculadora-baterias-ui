@@ -104,8 +104,12 @@ const ContratoFirmado = () => {
                   <div className="card-body">
                     <div className="row g-3">
                       <div className="col-md-6">
-                        <label className="form-label fw-semibold text-muted">ID de Propuesta</label>
-                        <p className="mb-0 font-monospace text-break">{propuestaId}</p>
+                        <label className="form-label fw-semibold text-muted"></label>
+                        <p className="mb-0 font-monospace text-break">
+                            <a href={`https://main.dbig9vzf5g2rs.amplifyapp.com/comunero/${propuestaId}`} target="_blank" rel="noopener noreferrer">
+                                VER PROPUESTA
+                            </a>
+                        </p>
                       </div>
                       
                       <div className="col-md-6">
