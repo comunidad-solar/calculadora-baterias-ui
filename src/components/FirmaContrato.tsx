@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import BackButton from './BackButton';
 import PageTransition from './PageTransition';
@@ -15,7 +15,7 @@ const FirmaContrato = () => {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { form } = useFormStore();
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+
   
   // Usar propuestaId del store si está disponible, sino usar la del state
   const propuestaId = form.propuestaId || location.state?.propuestaId;
@@ -78,25 +78,7 @@ const FirmaContrato = () => {
     });
   };
 
-    useLayoutEffect(() => {
-    let timerId: NodeJS.Timeout;
-    const handleListener = (e: MessageEvent<any>) => {
-
-      if (e.data.isRedirecting) {
-        timerId = setTimeout(() => {
-            navigate(`/contrato/${propuestaId}/firmado`);
-         
-        }, 2500);
-      }
-    };
-
-    window.addEventListener('message', handleListener);
-
-    return () => {
-      clearTimeout(timerId);
-      window.removeEventListener('message', handleListener);
-    };
-  }, [iframeRef]);
+  
 
   if (!propuestaId) {
     return (
@@ -245,7 +227,6 @@ const FirmaContrato = () => {
               <div style={{ height: 'calc(85vh - 100px)', position: 'relative', minHeight: '750px' }}>
                 <iframe
                   src={signUrl}
-                   ref={iframeRef}
                   style={{
                     width: '100%',
                     height: '100%',

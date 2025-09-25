@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Redirigiendo...</title>
+</head>
+<body>
+    <script>
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const pathParts = window.location.pathname.split('/');
+        
+        
+        let propuestaId = urlParams.get('propuestaId') || 
+                         urlParams.get('proposal_id') ||
+                         urlParams.get('id');
+        
+        
+        if (!propuestaId) {
+        
+            const contratoIndex = pathParts.indexOf('contrato');
+            if (contratoIndex >= 0 && pathParts[contratoIndex + 1]) {
+                propuestaId = pathParts[contratoIndex + 1];
+            }
+        }
+        
+        console.log('🔄 Página de redirección cargada');
+        console.log('📋 PropuestaId extraído:', propuestaId);
+        console.log('🌐 URL completa:', window.location.href);
+        
+        if (propuestaId) {
+            const targetUrl = `/contrato/${propuestaId}/firmado`;
+            console.log('🎯 Redirigiendo a:', targetUrl);
+            
+            // Si estamos dentro de un iframe, redirigir la página padre
+            if (window.parent && window.parent !== window) {
+                console.log('📱 Detectado iframe, redirigiendo página padre');
+                window.parent.location.href = targetUrl;
+            } else {
+                // Si no estamos en iframe, redirección normal
+                console.log('🌍 Redirección normal');
+                window.location.href = targetUrl;
+            }
+        } else {
+            console.error('❌ No se pudo extraer propuestaId de la URL');
+            // Fallback: redirigir al inicio
+            if (window.parent && window.parent !== window) {
+                window.parent.location.href = '/';
+            } else {
+                window.location.href = '/';
+            }
+        }
+    </script>
+    
+    <!-- Contenido visual mientras redirecciona -->
+    <div style="display: flex; justify-content: center; align-items: center; height: 100vh; font-family: Arial, sans-serif; text-align: center;">
+        <div>
+            <div style="font-size: 48px; margin-bottom: 20px;">✅</div>
+            <h2>¡Contrato firmado exitosamente!</h2>
+            <p>Redirigiendo a la página de confirmación...</p>
+            <div style="margin-top: 20px;">
+                <div style="display: inline-block; width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #5CA00E; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+    </style>
+</html>
