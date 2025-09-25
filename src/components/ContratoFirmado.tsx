@@ -8,11 +8,11 @@ const ContratoFirmado = () => {
   const { propuestaId } = useParams<{ propuestaId: string }>();
   const { form } = useFormStore();
 
-  const descargarContrato = () => {
-    // Lógica para descargar el contrato firmado
-    console.log('Solicitando descarga de contrato para propuestaId:', propuestaId);
-    // En una implementación futura, aquí se haría una llamada al backend para generar/descargar el PDF
-  };
+//   const descargarContrato = () => {
+//     // Lógica para descargar el contrato firmado
+//     console.log('Solicitando descarga de contrato para propuestaId:', propuestaId);
+//     // En una implementación futura, aquí se haría una llamada al backend para generar/descargar el PDF
+//   };
 
   // Usar los datos del store si están disponibles
   const nombreComunero = form.comunero?.nombre || form.nombre || 'Usuario';
