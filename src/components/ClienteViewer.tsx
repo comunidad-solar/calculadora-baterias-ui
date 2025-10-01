@@ -45,6 +45,22 @@ const ClienteViewer = () => {
           // Para fsmState "12_CONTRATA", mostrar vista específica en lugar de navegar
           setPropuestaContratadaData(resultado.datosParaStore);
           
+        } else if (resultado.success && resultado.fsmState === '04_DATOS_RECOGIDOS') {
+          console.log('✅ Propuesta generada detectada, navegando a vista de propuesta');
+          
+          // Para fsmState "04_DATOS_RECOGIDOS", navegar a propuesta con datos
+          if (resultado.datosParaStore && 'propuestaData' in resultado.datosParaStore) {
+            navigate('/propuesta', { 
+              state: { 
+                propuestaData: resultado.datosParaStore.propuestaData,
+                fromFsmState: '04_DATOS_RECOGIDOS'
+              }
+            });
+          } else {
+            console.error('❌ Estructura de datos inesperada para 04_DATOS_RECOGIDOS');
+            navigate('/propuesta');
+          }
+          
         } else if (resultado.success && resultado.datosGuardados) {
           console.log('✅ Datos cargados automáticamente en Zustand');
           console.log(`🧭 Navegando a: ${resultado.rutaNavegacion} para fsmState: ${resultado.fsmState}`);

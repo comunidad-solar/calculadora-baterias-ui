@@ -695,6 +695,69 @@ export const procesarRespuestaContratada = (respuesta: any) => {
   };
 };
 
+// Helper function para procesar respuesta de propuesta generada (fsmState: "04_DATOS_RECOGIDOS")
+export const procesarRespuestaPropuestaGenerada = (respuesta: any) => {
+  if (!respuesta.success || !respuesta.data) {
+    throw new Error('Respuesta inválida del servidor');
+  }
+
+  const { data } = respuesta;
+  const { fsmState, data: propuestaData } = data;
+
+  // Estructura esperada para propuesta generada
+  const datosPropuesta = {
+    fsmState: fsmState,
+    propuestaData: {
+      amount: propuestaData.propuesta?.precio || propuestaData.amount || 4699,
+      productData: {
+        name: propuestaData.propuesta?.nombre || propuestaData.productData?.name || 'Pack Batería EcoFlow 5 kWh',
+        group_name: propuestaData.propuesta?.grupo || propuestaData.productData?.group_name || 'Pack Batería Monofásico EcoFlow 5 kWh con Inversor de 12 kW',
+        mapped_items: propuestaData.propuesta?.items || propuestaData.productData?.mapped_items || [
+          { name: "Pack Baterías EcoFlow 5 kWh" },
+          { name: "1x EcoFlow PowerOcean LFP Battery 5kWh" },
+          { name: "1x Inversor Híbrido EcoFlow PowerOcean DC Fit 12kW" }
+        ]
+      },
+      usuario: {
+        nombre: propuestaData.comunero?.nombre || '',
+        email: propuestaData.comunero?.email || '',
+        direccion: {
+          calle: propuestaData.comunero?.direccion || '',
+          ciudad: propuestaData.comunero?.ciudad || '',
+          provincia: propuestaData.comunero?.provincia || '',
+          codigoPostal: propuestaData.comunero?.codigoPostal || ''
+        }
+      },
+      conditions: {
+        enZona: propuestaData.enZona || 'inZone'
+      },
+      propuestaId: propuestaData.propuestaId
+    },
+    // Datos del comunero para el store
+    comunero: {
+      id: propuestaData.comunero?.id || '',
+      nombre: propuestaData.comunero?.nombre || '',
+      email: propuestaData.comunero?.email || '',
+      telefono: propuestaData.comunero?.telefono || '',
+      direccion: propuestaData.comunero?.direccion || '',
+      codigoPostal: propuestaData.comunero?.codigoPostal || '',
+      ciudad: propuestaData.comunero?.ciudad || '',
+      provincia: propuestaData.comunero?.provincia || ''
+    },
+    token: propuestaData.token,
+    enZona: propuestaData.enZona,
+    propuestaId: propuestaData.propuestaId
+  };
+
+  console.log('📋 Datos procesados para propuesta generada:', datosPropuesta);
+  
+  return {
+    datosPropuesta,
+    fsmState,
+    rawResponse: data
+  };
+};
+
 // Helper function para determinar la ruta/vista basada en el fsmState
 export const obtenerRutaPorFsmState = (fsmState: string): string => {
   const rutasPorEstado: Record<string, string> = {
@@ -703,6 +766,7 @@ export const obtenerRutaPorFsmState = (fsmState: string): string => {
     '01_DENTRO_ZONA': '/preguntas-adicionales', // Mapeo para nueva nomenclatura del backend
     '02_IN_ZONE_WITH_COST': '/preguntas-adicionales', // Podría ser una vista diferente
     '03_OUT_ZONE': '/fuera-zona', // Vista para usuarios fuera de zona
+    '04_DATOS_RECOGIDOS': '/propuesta', // Vista de propuesta generada
     '04_MONO_DESCONOCE_A': '/preguntas-adicionales',
     '05_MONO_DESCONOCE_M': '/preguntas-adicionales', 
     '06_TRI_DESCONOCE_A': '/preguntas-adicionales',
@@ -786,6 +850,43 @@ export const cargarComuneroPorId = async (clienteId: string, useFormStore?: any)
           respuestas: Object.keys(datosParaStore.respuestasPreguntas)
         });
       }
+    } else if (fsmState === '04_DATOS_RECOGIDOS') {
+      const procesado = procesarRespuestaPropuestaGenerada(respuesta);
+      datosParaStore = procesado.datosPropuesta;
+      rutaNavegacion = 'propuesta-generada'; // Ruta especial para renderizar propuesta
+      
+      // También cargar datos básicos del comunero en el store si se proporciona
+      if (useFormStore && procesado.datosPropuesta.comunero) {
+        console.log('💾 Cargando datos del comunero en Zustand store...');
+        const { setField, setValidacionData, setFsmState } = useFormStore;
+        
+        // Datos básicos del formulario
+        setField('nombre', procesado.datosPropuesta.comunero.nombre);
+        setField('mail', procesado.datosPropuesta.comunero.email);
+        setField('telefono', procesado.datosPropuesta.comunero.telefono);
+        setField('direccion', procesado.datosPropuesta.comunero.direccion);
+        setField('codigoPostal', procesado.datosPropuesta.comunero.codigoPostal);
+        setField('ciudad', procesado.datosPropuesta.comunero.ciudad);
+        setField('provincia', procesado.datosPropuesta.comunero.provincia);
+        
+        // Estado FSM
+        setFsmState(fsmState);
+        
+        // Datos de validación
+        setValidacionData({
+          token: procesado.datosPropuesta.token || '',
+          comunero: procesado.datosPropuesta.comunero,
+          enZona: procesado.datosPropuesta.enZona || 'inZone',
+          propuestaId: procesado.datosPropuesta.propuestaId
+        });
+      }
+      
+      console.log('✅ Datos de propuesta generada procesados:', {
+        fsmState: procesado.fsmState,
+        propuestaId: procesado.datosPropuesta.propuestaId,
+        precio: procesado.datosPropuesta.propuestaData.amount,
+        producto: procesado.datosPropuesta.propuestaData.productData.name
+      });
     } else if (fsmState === '12_CONTRATA') {
       const procesado = procesarRespuestaContratada(respuesta);
       datosParaStore = procesado.datosContratada;
@@ -939,6 +1040,43 @@ RESPUESTA ESPERADA del backend para fsmState "01_DENTRO_ZONA":
         "instalacionCerca10m": null,
         "metrosExtra": "",
         "requiereContactoManual": false
+      }
+    }
+  }
+}
+
+RESPUESTA ESPERADA del backend para fsmState "04_DATOS_RECOGIDOS":
+{
+  "success": true,
+  "data": {
+    "mpk_log_id": "string",
+    "contact_id": "string", 
+    "deal_id": "string",
+    "fsmState": "04_DATOS_RECOGIDOS",
+    "data": {
+      "propuestaId": "PROP-2024-001234",
+      "token": "jwt_token_string",
+      "enZona": "inZone",
+      "propuesta": {
+        "precio": 4699,
+        "nombre": "Pack Batería EcoFlow 5 kWh",
+        "grupo": "Pack Batería Monofásico EcoFlow 5 kWh con Inversor de 12 kW",
+        "items": [
+          { "name": "Pack Baterías EcoFlow 5 kWh" },
+          { "name": "1x EcoFlow PowerOcean LFP Battery 5kWh" },
+          { "name": "1x Inversor Híbrido EcoFlow PowerOcean DC Fit 12kW" },
+          { "name": "Kit de instalación profesional" }
+        ]
+      },
+      "comunero": {
+        "id": "string",
+        "nombre": "Juan Pérez",
+        "email": "juan@email.com",
+        "telefono": "+34 600 123 456",
+        "direccion": "Calle Principal 123",
+        "codigoPostal": "28001",
+        "ciudad": "Madrid",
+        "provincia": "Madrid"
       }
     }
   }
