@@ -50,10 +50,16 @@ const ClienteViewer = () => {
           
           // Para fsmState "04_DATOS_RECOGIDOS", navegar a propuesta con datos
           if (resultado.datosParaStore && 'propuestaData' in resultado.datosParaStore) {
+            // Obtener información del tipo de instalación desde las respuestas de preguntas
+            const respuestasPreguntas = resultado.rawResponse?.data?.respuestasPreguntas;
+            const tipoInstalacion = respuestasPreguntas?.tipoInstalacion || 'desconozco';
+            
             navigate('/propuesta', { 
               state: { 
                 propuestaData: resultado.datosParaStore.propuestaData,
-                fromFsmState: '04_DATOS_RECOGIDOS'
+                fromFsmState: '04_DATOS_RECOGIDOS',
+                tipoInstalacion: tipoInstalacion,
+                requiereVisitaTecnica: tipoInstalacion === 'trifasica'
               }
             });
           } else {

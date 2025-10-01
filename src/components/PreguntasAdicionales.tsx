@@ -636,7 +636,9 @@ const PreguntasAdicionales = () => {
           navigate('/propuesta', { 
             state: { 
               propuestaData: response.data,
-              tipoSolicitud: 'dentro-10m'
+              tipoSolicitud: 'dentro-10m',
+              tipoInstalacion: tipoInstalacion,
+              requiereVisitaTecnica: tipoInstalacion === 'trifasica'
             } 
           });
         } else {
@@ -719,7 +721,9 @@ const PreguntasAdicionales = () => {
         navigate('/propuesta', {
           state: { 
             propuestaData: response.data,
-            tipoSolicitud: 'formulario-completo'
+            tipoSolicitud: 'formulario-completo',
+            tipoInstalacion: tipoInstalacion,
+            requiereVisitaTecnica: tipoInstalacion === 'trifasica'
           } 
         });
       } else {

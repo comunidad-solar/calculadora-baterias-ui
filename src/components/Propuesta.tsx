@@ -50,11 +50,20 @@ const Propuesta = () => {
   // Obtener datos de la propuesta del state de navegación
   const propuestaData: PropuestaData | undefined = location.state?.propuestaData;
   
+  // Obtener información del tipo de instalación y si requiere visita técnica
+  const tipoInstalacion: string = location.state?.tipoInstalacion || '';
+  const requiereVisitaTecnica: boolean = location.state?.requiereVisitaTecnica || false;
+  
   // Debug: mostrar datos recibidos
   console.log('📋 Datos de propuesta recibidos:', propuestaData);
   console.log('📋 Estructura completa de propuestaData:', JSON.stringify(propuestaData, null, 2));
   console.log('📋 Datos del UsuarioContext:', { validacionData, usuario });
   console.log('📋 Datos del FormStore:', { comunero: form.comunero, enZona: form.enZona });
+  
+  // Debug: mostrar información del tipo de instalación
+  console.log('⚡ Tipo de instalación detectado:', tipoInstalacion);
+  console.log('🔧 ¿Requiere visita técnica?:', requiereVisitaTecnica);
+  console.log('📍 Location state completo:', location.state);
   
   // Debug para servidor: verificar si estamos en modo debug
   const isDebugMode = new URLSearchParams(window.location.search).get('debug') === 'true';
@@ -361,6 +370,39 @@ const Propuesta = () => {
             </div>
           </div>
 
+          {/* Mensaje informativo para instalaciones trifásicas */}
+          {requiereVisitaTecnica && tipoInstalacion === 'trifasica' && (
+            <div className="mt-4">
+              <div 
+                className="bg-warning bg-opacity-10 border border-warning rounded-4 p-4"
+                style={{
+                  borderColor: '#FFC107 !important',
+                  backgroundColor: 'rgba(255, 193, 7, 0.1) !important'
+                }}
+              >
+                <div className="d-flex align-items-start gap-3">
+                  <div className="flex-shrink-0">
+                    <span style={{ fontSize: '2rem' }}>⚠️</span>
+                  </div>
+                  <div className="flex-grow-1">
+                    <h5 className="fw-bold mb-2" style={{ color: '#B8860B' }}>
+                      Instalación Trifásica Detectada
+                    </h5>
+                    <p className="mb-2" style={{ color: '#7A6914', fontSize: '1rem', lineHeight: '1.5' }}>
+                      Tu instalación eléctrica es trifásica, lo que requiere una <strong>evaluación técnica personalizada</strong> 
+                      antes de proceder con la instalación de las baterías.
+                    </p>
+                    <p className="mb-0" style={{ color: '#7A6914', fontSize: '0.95rem' }}>
+                      <strong>¿Qué significa esto?</strong> La propuesta mostrada es orientativa. 
+                      Nuestro equipo técnico debe evaluar tu instalación específica para garantizar 
+                      la compatibilidad y seguridad del sistema.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Sección Pack Batería */}
           <div className="mt-5">
             <div className="row g-0">
@@ -425,18 +467,35 @@ const Propuesta = () => {
                   
                   {/* Botón COMPRAR en el borde inferior de la card */}
                   <div className="text-center mt-4 mb-2">
-                    <button 
-                      className="btn btn-lg px-5 py-3 fw-bold text-white border-0 comprar-btn"
-                      style={{
-                        background: 'linear-gradient(90deg, #5CA00E, #B0D83E)',
-                        borderRadius: '100px',
-                        fontSize: '1.2rem',
-                        minWidth: '200px'
-                      }}
-                      onClick={handleComprar}
-                    >
-                      CONTRATAR
-                    </button>
+                    {requiereVisitaTecnica && tipoInstalacion === 'trifasica' ? (
+                      // Botón para instalaciones trifásicas - redirige a visita técnica
+                      <button 
+                        className="btn btn-lg px-5 py-3 fw-bold text-white border-0"
+                        style={{
+                          background: 'linear-gradient(90deg, #FF6B35, #FFA726)',
+                          borderRadius: '100px',
+                          fontSize: '1.2rem',
+                          minWidth: '200px'
+                        }}
+                        onClick={handleSolicitarVisitaTecnica}
+                      >
+                        SOLICITAR EVALUACIÓN
+                      </button>
+                    ) : (
+                      // Botón normal para instalaciones monofásicas
+                      <button 
+                        className="btn btn-lg px-5 py-3 fw-bold text-white border-0 comprar-btn"
+                        style={{
+                          background: 'linear-gradient(90deg, #5CA00E, #B0D83E)',
+                          borderRadius: '100px',
+                          fontSize: '1.2rem',
+                          minWidth: '200px'
+                        }}
+                        onClick={handleComprar}
+                      >
+                        CONTRATAR
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -662,18 +721,35 @@ const Propuesta = () => {
                   
                   {/* Botón COMPRAR */}
                   <div className="text-center mt-3">
-                    <button 
-                      className="btn btn-lg px-4 py-2 fw-bold text-white border-0"
-                      style={{
-                        background: 'linear-gradient(90deg, #5CA00E, #B0D83E)',
-                        borderRadius: '100px',
-                        fontSize: '1.1rem',
-                        minWidth: '220px'
-                      }}
-                      onClick={handleComprar}
-                    >
-                      CONTRATAR
-                    </button>
+                    {requiereVisitaTecnica && tipoInstalacion === 'trifasica' ? (
+                      // Botón para instalaciones trifásicas - redirige a visita técnica
+                      <button 
+                        className="btn btn-lg px-4 py-2 fw-bold text-white border-0"
+                        style={{
+                          background: 'linear-gradient(90deg, #FF6B35, #FFA726)',
+                          borderRadius: '100px',
+                          fontSize: '1.1rem',
+                          minWidth: '220px'
+                        }}
+                        onClick={handleSolicitarVisitaTecnica}
+                      >
+                        SOLICITAR EVALUACIÓN
+                      </button>
+                    ) : (
+                      // Botón normal para instalaciones monofásicas
+                      <button 
+                        className="btn btn-lg px-4 py-2 fw-bold text-white border-0"
+                        style={{
+                          background: 'linear-gradient(90deg, #5CA00E, #B0D83E)',
+                          borderRadius: '100px',
+                          fontSize: '1.1rem',
+                          minWidth: '220px'
+                        }}
+                        onClick={handleComprar}
+                      >
+                        CONTRATAR
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -939,18 +1015,35 @@ const Propuesta = () => {
 
             {/* Botón COMPRAR centrado */}
             <div className="text-center">
-              <button 
-                className="btn btn-lg px-5 py-3 fw-bold text-white border-0 comprar-btn"
-                style={{
-                  background: 'linear-gradient(90deg, #5CA00E, #B0D83E)',
-                  borderRadius: '100px',
-                  fontSize: '1.3rem',
-                  minWidth: '250px'
-                }}
-                onClick={handleComprar}
-              >
-                CONTRATAR
-              </button>
+              {requiereVisitaTecnica && tipoInstalacion === 'trifasica' ? (
+                // Botón para instalaciones trifásicas - redirige a visita técnica
+                <button 
+                  className="btn btn-lg px-5 py-3 fw-bold text-white border-0"
+                  style={{
+                    background: 'linear-gradient(90deg, #FF6B35, #FFA726)',
+                    borderRadius: '100px',
+                    fontSize: '1.3rem',
+                    minWidth: '250px'
+                  }}
+                  onClick={handleSolicitarVisitaTecnica}
+                >
+                  SOLICITAR EVALUACIÓN
+                </button>
+              ) : (
+                // Botón normal para instalaciones monofásicas
+                <button 
+                  className="btn btn-lg px-5 py-3 fw-bold text-white border-0 comprar-btn"
+                  style={{
+                    background: 'linear-gradient(90deg, #5CA00E, #B0D83E)',
+                    borderRadius: '100px',
+                    fontSize: '1.3rem',
+                    minWidth: '250px'
+                  }}
+                  onClick={handleComprar}
+                >
+                  CONTRATAR
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -1063,18 +1156,35 @@ const Propuesta = () => {
 
           {/* Botón COMPRAR centrado */}
           <div className="text-center">
-            <button 
-              className="btn btn-lg px-5 py-3 fw-bold text-white border-0 comprar-btn"
-              style={{
-                background: 'linear-gradient(90deg, #5CA00E, #B0D83E)',
-                borderRadius: '100px',
-                fontSize: '1.3rem',
-                minWidth: '250px'
-              }}
-              onClick={handleComprar}
-            >
-              CONTRATAR
-            </button>
+            {requiereVisitaTecnica && tipoInstalacion === 'trifasica' ? (
+              // Botón para instalaciones trifásicas - redirige a visita técnica
+              <button 
+                className="btn btn-lg px-5 py-3 fw-bold text-white border-0"
+                style={{
+                  background: 'linear-gradient(90deg, #FF6B35, #FFA726)',
+                  borderRadius: '100px',
+                  fontSize: '1.3rem',
+                  minWidth: '250px'
+                }}
+                onClick={handleSolicitarVisitaTecnica}
+              >
+                SOLICITAR EVALUACIÓN
+              </button>
+            ) : (
+              // Botón normal para instalaciones monofásicas
+              <button 
+                className="btn btn-lg px-5 py-3 fw-bold text-white border-0 comprar-btn"
+                style={{
+                  background: 'linear-gradient(90deg, #5CA00E, #B0D83E)',
+                  borderRadius: '100px',
+                  fontSize: '1.3rem',
+                  minWidth: '250px'
+                }}
+                onClick={handleComprar}
+              >
+                CONTRATAR
+              </button>
+            )}
           </div>
         </div>
       </div>
