@@ -50,50 +50,24 @@ const GoogleAddressInput: React.FC<GoogleAddressInputProps> = ({
     }
   });
 
-  // LOG: Información detallada del entorno al montar el componente
+  // LOG: Información del entorno al montar el componente
   useEffect(() => {
-    console.log('🔍 DIAGNÓSTICO COMPLETO DEL ENTORNO:', {
+    console.log('🔍 GoogleAddressInput montado:', {
       timestamp: new Date().toISOString(),
-      browser: {
-        userAgent: navigator.userAgent,
-        platform: navigator.platform,
-        vendor: navigator.vendor,
-        language: navigator.language,
-        languages: navigator.languages,
-        onLine: navigator.onLine,
-        hardwareConcurrency: navigator.hardwareConcurrency,
-        maxTouchPoints: navigator.maxTouchPoints,
-        cookieEnabled: navigator.cookieEnabled
-      },
-      window: {
-        innerWidth: window.innerWidth,
-        innerHeight: window.innerHeight,
-        devicePixelRatio: window.devicePixelRatio,
-        hasGoogle: !!window.google,
-        hasGoogleMaps: !!(window.google && window.google.maps),
-        location: window.location.href
-      },
-      document: {
-        readyState: document.readyState,
-        visibilityState: document.visibilityState,
-        hasFocus: document.hasFocus(),
-        activeElement: document.activeElement?.tagName
-      },
-      performance: {
-        timing: performance.timing?.loadEventEnd - performance.timing?.navigationStart || 'N/A',
-        memory: (performance as any).memory || 'N/A'
-      }
+      userAgent: navigator.userAgent.substring(0, 50) + '...',
+      hasGoogle: !!window.google,
+      hasGoogleMaps: !!(window.google && window.google.maps)
     });
   }, []);
 
   // Sincronizar con cambios externos del valor (ej: reset del formulario)
   useEffect(() => {
-    console.log('🔄 Value cambió externamente:', { oldValue: searchQuery, newValue: value });
+    console.log('🔄 Value cambió externamente:', { newValue: value });
     if (!value) {
       setIsValidAddress(false);
       setSearchQuery('');
     }
-  }, [value, searchQuery]);
+  }, [value]); // Removed searchQuery from dependencies to avoid infinite loop
 
   // Función helper para extraer código postal de address_components
   const extractPostalCode = (addressComponents: any[]): string | null => {
@@ -204,33 +178,40 @@ const GoogleAddressInput: React.FC<GoogleAddressInputProps> = ({
   );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value;
-    
-    console.log('⌨️ Input change:', {
-      newValue: val,
-      currentValue: value,
-      searchQuery,
-      isValidAddress,
-      timestamp: new Date().toISOString()
-    });
-    
-    // Si ya hay una dirección válida seleccionada y el usuario está escribiendo,
-    // limpiar la dirección válida y comenzar una nueva búsqueda
-    if (isValidAddress && val !== value) {
-      console.log('🔄 Limpiando dirección válida para nueva búsqueda');
-      setIsValidAddress(false);
-      onChange(''); // Limpiar la dirección válida
-    }
-    
-    setSearchQuery(val);
-    
-    if (val.length > 2) {
-      setLoading(true);
-      searchAddresses(val);
-    } else {
-      setSuggestions([]);
-      setShowDropdown(false);
-      setLoading(false);
+    try {
+      const val = e.target.value;
+      
+      console.log('⌨️ Input change:', {
+        newValue: val,
+        currentValue: value,
+        searchQuery,
+        isValidAddress,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Si ya hay una dirección válida seleccionada y el usuario está escribiendo,
+      // limpiar la dirección válida y comenzar una nueva búsqueda
+      if (isValidAddress && val !== value) {
+        console.log('🔄 Limpiando dirección válida para nueva búsqueda');
+        setIsValidAddress(false);
+        onChange(''); // Limpiar la dirección válida
+      }
+      
+      setSearchQuery(val);
+      
+      if (val.length > 2) {
+        setLoading(true);
+        searchAddresses(val);
+      } else {
+        setSuggestions([]);
+        setShowDropdown(false);
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('❌ Error en handleInputChange:', error);
+      // Fallback: al menos permitir que se actualice el searchQuery
+      const val = e.target.value;
+      setSearchQuery(val);
     }
   };
 
@@ -392,15 +373,30 @@ const GoogleAddressInput: React.FC<GoogleAddressInputProps> = ({
   };
 
   const handleFocus = () => {
-    // Si ya hay una dirección válida, permitir edición desde cero
-    if (isValidAddress) {
-      setIsValidAddress(false);
-      setSearchQuery(value);
-      onChange('');
-    }
+    console.log('👁️ handleFocus ejecutado:', {
+      isValidAddress,
+      value,
+      searchQuery,
+      suggestionsLength: suggestions.length,
+      timestamp: new Date().toISOString()
+    });
     
-    if (suggestions.length > 0) {
-      setShowDropdown(true);
+    try {
+      // Si ya hay una dirección válida, permitir edición desde cero
+      if (isValidAddress) {
+        console.log('🔄 Limpiando dirección válida en focus');
+        setIsValidAddress(false);
+        setSearchQuery(value);
+        // Remover onChange('') que puede estar causando problemas
+        // onChange('');
+      }
+      
+      if (suggestions.length > 0) {
+        console.log('📋 Mostrando dropdown existente');
+        setShowDropdown(true);
+      }
+    } catch (error) {
+      console.error('❌ Error en handleFocus:', error);
     }
   };
 
@@ -418,7 +414,10 @@ const GoogleAddressInput: React.FC<GoogleAddressInputProps> = ({
         placeholder={isValidAddress ? "Haz clic para cambiar dirección..." : "Busca tu dirección..."}
         className={`form-control form-control-lg ${isValidAddress ? 'is-valid' : (searchQuery && !isValidAddress ? 'is-invalid' : '')}`}
         value={isValidAddress ? value : searchQuery}
-        onChange={handleInputChange}
+        onChange={(e) => {
+          console.log('⌨️ Input onChange raw:', e.target.value);
+          handleInputChange(e);
+        }}
         onFocus={handleFocus}
         onBlur={handleBlur}
         autoComplete="off"
