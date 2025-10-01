@@ -167,21 +167,22 @@ const GoogleAddressInput: React.FC<GoogleAddressInputProps> = ({
   const handleSelectSuggestion = async (prediction: PlacePrediction) => {
     setLoading(true);
     setShowDropdown(false);
-    
+    console.log('🏷️ Sugerencia seleccionada:', prediction);
     try {
       // Si es una predicción real de Google, obtener detalles
       if (!prediction.place_id.startsWith('mock')) {
         const placeDetails = await getPlaceDetails(prediction.place_id);
-        
+        console.log('📍 Detalles del lugar obtenidos:', placeDetails);
         // Extraer todos los componentes de dirección si están disponibles
         const addressComponents = placeDetails.address_components || [];
         const postalCode = extractPostalCode(addressComponents);
         const city = extractCity(addressComponents);
         const province = extractProvince(addressComponents);
         const country = extractCountry(addressComponents);
-        
+        console.log('🏷️ Componentes extraídos:', { postalCode, city, province, country });
         // Actualizar dirección y marcar como válida
         onChange(placeDetails.formatted_address);
+        console.log('📍 Dirección formateada:', placeDetails.formatted_address);
         setIsValidAddress(true);
         setSearchQuery(placeDetails.formatted_address);
         
