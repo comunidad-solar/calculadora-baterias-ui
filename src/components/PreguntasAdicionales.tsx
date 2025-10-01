@@ -776,6 +776,32 @@ const PreguntasAdicionales = () => {
     setRespuestaPregunta('instalacionCerca10m', null);
   };
 
+  const handleTipoCuadroElectricoChange = (valor: string) => {
+    setRespuestaPregunta('tipoCuadroElectrico', valor);
+    
+    // Si selecciona tipo1 (monofásico) o tipo2 (trifásico), actualizar automáticamente tipoInstalacion
+    if (valor === 'tipo1') {
+      setRespuestaPregunta('tipoInstalacion', 'monofasica');
+      // Reset battery related fields ya que cambió el tipo de instalación
+      setRespuestaPregunta('tieneBaterias', null);
+      setRespuestaPregunta('tipoBaterias', '');
+      setRespuestaPregunta('capacidadCanadian', '');
+      setRespuestaPregunta('capacidadHuawei', '');
+      setRespuestaPregunta('instalacionCerca10m', null);
+      setRespuestaPregunta('metrosExtra', '');
+    } else if (valor === 'tipo2') {
+      setRespuestaPregunta('tipoInstalacion', 'trifasica');
+      // Reset battery related fields ya que cambió el tipo de instalación
+      setRespuestaPregunta('tieneBaterias', null);
+      setRespuestaPregunta('tipoBaterias', '');
+      setRespuestaPregunta('capacidadCanadian', '');
+      setRespuestaPregunta('capacidadHuawei', '');
+      setRespuestaPregunta('instalacionCerca10m', null);
+      setRespuestaPregunta('metrosExtra', '');
+    }
+    // Si selecciona 'ninguno', no cambiar tipoInstalacion (se mantiene en 'desconozco')
+  };
+
   const handleTieneBateriasChange = (valor: boolean) => {
     setRespuestaPregunta('tieneBaterias', valor);
     // Reset dependent fields
@@ -1853,7 +1879,7 @@ const PreguntasAdicionales = () => {
                         id="cuadroTipo1"
                         value="tipo1"
                         checked={tipoCuadroElectrico === 'tipo1'}
-                        onChange={(e) => setRespuestaPregunta('tipoCuadroElectrico', e.target.value)}
+                        onChange={(e) => handleTipoCuadroElectricoChange(e.target.value)}
                       />
                       <label className="form-check-label d-block" htmlFor="cuadroTipo1">
                         <div className="border rounded-3 overflow-hidden mb-2" style={{ cursor: 'pointer' }}>
@@ -1878,7 +1904,7 @@ const PreguntasAdicionales = () => {
                         id="cuadroTipo2"
                         value="tipo2"
                         checked={tipoCuadroElectrico === 'tipo2'}
-                        onChange={(e) => setRespuestaPregunta('tipoCuadroElectrico', e.target.value)}
+                        onChange={(e) => handleTipoCuadroElectricoChange(e.target.value)}
                       />
                       <label className="form-check-label d-block" htmlFor="cuadroTipo2">
                         <div className="border rounded-3 overflow-hidden mb-2" style={{ cursor: 'pointer' }}>
@@ -1894,6 +1920,20 @@ const PreguntasAdicionales = () => {
                   </div>
                 </div>
 
+                {/* Mensaje informativo cuando se selecciona tipo1 o tipo2 */}
+                {(tipoCuadroElectrico === 'tipo1' || tipoCuadroElectrico === 'tipo2') && (
+                  <div className="alert alert-success border-0 fade-in-result mb-4">
+                    <div className="d-flex align-items-center">
+                      <span className="me-2">✅</span>
+                      <small>
+                        <strong>¡Perfecto!</strong> Hemos identificado que tienes una instalación{' '}
+                        <strong>{tipoCuadroElectrico === 'tipo1' ? 'monofásica' : 'trifásica'}</strong>.
+                        Continuaremos con tu propuesta personalizada.
+                      </small>
+                    </div>
+                  </div>
+                )}
+
                 {/* Opción "Ninguno coincide" */}
                 <div className="form-check mb-3">
                   <input
@@ -1903,7 +1943,7 @@ const PreguntasAdicionales = () => {
                     id="cuadroNinguno"
                     value="ninguno"
                     checked={tipoCuadroElectrico === 'ninguno'}
-                    onChange={(e) => setRespuestaPregunta('tipoCuadroElectrico', e.target.value)}
+                    onChange={(e) => handleTipoCuadroElectricoChange(e.target.value)}
                   />
                   <label className="form-check-label fw-semibold" htmlFor="cuadroNinguno">
                     Ninguno de los anteriores coincide con mi cuadro eléctrico

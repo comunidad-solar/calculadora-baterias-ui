@@ -700,6 +700,7 @@ export const obtenerRutaPorFsmState = (fsmState: string): string => {
   const rutasPorEstado: Record<string, string> = {
     'initial': '/home',
     '01_IN_ZONE_LEAD': '/preguntas-adicionales',
+    '01_DENTRO_ZONA': '/preguntas-adicionales', // Mapeo para nueva nomenclatura del backend
     '02_IN_ZONE_WITH_COST': '/preguntas-adicionales', // Podría ser una vista diferente
     '03_OUT_ZONE': '/fuera-zona', // Vista para usuarios fuera de zona
     '04_MONO_DESCONOCE_A': '/preguntas-adicionales',
@@ -741,7 +742,7 @@ export const cargarComuneroPorId = async (clienteId: string, useFormStore?: any)
     let rutaNavegacion;
     
     // Procesar según el estado FSM
-    if (fsmState === '01_IN_ZONE_LEAD') {
+    if (fsmState === '01_IN_ZONE_LEAD' || fsmState === '01_DENTRO_ZONA') {
       const procesado = procesarRespuestaComunero(respuesta);
       datosParaStore = procesado.datosParaStore;
       rutaNavegacion = obtenerRutaPorFsmState(fsmState);
@@ -762,8 +763,9 @@ export const cargarComuneroPorId = async (clienteId: string, useFormStore?: any)
         setField('ciudad', datosParaStore.ciudad);
         setField('provincia', datosParaStore.provincia);
         
-        // Estado FSM
-        setFsmState(datosParaStore.fsmState);
+        // Estado FSM - normalizar a la nomenclatura interna
+        const fsmStateNormalizado = fsmState === '01_DENTRO_ZONA' ? '01_IN_ZONE_LEAD' : fsmState;
+        setFsmState(fsmStateNormalizado);
         
         // Datos de validación completos
         setValidacionData({
@@ -779,7 +781,7 @@ export const cargarComuneroPorId = async (clienteId: string, useFormStore?: any)
         setRespuestasPreguntas(datosParaStore.respuestasPreguntas);
         
         console.log('✅ Datos cargados en Zustand:', {
-          fsmState: datosParaStore.fsmState,
+          fsmState: fsmStateNormalizado,
           comunero: datosParaStore.comunero.nombre,
           respuestas: Object.keys(datosParaStore.respuestasPreguntas)
         });
@@ -889,6 +891,55 @@ RESPUESTA ESPERADA del backend para fsmState "01_IN_ZONE_LEAD":
       "dealId": "...",
       "analisisTratos": { ... },
       "respuestasPreguntas": { ... }
+    }
+  }
+}
+
+RESPUESTA ESPERADA del backend para fsmState "01_DENTRO_ZONA":
+{
+  "success": true,
+  "data": {
+    "mpk_log_id": "string",
+    "contact_id": "string", 
+    "deal_id": "string",
+    "fsmState": "01_DENTRO_ZONA",
+    "data": {
+      "comunero": {
+        "id": "string",
+        "nombre": "Juan Pérez",
+        "email": "juan@email.com",
+        "telefono": "+34 600 123 456",
+        "direccion": "Calle Principal 123",
+        "codigoPostal": "28001",
+        "ciudad": "Madrid",
+        "provincia": "Madrid"
+      },
+      "token": "jwt_token_string",
+      "enZona": "inZone",
+      "propuestaId": "PROP-2024-001234",
+      "dealId": "DEAL-789",
+      "analisisTratos": {
+        "tieneTratoCerradoGanado": false,
+        "hasInversor": null,
+        "tratoGanadoBaterias": false,
+        "bateriaInicial": null,
+        "tieneAmpliacionBaterias": false,
+        "bateriaAmpliacion": null
+      },
+      "respuestasPreguntas": {
+        "tieneInstalacionFV": null,
+        "tieneInversorHuawei": "",
+        "tipoInversorHuawei": "",
+        "tipoInstalacion": "",
+        "tipoCuadroElectrico": "",
+        "tieneBaterias": null,
+        "tipoBaterias": "",
+        "capacidadCanadian": "",
+        "capacidadHuawei": "",
+        "instalacionCerca10m": null,
+        "metrosExtra": "",
+        "requiereContactoManual": false
+      }
     }
   }
 }
