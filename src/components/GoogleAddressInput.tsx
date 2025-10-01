@@ -22,17 +22,78 @@ const GoogleAddressInput: React.FC<GoogleAddressInputProps> = ({
   const [suggestions, setSuggestions] = useState<PlacePrediction[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  
+  // LOG: Verificar props iniciales
+  console.log('🏠 GoogleAddressInput - Props recibidas:', {
+    value,
+    hasOnChange: !!onChange,
+    hasOnPostalCodeChange: !!onPostalCodeChange,
+    hasOnCityChange: !!onCityChange,
+    hasOnProvinceChange: !!onProvinceChange,
+    hasOnCountryChange: !!onCountryChange
+  });
   const [isValidAddress, setIsValidAddress] = useState(false); // Nueva state para trackear si la dirección es válida
   const [searchQuery, setSearchQuery] = useState(''); // Query de búsqueda separada del valor seleccionado
+  const [isSelecting, setIsSelecting] = useState(false); // Prevenir múltiples selecciones
   const { isLoaded, error: googleError, searchPlaces, getPlaceDetails } = useGooglePlaces();
+  
+  // LOG: Estado del hook Google Places
+  console.log('🗺️ useGooglePlaces estado:', {
+    isLoaded,
+    googleError,
+    hasSearchPlaces: !!searchPlaces,
+    hasGetPlaceDetails: !!getPlaceDetails,
+    browserInfo: {
+      userAgent: navigator.userAgent,
+      platform: navigator.platform,
+      vendor: navigator.vendor
+    }
+  });
+
+  // LOG: Información detallada del entorno al montar el componente
+  useEffect(() => {
+    console.log('🔍 DIAGNÓSTICO COMPLETO DEL ENTORNO:', {
+      timestamp: new Date().toISOString(),
+      browser: {
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        vendor: navigator.vendor,
+        language: navigator.language,
+        languages: navigator.languages,
+        onLine: navigator.onLine,
+        hardwareConcurrency: navigator.hardwareConcurrency,
+        maxTouchPoints: navigator.maxTouchPoints,
+        cookieEnabled: navigator.cookieEnabled
+      },
+      window: {
+        innerWidth: window.innerWidth,
+        innerHeight: window.innerHeight,
+        devicePixelRatio: window.devicePixelRatio,
+        hasGoogle: !!window.google,
+        hasGoogleMaps: !!(window.google && window.google.maps),
+        location: window.location.href
+      },
+      document: {
+        readyState: document.readyState,
+        visibilityState: document.visibilityState,
+        hasFocus: document.hasFocus(),
+        activeElement: document.activeElement?.tagName
+      },
+      performance: {
+        timing: performance.timing?.loadEventEnd - performance.timing?.navigationStart || 'N/A',
+        memory: (performance as any).memory || 'N/A'
+      }
+    });
+  }, []);
 
   // Sincronizar con cambios externos del valor (ej: reset del formulario)
   useEffect(() => {
+    console.log('🔄 Value cambió externamente:', { oldValue: searchQuery, newValue: value });
     if (!value) {
       setIsValidAddress(false);
       setSearchQuery('');
     }
-  }, [value]);
+  }, [value, searchQuery]);
 
   // Función helper para extraer código postal de address_components
   const extractPostalCode = (addressComponents: any[]): string | null => {
@@ -145,9 +206,18 @@ const GoogleAddressInput: React.FC<GoogleAddressInputProps> = ({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     
+    console.log('⌨️ Input change:', {
+      newValue: val,
+      currentValue: value,
+      searchQuery,
+      isValidAddress,
+      timestamp: new Date().toISOString()
+    });
+    
     // Si ya hay una dirección válida seleccionada y el usuario está escribiendo,
     // limpiar la dirección válida y comenzar una nueva búsqueda
     if (isValidAddress && val !== value) {
+      console.log('🔄 Limpiando dirección válida para nueva búsqueda');
       setIsValidAddress(false);
       onChange(''); // Limpiar la dirección válida
     }
@@ -165,46 +235,90 @@ const GoogleAddressInput: React.FC<GoogleAddressInputProps> = ({
   };
 
   const handleSelectSuggestion = async (prediction: PlacePrediction) => {
+    if (isSelecting) {
+      console.log('⏳ Ya hay una selección en proceso, ignorando...');
+      return;
+    }
+    
+    console.log('🔍 Seleccionando sugerencia:', prediction);
+    setIsSelecting(true);
     setLoading(true);
     setShowDropdown(false);
-    console.log('🏷️ Sugerencia seleccionada:', prediction);
     try {
       // Si es una predicción real de Google, obtener detalles
       if (!prediction.place_id.startsWith('mock')) {
+        console.log('🔍 Obteniendo detalles del lugar:', prediction.place_id);
         const placeDetails = await getPlaceDetails(prediction.place_id);
-        console.log('📍 Detalles del lugar obtenidos:', placeDetails);
+        console.log('📋 Detalles obtenidos:', placeDetails);
+        
         // Extraer todos los componentes de dirección si están disponibles
         const addressComponents = placeDetails.address_components || [];
         const postalCode = extractPostalCode(addressComponents);
         const city = extractCity(addressComponents);
         const province = extractProvince(addressComponents);
         const country = extractCountry(addressComponents);
-        console.log('🏷️ Componentes extraídos:', { postalCode, city, province, country });
+        
         // Actualizar dirección y marcar como válida
+        console.log('✅ Actualizando dirección con:', placeDetails.formatted_address);
+        
+        // LOG: Verificar función onChange antes de llamarla
+        console.log('🔧 Verificando onChange:', {
+          hasOnChange: !!onChange,
+          onChangeType: typeof onChange,
+          onChangeName: onChange?.name
+        });
+        
         onChange(placeDetails.formatted_address);
-        console.log('📍 Dirección formateada:', placeDetails.formatted_address);
+    
         setIsValidAddress(true);
         setSearchQuery(placeDetails.formatted_address);
         
+        console.log('✅ Estados actualizados:', {
+          isValidAddress: true,
+          searchQuery: placeDetails.formatted_address,
+          timestamp: new Date().toISOString(),
+          success: true
+        });
+        
         // Actualizar cada componente si se proporcionó el callback correspondiente y se encontró el valor
         if (onPostalCodeChange && postalCode) {
-          onPostalCodeChange(postalCode);
-          console.log('📍 Código postal extraído:', postalCode);
+          console.log('📍 Ejecutando onPostalCodeChange con:', postalCode);
+          try {
+            onPostalCodeChange(postalCode);
+            console.log('✅ onPostalCodeChange ejecutado exitosamente');
+          } catch (err) {
+            console.error('❌ Error en onPostalCodeChange:', err);
+          }
         }
         
         if (onCityChange && city) {
-          onCityChange(city);
-          console.log('🏙️ Ciudad extraída:', city);
+          console.log('🏙️ Ejecutando onCityChange con:', city);
+          try {
+            onCityChange(city);
+            console.log('✅ onCityChange ejecutado exitosamente');
+          } catch (err) {
+            console.error('❌ Error en onCityChange:', err);
+          }
         }
         
         if (onProvinceChange && province) {
-          onProvinceChange(province);
-          console.log('🗺️ Provincia extraída:', province);
+          console.log('🗺️ Ejecutando onProvinceChange con:', province);
+          try {
+            onProvinceChange(province);
+            console.log('✅ onProvinceChange ejecutado exitosamente');
+          } catch (err) {
+            console.error('❌ Error en onProvinceChange:', err);
+          }
         }
         
         if (onCountryChange && country) {
-          onCountryChange(country);
-          console.log('🌍 País extraído:', country);
+          console.log('🌍 Ejecutando onCountryChange con:', country);
+          try {
+            onCountryChange(country);
+            console.log('✅ onCountryChange ejecutado exitosamente');
+          } catch (err) {
+            console.error('❌ Error en onCountryChange:', err);
+          }
         }
         
         // Log completo para debugging
@@ -218,26 +332,63 @@ const GoogleAddressInput: React.FC<GoogleAddressInputProps> = ({
         
       } else {
         // Para sugerencias mock, usar la descripción directamente
-        onChange(prediction.description);
-        setIsValidAddress(true);
-        setSearchQuery(prediction.description);
+        console.log('🎭 Usando sugerencia mock:', prediction.description);
+        console.log('🔧 Verificando onChange para mock:', {
+          hasOnChange: !!onChange,
+          onChangeType: typeof onChange
+        });
+        
+        try {
+          onChange(prediction.description);
+          setIsValidAddress(true);
+          setSearchQuery(prediction.description);
+          console.log('✅ Sugerencia mock procesada exitosamente');
+        } catch (err) {
+          console.error('❌ Error procesando sugerencia mock:', err);
+        }
       }
     } catch (err) {
-      console.error('Error getting place details:', err);
+      console.error('❌ Error obteniendo detalles del lugar:', err);
+      console.log('📋 Usando descripción como fallback:', prediction.description);
       onChange(prediction.description);
       setIsValidAddress(true);
       setSearchQuery(prediction.description);
     } finally {
       setSuggestions([]);
       setLoading(false);
+      setIsSelecting(false);
     }
   };
 
   const handleBlur = () => {
+    console.log('👁️ handleBlur ejecutado:', {
+      isSelecting,
+      showDropdown,
+      suggestions: suggestions.length,
+      timestamp: new Date().toISOString(),
+      performance: {
+        now: performance.now(),
+        timeOrigin: performance.timeOrigin
+      }
+    });
+    
+    // No cerrar si hay una selección en proceso
+    if (isSelecting) {
+      console.log('⏳ Selección en proceso, no cerrando dropdown');
+      return;
+    }
+    
     // Retrasar el cierre para permitir clicks en las sugerencias
+    console.log('⏰ Programando cierre del dropdown en 300ms');
     setTimeout(() => {
-      setShowDropdown(false);
-    }, 150);
+      console.log('⏰ Ejecutando cierre del dropdown:', {
+        isSelecting,
+        timestamp: new Date().toISOString()
+      });
+      if (!isSelecting) {
+        setShowDropdown(false);
+      }
+    }, 300); // Aumentado de 150 a 300ms
   };
 
   const handleFocus = () => {
@@ -300,7 +451,32 @@ const GoogleAddressInput: React.FC<GoogleAddressInputProps> = ({
               key={suggestion.place_id}
               className="px-3 py-2 border-bottom cursor-pointer d-flex align-items-start"
               style={{cursor: 'pointer'}}
-              onClick={() => handleSelectSuggestion(suggestion)}
+              onMouseDown={(e) => {
+                console.log('🖱️ MouseDown detectado:', {
+                  suggestion: suggestion.description,
+                  eventType: e.type,
+                  button: e.button,
+                  timestamp: new Date().toISOString(),
+                  isSelecting,
+                  showDropdown
+                });
+                e.preventDefault(); // Prevenir que onBlur se ejecute
+              }}
+              onClick={(e) => {
+                console.log('🖱️ Click detectado:', {
+                  suggestion: suggestion.description,
+                  eventType: e.type,
+                  button: e.button,
+                  timestamp: new Date().toISOString(),
+                  isSelecting,
+                  showDropdown,
+                  target: e.target,
+                  currentTarget: e.currentTarget
+                });
+                e.preventDefault();
+                e.stopPropagation();
+                handleSelectSuggestion(suggestion);
+              }}
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8f9fa'}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
             >
