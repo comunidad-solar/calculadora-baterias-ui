@@ -695,6 +695,64 @@ export const procesarRespuestaContratada = (respuesta: any) => {
   };
 };
 
+// Helper function para procesar respuesta de visita técnica (fsmState: "06_VISITA_TECNICA")
+export const procesarRespuestaVisitaTecnica = (respuesta: any) => {
+  console.log('🔧 Procesando respuesta de visita técnica:', respuesta);
+  
+  const data = respuesta.data;
+  
+  // Estructura de datos para la propuesta post-visita técnica (similar a 04_DATOS_RECOGIDOS)
+  const datosPropuesta = {
+    fsmState: '06_VISITA_TECNICA',
+    propuestaData: {
+      amount: data.propuestaData?.amount || 4699,
+      productData: {
+        name: data.propuestaData?.productData?.name || 'Pack Batería EcoFlow 5 kWh',
+        group_name: data.propuestaData?.productData?.group_name || 'Pack Batería Trifásico EcoFlow 5 kWh con Inversor de 12 kW',
+        mapped_items: data.propuestaData?.productData?.mapped_items || []
+      },
+      usuario: {
+        nombre: data.comunero?.nombre || '',
+        email: data.comunero?.email || '',
+        direccion: {
+          calle: data.comunero?.direccion || '',
+          ciudad: data.comunero?.ciudad || '',
+          provincia: data.comunero?.provincia || '',
+          codigoPostal: data.comunero?.codigoPostal || ''
+        }
+      },
+      conditions: {
+        enZona: data.enZona || 'inZone'
+      },
+      propuestaId: data.propuestaData?.propuestaId
+    },
+    // Datos del comunero para el store
+    comunero: {
+      id: data.comunero?.id || '',
+      nombre: data.comunero?.nombre || '',
+      email: data.comunero?.email || '',
+      telefono: data.comunero?.telefono || '',
+      direccion: data.comunero?.direccion || '',
+      codigoPostal: data.comunero?.codigoPostal || '',
+      ciudad: data.comunero?.ciudad || '',
+      provincia: data.comunero?.provincia || ''
+    },
+    token: data.token,
+    enZona: data.enZona,
+    propuestaId: data.propuestaData?.propuestaId,
+    
+    // Indicador simple: la visita técnica está completada
+    visitaTecnicaCompletada: true,
+    tipoInstalacion: data.respuestasPreguntas?.tipoInstalacion || 'trifasica'
+  };
+  
+  return {
+    fsmState: '06_VISITA_TECNICA',
+    datosPropuesta,
+    tipoRespuesta: 'visita-tecnica'
+  };
+};
+
 // Helper function para procesar respuesta de propuesta generada (fsmState: "04_DATOS_RECOGIDOS")
 export const procesarRespuestaPropuestaGenerada = (respuesta: any) => {
   if (!respuesta.success || !respuesta.data) {
@@ -770,6 +828,7 @@ export const obtenerRutaPorFsmState = (fsmState: string): string => {
     '04_MONO_DESCONOCE_A': '/preguntas-adicionales',
     '05_MONO_DESCONOCE_M': '/preguntas-adicionales', 
     '06_TRI_DESCONOCE_A': '/preguntas-adicionales',
+    '06_VISITA_TECNICA': '/propuesta', // Propuesta post-visita técnica
     '07_TRI_DESCONOCE_M': '/preguntas-adicionales',
     '12_CONTRATA': '/propuesta-contratada', // Nueva vista para propuestas contratadas
     // Agregar más estados según se definan
@@ -896,6 +955,43 @@ export const cargarComuneroPorId = async (clienteId: string, useFormStore?: any)
         fsmState: procesado.fsmState,
         propuesta: procesado.datosContratada.propuesta.id,
         producto: procesado.datosContratada.propuesta.producto.nombre
+      });
+    } else if (fsmState === '06_VISITA_TECNICA') {
+      const procesado = procesarRespuestaVisitaTecnica(respuesta);
+      datosParaStore = procesado.datosPropuesta;
+      rutaNavegacion = 'propuesta-visita-tecnica'; // Ruta especial para renderizar propuesta post-visita
+      
+      // También cargar datos básicos del comunero en el store si se proporciona
+      if (useFormStore && procesado.datosPropuesta.comunero) {
+        console.log('💾 Cargando datos del comunero post-visita técnica en Zustand store...');
+        const { setField, setValidacionData, setFsmState } = useFormStore;
+        
+        // Datos básicos del formulario
+        setField('nombre', procesado.datosPropuesta.comunero.nombre);
+        setField('mail', procesado.datosPropuesta.comunero.email);
+        setField('telefono', procesado.datosPropuesta.comunero.telefono);
+        setField('direccion', procesado.datosPropuesta.comunero.direccion);
+        setField('codigoPostal', procesado.datosPropuesta.comunero.codigoPostal);
+        setField('ciudad', procesado.datosPropuesta.comunero.ciudad);
+        setField('provincia', procesado.datosPropuesta.comunero.provincia);
+        
+        // Estado FSM
+        setFsmState(fsmState);
+        
+        // Datos de validación
+        setValidacionData({
+          token: procesado.datosPropuesta.token || '',
+          comunero: procesado.datosPropuesta.comunero,
+          enZona: procesado.datosPropuesta.enZona || 'inZone',
+          propuestaId: procesado.datosPropuesta.propuestaId
+        });
+      }
+      
+      console.log('✅ Datos de visita técnica procesados:', {
+        fsmState: procesado.fsmState,
+        propuestaId: procesado.datosPropuesta.propuestaId,
+        visitaCompletada: procesado.datosPropuesta.visitaTecnicaCompletada,
+        tipoInstalacion: procesado.datosPropuesta.tipoInstalacion
       });
     } else {
       // Para otros estados FSM, implementar según sea necesario
@@ -1155,6 +1251,62 @@ ESTADO ACTUAL:
 ✅ Implementado: 01_IN_ZONE_LEAD → Carga automática en Zustand + navegación
 ⚠️  Pendiente: Todos los demás estados FSM
 
+RESPUESTA ESPERADA del backend para fsmState "06_VISITA_TECNICA":
+{
+  "success": true,
+  "data": {
+    "mpk_log_id": "string",
+    "contact_id": "string", 
+    "deal_id": "string",
+    "fsmState": "06_VISITA_TECNICA",
+    "comunero": {
+      "id": "comunero_123",
+      "nombre": "Juan Pérez",
+      "email": "juan@ejemplo.com", 
+      "telefono": "+34666777888",
+      "direccion": "Calle Example 123",
+      "codigoPostal": "28001",
+      "ciudad": "Madrid",
+      "provincia": "Madrid"
+    },
+    "propuestaData": {
+      "propuestaId": "prop_456",
+      "amount": 5200,
+      "productData": {
+        "name": "Pack Batería Trifásico EcoFlow 5 kWh con Inversor de 12 kW",
+        "mapped_items": [
+          { "name": "Pack Baterías EcoFlow 5 kWh Trifásico" },
+          { "name": "1x EcoFlow PowerOcean LFP Battery 5kWh" },
+          { "name": "1x Inversor Híbrido Trifásico EcoFlow PowerOcean DC Fit 12kW" },
+          { "name": "Modificación cuadro eléctrico" },
+          { "name": "Protecciones adicionales trifásicas" }
+        ],
+        "group_name": "Sistema Trifásico Post-Evaluación"
+      },
+      "usuario": {
+        "nombre": "Juan Pérez",
+        "email": "juan@ejemplo.com",
+        "direccion": {
+          "calle": "Calle Example 123",
+          "ciudad": "Madrid", 
+          "provincia": "Madrid",
+          "codigoPostal": "28001"
+        }
+      }
+    },
+    "respuestasPreguntas": {
+      "tipoVivienda": "casa",
+      "tipoCuadroElectrico": "trifasico_general",
+      "tipoInstalacion": "trifasica",
+      "tieneInstalacionFV": true,
+      "potenciaInstalacion": "6kW"
+    },
+    "token": "token_jwt_aqui",
+    "enZona": "inZone",
+    "dealId": "deal_123"
+  }
+}
+
 FLUJO ACTUAL PARA 01_IN_ZONE_LEAD:
 1. Cliente llama: cargarComuneroPorId(clienteId, formStore)
 2. Función hace GET /comunero/:id
@@ -1163,4 +1315,14 @@ FLUJO ACTUAL PARA 01_IN_ZONE_LEAD:
 5. Se cargan automáticamente en Zustand store
 6. Se navega a /preguntas-adicionales
 7. Usuario ve la vista con todos sus datos precargados
+
+FLUJO PARA 06_VISITA_TECNICA:
+1. Cliente llama: cargarComuneroPorId(clienteId, formStore) desde URL /comunero/:propuestaId
+2. Función hace GET /comunero/:id
+3. Backend responde con fsmState: "06_VISITA_TECNICA" + propuesta final post-evaluación
+4. Se procesan los datos con procesarRespuestaVisitaTecnica() (similar a 04_DATOS_RECOGIDOS)
+5. Se cargan automáticamente en Zustand store
+6. Se navega a /propuesta con precios finales
+7. Usuario ve propuesta normal PERO con botón "SOLICITAR VISITA TÉCNICA" deshabilitado
+8. Puede proceder a compra normal con botones "CONTRATAR"
 */

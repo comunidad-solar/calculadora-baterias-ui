@@ -54,6 +54,10 @@ const Propuesta = () => {
   const tipoInstalacion: string = location.state?.tipoInstalacion || '';
   const requiereVisitaTecnica: boolean = location.state?.requiereVisitaTecnica || false;
   
+  // Información específica de visita técnica
+  const visitaTecnicaCompletada: boolean = location.state?.visitaTecnicaCompletada || false;
+  const fsmState: string = location.state?.fromFsmState || '';
+  
   // Debug: mostrar datos recibidos
   console.log('📋 Datos de propuesta recibidos:', propuestaData);
   console.log('📋 Estructura completa de propuestaData:', JSON.stringify(propuestaData, null, 2));
@@ -64,6 +68,11 @@ const Propuesta = () => {
   console.log('⚡ Tipo de instalación detectado:', tipoInstalacion);
   console.log('🔧 ¿Requiere visita técnica?:', requiereVisitaTecnica);
   console.log('📍 Location state completo:', location.state);
+  
+  // Debug: información de visita técnica si aplica
+  if (visitaTecnicaCompletada) {
+    console.log('✅ Visita técnica completada - Botón de solicitar visita deshabilitado');
+  }
   
   // Debug para servidor: verificar si estamos en modo debug
   const isDebugMode = new URLSearchParams(window.location.search).get('debug') === 'true';
@@ -88,8 +97,8 @@ const Propuesta = () => {
   const additionalItems: string[] = [
     "Instalación profesional certificada",
     "Material eléctrico", 
+    "Sistema de respaldo incorporado (BackUp)",
     "Legalización (*Solo si se tiene instalación fotovoltaica)",
-    "Sistema de respaldo incorporado (BackUp)"
   ];
   
   // Combinar items base con items adicionales
@@ -338,7 +347,7 @@ const Propuesta = () => {
           </div>
 
           {/* Header con saludo personalizado */}
-          <div 
+          {/* <div 
             className="gradient-border shadow-sm position-relative"
             style={{
               borderRadius: '20px'
@@ -352,7 +361,7 @@ const Propuesta = () => {
                     alt="Comunidad Solar" 
                     style={{ width: '100px', height: '100px' }}
                   />
-                  {/* Fallback logo */}
+                  {/* Fallback logo 
                   <div 
                     className="bg-primary bg-opacity-10 rounded-circle d-none align-items-center justify-content-center"
                     style={{ width: '60px', height: '60px' }}
@@ -368,34 +377,63 @@ const Propuesta = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Mensaje informativo para instalaciones trifásicas */}
-          {requiereVisitaTecnica && tipoInstalacion === 'trifasica' && (
+          {tipoInstalacion === 'trifasica' && (
             <div className="mt-4">
               <div 
-                className="bg-warning bg-opacity-10 border border-warning rounded-4 p-4"
+                className={`rounded-4 p-4 ${
+                  visitaTecnicaCompletada 
+                    ? 'bg-info bg-opacity-10 border border-info' 
+                    : 'bg-warning bg-opacity-10 border border-warning'
+                }`}
                 style={{
-                  borderColor: '#FFC107 !important',
-                  backgroundColor: 'rgba(255, 193, 7, 0.1) !important'
+                  borderColor: visitaTecnicaCompletada ? '#0DCAF0 !important' : '#FFC107 !important',
+                  backgroundColor: visitaTecnicaCompletada 
+                    ? 'rgba(13, 202, 240, 0.1) !important' 
+                    : 'rgba(255, 193, 7, 0.1) !important'
                 }}
               >
                 <div className="d-flex align-items-start gap-3">
                   <div className="flex-shrink-0">
-                    <span style={{ fontSize: '2rem' }}>⚠️</span>
+                    <span style={{ fontSize: '2rem' }}>
+                      {visitaTecnicaCompletada ? '🔧' : '⚠️'}
+                    </span>
                   </div>
                   <div className="flex-grow-1">
-                    <h5 className="fw-bold mb-2" style={{ color: '#B8860B' }}>
-                      Instalación Trifásica Detectada
+                    <h5 className="fw-bold mb-2" style={{ 
+                      color: visitaTecnicaCompletada ? '#055160' : '#B8860B' 
+                    }}>
+                      {fsmState === '06_VISITA_TECNICA' 
+                        ? 'Instalación Trifásica - Visita Técnica Pendiente'
+                        : visitaTecnicaCompletada 
+                          ? 'Instalación Trifásica - Visita Técnica Completada' 
+                          : 'Instalación Trifásica Detectada'
+                      }
                     </h5>
-                    <p className="mb-2" style={{ color: '#7A6914', fontSize: '1rem', lineHeight: '1.5' }}>
-                      Tu instalación eléctrica es trifásica, lo que requiere una <strong>evaluación técnica personalizada</strong> 
-                      antes de proceder con la instalación de las baterías.
+                    <p className="mb-2" style={{ 
+                      color: visitaTecnicaCompletada ? '#0A58CA' : '#7A6914', 
+                      fontSize: '1rem', 
+                      lineHeight: '1.5' 
+                    }}>
+                      {fsmState === '06_VISITA_TECNICA' 
+                        ? 'Nuestro equipo técnico está a la espera del pago para realizar la evaluación de tu instalación trifásica. Esta propuesta no es final, es informativa.'
+                        : visitaTecnicaCompletada 
+                          ? 'Nuestro equipo técnico ha completado la evaluación de tu instalación trifásica. Esta propuesta refleja los ajustes necesarios identificados durante la visita técnica.'
+                          : 'Tu instalación eléctrica es trifásica, lo que requiere una evaluación técnica personalizada antes de proceder con la instalación de las baterías.'
+                      }
                     </p>
-                    <p className="mb-0" style={{ color: '#7A6914', fontSize: '0.95rem' }}>
-                      <strong>¿Qué significa esto?</strong> La propuesta mostrada es orientativa. 
-                      Nuestro equipo técnico debe evaluar tu instalación específica para garantizar 
-                      la compatibilidad y seguridad del sistema.
+                    <p className="mb-0" style={{ 
+                      color: visitaTecnicaCompletada ? '#0A58CA' : '#7A6914', 
+                      fontSize: '0.95rem' 
+                    }}>
+                      {fsmState === '06_VISITA_TECNICA' 
+                        ? null
+                        : visitaTecnicaCompletada 
+                          ? <><strong>¡Listo para contratar!</strong> Los precios y componentes mostrados incluyen todas las modificaciones técnicas necesarias para tu instalación trifásica.</>
+                          : <><strong>¿Qué significa esto?</strong> La propuesta mostrada es orientativa. Nuestro equipo técnico debe evaluar tu instalación específica para garantizar la compatibilidad y seguridad del sistema.</>
+                      }
                     </p>
                   </div>
                 </div>
@@ -408,10 +446,16 @@ const Propuesta = () => {
             <div className="row g-0">
               <div className="col-lg-6">
                 {/* Título FUERA de la card */}
+                 <div className="flex-grow-1 mt-4">
+                  <h4 className="mb-1 fw-bold">Hola, {usuarioDisplay.nombre}:</h4>
+                  <p className="mb-0 text-secondary">
+                    Aquí tienes la propuesta de baterías que mejor se adapta
+                  </p>
+                </div>
                 <h1 
-                  className="fw-bold mb-4 mt-5" 
+                  className="fw-bold mb-4 mt-2" 
                   style={{
-                    background: 'linear-gradient(90deg, #79BC1C, #B0D83E)',
+                    background: 'linear-gradient(90deg, #4BCCE2, #58B9C6)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                     backgroundClip: 'text',
@@ -422,82 +466,133 @@ const Propuesta = () => {
                   {groupName}
                 </h1>
                 
-                {/* Card con precio y botón */}
-                <div className="bg-white rounded-4 shadow-lg p-4 position-relative text-center">
-                  {/* Sección precio */}
-                  <div className="mb-4">
-                    <p 
-                      className="mb-2 fw-medium" 
-                      style={{ color: '#6FAF32', fontSize: '1.3rem' }}
-                    >
-                      Tu mejor Pack de Batería solo por
-                    </p>
-                    <div className="d-flex align-items-baseline justify-content-center gap-2 mb-3">
-                      <span 
-                        className="fw-bold" 
-                        style={{ 
-                          color: '#6FAF32', 
-                          fontSize: '4rem',
-                          lineHeight: '1'
-                        }}
-                      >
-                        {amount.toLocaleString('es-ES')}€
-                      </span>
-                      <span 
-                        style={{ 
-                          color: '#6FAF32', 
-                          fontSize: '1.2rem',
-                          opacity: 0.8
-                        }}
-                      >
-                        (IVA incluido)
-                      </span>
+                {/* Cards con precio y botón - Dos cards lado a lado */}
+                <div className="row g-3">
+                  {/* Card 1: Pago único */}
+                  <div className="col-md-6">
+                    <div className="bg-white rounded-4 shadow-lg p-4 h-100 text-center position-relative"
+                         style={{ backgroundColor: '#F8F9FA' }}>
+                      <div className="mb-3">
+                        <p className="mb-2 fw-medium" style={{ color: '#58B9C6', fontSize: '1rem' }}>
+                          En un solo pago único
+                        </p>
+                        <div className="d-flex align-items-baseline justify-content-center gap-1 mb-2">
+                          <span className="fw-bold" style={{ 
+                            color: '#58B9C6', 
+                            fontSize: '2.5rem',
+                            lineHeight: '1'
+                          }}>
+                            {amount.toLocaleString('es-ES')}€
+                          </span>
+                        </div>
+                        <p className="mb-0" style={{ 
+                          color: '#666', 
+                          fontSize: '0.9rem'
+                        }}>
+                          (IVA incluido)
+                        </p>
+                        <p className="mb-3 mt-2" style={{ 
+                          color: '#9D9D9D', 
+                          fontSize: '0.8rem'
+                        }}>
+                          Incluye sistema de respaldo + Instalación
+                        </p>
+                      </div>
+                      
+                      {/* Botón para card de pago único */}
+                      {fsmState !== '06_VISITA_TECNICA' && (
+                        (requiereVisitaTecnica && tipoInstalacion === 'trifasica') ? (
+                          <button 
+                            className="btn btn-lg px-4 py-2 fw-bold text-white border-0 w-100"
+                            style={{
+                              background: 'linear-gradient(90deg, #FF6B35, #FFA726)',
+                              borderRadius: '50px',
+                              fontSize: '1rem'
+                            }}
+                            onClick={handleSolicitarVisitaTecnica}
+                          >
+                            SOLICITAR EVALUACIÓN
+                          </button>
+                        ) : (
+                          <button 
+                            className="btn btn-lg px-4 py-2 fw-bold text-white border-0 w-100"
+                            style={{
+                              background: 'linear-gradient(90deg, #58B9C6, #4BCCE2)',
+                              borderRadius: '50px',
+                              fontSize: '1rem'
+                            }}
+                            onClick={handleComprar}
+                          >
+                            CONTRATAR
+                          </button>
+                        )
+                      )}
                     </div>
-                    <p 
-                      className="mb-0" 
-                      style={{ 
-                        color: '#6FAF32', 
-                        fontSize: '1.2rem'
-                      }}
-                    >
-                      Incluye sistema de respaldo<br />
-                      + Instalación profesional
-                    </p>
                   </div>
-                  
-                  {/* Botón COMPRAR en el borde inferior de la card */}
-                  <div className="text-center mt-4 mb-2">
-                    {requiereVisitaTecnica && tipoInstalacion === 'trifasica' ? (
-                      // Botón para instalaciones trifásicas - redirige a visita técnica
-                      <button 
-                        className="btn btn-lg px-5 py-3 fw-bold text-white border-0"
-                        style={{
-                          background: 'linear-gradient(90deg, #FF6B35, #FFA726)',
-                          borderRadius: '100px',
-                          fontSize: '1.2rem',
-                          minWidth: '200px'
-                        }}
-                        onClick={handleSolicitarVisitaTecnica}
-                      >
-                        SOLICITAR EVALUACIÓN
-                      </button>
-                    ) : (
-                      // Botón normal para instalaciones monofásicas
-                      <button 
-                        className="btn btn-lg px-5 py-3 fw-bold text-white border-0 comprar-btn"
-                        style={{
-                          background: 'linear-gradient(90deg, #5CA00E, #B0D83E)',
-                          borderRadius: '100px',
-                          fontSize: '1.2rem',
-                          minWidth: '200px'
-                        }}
-                        onClick={handleComprar}
-                      >
-                        CONTRATAR
-                      </button>
-                    )}
+
+                  {/* Card 2: Financiación */}
+                  <div className="col-md-6">
+                    <div className="bg-white rounded-4 shadow-lg p-4 h-100 text-center position-relative"
+                         style={{ backgroundColor: '#F8F9FA' }}>
+                      <div className="mb-3">
+                        <p className="mb-2 fw-medium" style={{ color: '#58B9C6', fontSize: '1rem' }}>
+                          Financialo solo por
+                        </p>
+                        <div className="d-flex align-items-baseline justify-content-center gap-1 mb-2">
+                          <span className="fw-bold" style={{ 
+                            color: '#58B9C6', 
+                            fontSize: '2.5rem',
+                            lineHeight: '1'
+                          }}>
+                            XX€/mes
+                          </span>
+                        </div>
+                        <p className="mb-0" style={{ 
+                          color: '#666', 
+                          fontSize: '0.9rem'
+                        }}>
+                          (sin intereses)
+                        </p>
+                        <p className="mb-3 mt-2" style={{ 
+                          color: '#9D9D9D', 
+                          fontSize: '0.8rem'
+                        }}>
+                          Incluye sistema de respaldo + Instalación
+                        </p>
+                      </div>
+                      
+                      {/* Botón para card de financiación */}
+                      {fsmState !== '06_VISITA_TECNICA' && (
+                        (requiereVisitaTecnica && tipoInstalacion === 'trifasica') ? (
+                          <button 
+                            className="btn btn-lg px-4 py-2 fw-bold text-white border-0 w-100"
+                            style={{
+                              background: 'linear-gradient(90deg, #FF6B35, #FFA726)',
+                              borderRadius: '50px',
+                              fontSize: '1rem'
+                            }}
+                            onClick={handleSolicitarVisitaTecnica}
+                          >
+                            SOLICITAR EVALUACIÓN
+                          </button>
+                        ) : (
+                          <button 
+                            className="btn btn-lg px-4 py-2 fw-bold text-white border-0 w-100"
+                            style={{
+                              background: 'linear-gradient(90deg, #58B9C6, #4BCCE2)',
+                              borderRadius: '50px',
+                              fontSize: '1rem'
+                            }}
+                            onClick={handleComprar}
+                          >
+                            CONTRATAR
+                          </button>
+                        )
+                      )}
+                    </div>
                   </div>
                 </div>
+                
               </div>
               
               {/* Imagen de la batería */}
@@ -521,30 +616,33 @@ const Propuesta = () => {
           {/* Botones adicionales */}
           <div className="mt-4 d-flex justify-content-between align-items-center">
             <div className="d-flex align-items-center">
-              <button 
-                className="btn px-4 py-2 gradient-border-btn"
-                style={{
-                  background: 'white',
-                  color: '#79BC1C',
-                  borderRadius: '100px',
-                  border: '2px solid transparent',
-                  backgroundClip: 'padding-box'
-                }}
-                onClick={handleSolicitarVisitaTecnica}
-              >
-                SOLICITAR VISITA TÉCNICA
-              </button>
+              {/* Solo mostrar botón de visita técnica si no se ha completado ya */}
+              {!visitaTecnicaCompletada && (
+                <button 
+                  className="btn px-4 py-2 gradient-border-btn"
+                  style={{
+                    background: 'white',
+                    color: '#58B9C6',
+                    borderRadius: '100px',
+                    border: '2px solid transparent',
+                    backgroundClip: 'padding-box'
+                  }}
+                  onClick={handleSolicitarVisitaTecnica}
+                >
+                  SOLICITAR VISITA TÉCNICA
+                </button>
+              )}
             </div>
             <div className="d-flex align-items-center gap-3">
               <div className="d-flex align-items-center gap-2">
-                <span style={{ color: '#79BC1C' }}>ℹ️</span>
-                <span style={{ color: '#79BC1C' }}>¿Tienes dudas?</span>
+                <span style={{ color: '#58B9C6' }}>ℹ️</span>
+                <span style={{ color: '#58B9C6' }}>¿Tienes dudas?</span>
               </div>
               <button 
                 className="btn px-4 py-2 gradient-border-btn"
                 style={{
                   background: 'white',
-                  color: '#79BC1C',
+                  color: '#58B9C6',
                   borderRadius: '100px',
                   border: '2px solid transparent',
                   backgroundClip: 'padding-box'
@@ -562,15 +660,15 @@ const Propuesta = () => {
             {/* Header con beneficios - Pegadas con líneas blancas */}
             <div className="mb-4">
               <div className="d-flex rounded-3 overflow-hidden shadow-sm">
-                <div className="flex-fill p-3 text-center" style={{ backgroundColor: '#6FAF32', color: 'white' }}>
+                <div className="flex-fill p-3 text-center" style={{ backgroundColor: '#58B9C6', color: 'white' }}>
                   <h5 className="mb-0 fw-bold">Seguridad ante apagones</h5>
                 </div>
                 <div style={{ width: '2px', backgroundColor: 'white' }}></div>
-                <div className="flex-fill p-3 text-center" style={{ backgroundColor: '#6FAF32', color: 'white' }}>
+                <div className="flex-fill p-3 text-center" style={{ backgroundColor: '#58B9C6', color: 'white' }}>
                   <h5 className="mb-0 fw-bold">Aumenta el ahorro</h5>
                 </div>
                 <div style={{ width: '2px', backgroundColor: 'white' }}></div>
-                <div className="flex-fill p-3 text-center" style={{ backgroundColor: '#6FAF32', color: 'white' }}>
+                <div className="flex-fill p-3 text-center" style={{ backgroundColor: '#58B9C6', color: 'white' }}>
                   <h5 className="mb-0 fw-bold">Autonomía Energética</h5>
                 </div>
               </div>
@@ -581,46 +679,148 @@ const Propuesta = () => {
               ¿Qué incluye la instalación?
             </h2>
 
-            {/* Grid de componentes incluidos */}
+            {/* Lista de componentes incluidos en dos columnas */}
             <div className="mb-4" style={{padding: '0 35px'}}>
-              <div 
-                className="items-container"
-                style={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gap: '1rem',
-                  maxWidth: '1000px',
-                  margin: '0 auto',
-                  justifyContent: 'center'
-                }}
-              >
-                {items.map((item: ProductItem | string, index: number) => (
-                  <div key={index} className="item-card" style={{width: '230px', flexShrink: 0}}>
-                    <div className="bg-white rounded-4 p-3 h-100 text-center shadow-sm" style={{ border: '2px solid #A0D034' }}>
-                      <h6 className="mb-0" style={{ color: '#2A2A2A', fontSize: '0.9rem' }}>
-                        {/* Si el item es un string, usarlo directamente; si es un objeto, usar sus propiedades */}
-                        {typeof item === 'string' 
-                          ? item 
-                          : (item.attribute_option_name1 || item.name || 'Producto sin nombre')
-                        }
-                      </h6>
-                    </div>
+              <div className="row justify-content-center">
+                <div className="col-lg-10">
+                  <div className="row">
+                    {(() => {
+                      // Función para calcular la distribución de items
+                      const totalItems = items.length;
+                      const leftColumnCount = Math.ceil(totalItems / 2);
+                      const rightColumnCount = totalItems - leftColumnCount;
+                      
+                      const leftItems = items.slice(0, leftColumnCount);
+                      const rightItems = items.slice(leftColumnCount);
+                      
+                      return (
+                        <>
+                          {/* Columna izquierda */}
+                          <div className="col-md-6">
+                            {leftItems.map((item: ProductItem | string, index: number) => {
+                              const itemText = typeof item === 'string' 
+                                ? item 
+                                : (item.attribute_option_name1 || item.name || 'Producto sin nombre');
+                              const isLegalizacion = itemText.includes('Legalización (*Solo si se tiene instalación fotovoltaica)');
+                              
+                              return (
+                                <div key={index} className="d-flex align-items-start gap-3 mb-3">
+                                  <div className="flex-shrink-0" style={{ marginTop: '2px' }}>
+                                    <span style={{ 
+                                      color: isLegalizacion ? '#CF3B3B' : '#4BCCE2', 
+                                      fontSize: '1.2rem',
+                                      fontWeight: 'bold'
+                                    }}>
+                                      →
+                                    </span>
+                                  </div>
+                                  <div className="flex-grow-1">
+                                    <p className="mb-0" style={{ 
+                                      color: isLegalizacion ? '#CF3B3B' : '#2A2A2A', 
+                                      fontSize: '1rem',
+                                      fontWeight: '500',
+                                      lineHeight: '1.4'
+                                    }}>
+                                      {itemText}
+                                    </p>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                            
+                            {/* Item especial "Extra fuera de zona" en columna izquierda si aplica */}
+                            {validacionData?.enZona === 'inZoneWithCost' && leftColumnCount <= rightColumnCount && (
+                              <div className="d-flex align-items-start gap-3 mb-3">
+                                <div className="flex-shrink-0" style={{ marginTop: '2px' }}>
+                                  <span style={{ 
+                                    color: '#FF6B35', 
+                                    fontSize: '1.2rem',
+                                    fontWeight: 'bold'
+                                  }}>
+                                    →
+                                  </span>
+                                </div>
+                                <div className="flex-grow-1">
+                                  <p className="mb-0" style={{ 
+                                    color: '#FF6B35', 
+                                    fontSize: '1rem',
+                                    fontWeight: '500',
+                                    lineHeight: '1.4'
+                                  }}>
+                                    Extra fuera de zona
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Columna derecha */}
+                          <div className="col-md-6">
+                            {rightItems.map((item: ProductItem | string, index: number) => {
+                              const itemText = typeof item === 'string' 
+                                ? item 
+                                : (item.attribute_option_name1 || item.name || 'Producto sin nombre');
+                              const isLegalizacion = itemText.includes('Legalización (*Solo si se tiene instalación fotovoltaica)');
+                              
+                              return (
+                                <div key={index + leftColumnCount} className="d-flex align-items-start gap-3 mb-3">
+                                  <div className="flex-shrink-0" style={{ marginTop: '2px' }}>
+                                    <span style={{ 
+                                      color: isLegalizacion ? '#CF3B3B' : '#4BCCE2', 
+                                      fontSize: '1.2rem',
+                                      fontWeight: 'bold'
+                                    }}>
+                                      →
+                                    </span>
+                                  </div>
+                                  <div className="flex-grow-1">
+                                    <p className="mb-0" style={{ 
+                                      color: isLegalizacion ? '#CF3B3B' : '#2A2A2A', 
+                                      fontSize: '1rem',
+                                      fontWeight: '500',
+                                      lineHeight: '1.4'
+                                    }}>
+                                      {itemText}
+                                    </p>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                            
+                            {/* Item especial "Extra fuera de zona" en columna derecha si aplica */}
+                            {validacionData?.enZona === 'inZoneWithCost' && leftColumnCount > rightColumnCount && (
+                              <div className="d-flex align-items-start gap-3 mb-3">
+                                <div className="flex-shrink-0" style={{ marginTop: '2px' }}>
+                                  <span style={{ 
+                                    color: '#FF6B35', 
+                                    fontSize: '1.2rem',
+                                    fontWeight: 'bold'
+                                  }}>
+                                    →
+                                  </span>
+                                </div>
+                                <div className="flex-grow-1">
+                                  <p className="mb-0" style={{ 
+                                    color: '#FF6B35', 
+                                    fontSize: '1rem',
+                                    fontWeight: '500',
+                                    lineHeight: '1.4'
+                                  }}>
+                                    Extra fuera de zona
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
-                ))}
+                </div>
               </div>
             </div>
 
-            {/* Nota adicional - Solo mostrar si está fuera de zona o en zona con costo */}
-            {validacionData?.enZona === 'inZoneWithCost' && (
-              <div className="text-center mt-4">
-                <div className="d-flex align-items-center justify-content-center gap-2">
-                  <span style={{ color: '#79BC1C', fontSize: '1.2rem' }}>⊕</span>
-                  <span className="fw-bold" style={{ color: '#79BC1C' }}>
-                    Extra (*fuera de zona)
-                  </span>
-                </div>
-              </div>
-            )}
+
           </div>
           
 
@@ -634,7 +834,7 @@ const Propuesta = () => {
                   <div 
                     className="position-absolute rounded-4"
                     style={{ 
-                      backgroundColor: '#DBF0BE',
+                      backgroundColor: '#BFF2F9',
                       width: '95%',
                       height: '60%',
                       top: '10%',
@@ -678,7 +878,7 @@ const Propuesta = () => {
                 <div 
                   className="bg-white rounded-4 shadow-lg p-4 h-100"
                   style={{ 
-                    border: '3px solid #A0D034',
+                    // border: '3px solid #A0D034',
                     position: 'relative'
                   }}
                 >
@@ -721,34 +921,36 @@ const Propuesta = () => {
                   
                   {/* Botón COMPRAR */}
                   <div className="text-center mt-3">
-                    {requiereVisitaTecnica && tipoInstalacion === 'trifasica' ? (
-                      // Botón para instalaciones trifásicas - redirige a visita técnica
-                      <button 
-                        className="btn btn-lg px-4 py-2 fw-bold text-white border-0"
-                        style={{
-                          background: 'linear-gradient(90deg, #FF6B35, #FFA726)',
-                          borderRadius: '100px',
-                          fontSize: '1.1rem',
-                          minWidth: '220px'
-                        }}
-                        onClick={handleSolicitarVisitaTecnica}
-                      >
-                        SOLICITAR EVALUACIÓN
-                      </button>
-                    ) : (
-                      // Botón normal para instalaciones monofásicas
-                      <button 
-                        className="btn btn-lg px-4 py-2 fw-bold text-white border-0"
-                        style={{
-                          background: 'linear-gradient(90deg, #5CA00E, #B0D83E)',
-                          borderRadius: '100px',
-                          fontSize: '1.1rem',
-                          minWidth: '220px'
-                        }}
-                        onClick={handleComprar}
-                      >
-                        CONTRATAR
-                      </button>
+                    {fsmState !== '06_VISITA_TECNICA' && (
+                      (requiereVisitaTecnica && tipoInstalacion === 'trifasica') ? (
+                        // Botón para instalaciones trifásicas que necesitan evaluación
+                        <button 
+                          className="btn btn-lg px-4 py-2 fw-bold text-white border-0"
+                          style={{
+                            background: 'linear-gradient(90deg, #FF6B35, #FFA726)',
+                            borderRadius: '100px',
+                            fontSize: '1.1rem',
+                            minWidth: '220px'
+                          }}
+                          onClick={handleSolicitarVisitaTecnica}
+                        >
+                          SOLICITAR EVALUACIÓN
+                        </button>
+                      ) : (
+                        // Botón CONTRATAR normal
+                        <button 
+                          className="btn btn-lg px-4 py-2 fw-bold text-white border-0"
+                          style={{
+                            background: 'linear-gradient(90deg, #58B9C6, #4BCCE2)',
+                            borderRadius: '100px',
+                            fontSize: '1.1rem',
+                            minWidth: '220px'
+                          }}
+                          onClick={handleComprar}
+                        >
+                          CONTRATAR
+                        </button>
+                      )
                     )}
                   </div>
                 </div>
@@ -758,119 +960,157 @@ const Propuesta = () => {
           </div>
         </div>
 
-        {/* Sección: Modelo de compra */}
-        <div className="container-fluid mt-5" style={{ maxWidth: '1200px' }}>
+        {/* Sección: Proceso para obtener tu Batería */}
+        <div className="container-fluid mt-5 py-5" style={{ maxWidth: '1200px', backgroundColor: '#EFFDFF', borderRadius: '20px' }}>
           <div className="text-center mb-5">
             <h2 className="fw-bold" style={{ color: '#2A2A2A', fontSize: '2.5rem' }}>
-              Modelo de compra
+             Proceso para obtener tu Batería
             </h2>
           </div>
 
           <div className="row justify-content-center">
-            <div className="col-lg-8">
-              {/* Paso 01 - Contratación */}
-              <div className="d-flex align-items-start mb-4">
-                <div className="flex-shrink-0 me-4">
-                  <div 
-                    className="rounded-circle d-flex align-items-center justify-content-center position-relative"
-                    style={{ 
-                      width: '20px', 
-                      height: '20px', 
-                      backgroundColor: '#ffffffff',
-                      border: '3px solid #A0D034'
-                    }}
-                  >
-                    {/* Línea vertical conectora */}
+            <div className="col-lg-10">
+              <div className="d-flex align-items-center justify-content-center position-relative">
+                
+                {/* Paso 01 - Contratación */}
+                <div className="text-center flex-fill position-relative">
+                  {/* Número con círculo */}
+                  <div className="d-flex justify-content-center mb-3">
                     <div 
-                      className="position-absolute"
-                      style={{
-                        width: '2px',
-                        height: '80px',
-                        backgroundColor: '#A0D034',
-                        top: '100%',
-                        left: '50%',
-                        transform: 'translateX(-50%)'
+                      className="rounded-circle d-flex align-items-center justify-content-center"
+                      style={{ 
+                        width: '40px', 
+                        height: '40px', 
+                        backgroundColor: '#58B9C6',
+                        color: 'white',
+                        fontWeight: 'bold'
                       }}
-                    ></div>
+                    >
+                      01
+                    </div>
                   </div>
-                </div>
-                <div className="flex-grow-1">
-                  <div 
-                    className="d-inline-block px-4 py-2 rounded-pill text-white fw-bold mb-2"
-                    style={{ backgroundColor: '#A0D034', fontSize: '1.1rem' }}
-                  >
-                    01 Contratación
-                  </div>
-                  <p className="mb-0" style={{ color: '#2A2A2A', fontSize: '1rem', marginLeft: '0' }}>
+                  
+                  {/* Título del paso */}
+                  <h4 className="fw-bold mb-3" style={{ color: '#58B9C6', fontSize: '1.4rem' }}>
+                    Contratación
+                  </h4>
+                  
+                  {/* Descripción */}
+                  <p className="mb-0" style={{ color: '#2A2A2A', fontSize: '0.95rem', lineHeight: '1.4' }}>
                     Activar el proceso de contratación, firma y pago.
                   </p>
-                </div>
-              </div>
-
-              {/* Paso 02 - Instalación y Puesta en Marcha */}
-              <div className="d-flex align-items-start mb-4">
-                <div className="flex-shrink-0 me-4">
+                  
+                  {/* Línea horizontal conectora hacia el paso siguiente */}
                   <div 
-                    className="rounded-circle d-flex align-items-center justify-content-center position-relative"
-                    style={{ 
-                      width: '20px', 
-                      height: '20px', 
-                      backgroundColor: '#ffffffff',
-                      border: '3px solid #A0D034'
+                    className="position-absolute d-none d-lg-block"
+                    style={{
+                      width: '100%',
+                      height: '2px',
+                      backgroundColor: '#58B9C6',
+                      top: '20px',
+                      left: '55%',
+                      zIndex: 0
                     }}
-                  >
-                    {/* Línea vertical conectora */}
-                    <div 
-                      className="position-absolute"
-                      style={{
-                        width: '2px',
-                        height: '80px',
-                        backgroundColor: '#A0D034',
-                        top: '100%',
-                        left: '50%',
-                        transform: 'translateX(-50%)'
-                      }}
-                    ></div>
-                  </div>
+                  ></div>
                 </div>
-                <div className="flex-grow-1">
-                  <div 
-                    className="d-inline-block px-4 py-2 rounded-pill text-white fw-bold mb-2"
-                    style={{ backgroundColor: '#A0D034', fontSize: '1.1rem' }}
-                  >
-                    02 Instalación y Puesta en Marcha
+
+                {/* Paso 02 - Instalación */}
+                <div className="text-center flex-fill position-relative">
+                  {/* Número con círculo */}
+                  <div className="d-flex justify-content-center mb-3">
+                    <div 
+                      className="rounded-circle d-flex align-items-center justify-content-center"
+                      style={{ 
+                        width: '40px', 
+                        height: '40px', 
+                        backgroundColor: 'white',
+                        border: '2px solid #58B9C6',
+                        color: '#58B9C6',
+                        fontWeight: 'bold',
+                        zIndex: 1
+                      }}
+                    >
+                      02
+                    </div>
                   </div>
-                  <p className="mb-0" style={{ color: '#2A2A2A', fontSize: '1rem', marginLeft: '0' }}>
+                  
+                  {/* Título del paso */}
+                  <h4 className="fw-bold mb-3" style={{ color: '#58B9C6', fontSize: '1.4rem' }}>
+                    Instalación
+                  </h4>
+                  
+                  {/* Descripción */}
+                  <p className="mb-0" style={{ color: '#2A2A2A', fontSize: '0.95rem', lineHeight: '1.4' }}>
                     Nos pondremos en contacto contigo para la petición de la información necesaria para instalar.
                   </p>
-                </div>
-              </div>
-
-              {/* Paso 03 - Legalización */}
-              <div className="d-flex align-items-start">
-                <div className="flex-shrink-0 me-4">
+                  
+                  {/* Línea horizontal conectora hacia el paso siguiente */}
                   <div 
-                    className="rounded-circle d-flex align-items-center justify-content-center"
-                    style={{ 
-                      width: '20px', 
-                      height: '20px', 
-                      backgroundColor: '#ffffffff',
-                      border: '3px solid #A0D034'
+                    className="position-absolute d-none d-lg-block"
+                    style={{
+                      width: '50%',
+                      height: '2px',
+                      backgroundColor: '#58B9C6',
+                      top: '20px',
+                      left: '0%',
+                      zIndex: 0
                     }}
-                  >
-                  </div>
+                  ></div>
+                   <div 
+                    className="position-absolute d-none d-lg-block"
+                    style={{
+                      width: '50%',
+                      height: '2px',
+                      backgroundColor: '#58B9C6',
+                      top: '20px',
+                      left: '46%',
+                      zIndex: 0
+                    }}
+                  ></div>
+                    <div 
+                    className="position-absolute d-none d-lg-block"
+                    style={{
+                      width: '50%',
+                      height: '2px',
+                      backgroundColor: '#58B9C6',
+                      top: '20px',
+                      left: '76%',
+                      zIndex: 0
+                    }}
+                  ></div>
                 </div>
-                <div className="flex-grow-1">
-                  <div 
-                    className="d-inline-block px-4 py-2 rounded-pill text-white fw-bold mb-2"
-                    style={{ backgroundColor: '#A0D034', fontSize: '1.1rem' }}
-                  >
-                    03 Legalización
+
+                {/* Paso 03 - Legalización */}
+                <div className="text-center flex-fill">
+                  {/* Número con círculo */}
+                  <div className="d-flex justify-content-center mb-3">
+                    <div 
+                      className="rounded-circle d-flex align-items-center justify-content-center"
+                      style={{ 
+                        width: '40px', 
+                        height: '40px', 
+                        backgroundColor: 'white',
+                        border: '2px solid #58B9C6',
+                        color: '#58B9C6',
+                        fontWeight: 'bold',
+                        zIndex: 1
+                      }}
+                    >
+                      03
+                    </div>
                   </div>
-                  <p className="mb-0" style={{ color: '#2A2A2A', fontSize: '1rem', marginLeft: '0' }}>
+                  
+                  {/* Título del paso */}
+                  <h4 className="fw-bold mb-3" style={{ color: '#58B9C6', fontSize: '1.4rem' }}>
+                    Legalización
+                  </h4>
+                  
+                  {/* Descripción */}
+                  <p className="mb-0" style={{ color: '#2A2A2A', fontSize: '0.95rem', lineHeight: '1.4' }}>
                     Comunicación del boletín y/o legalización con Industria
                   </p>
                 </div>
+
               </div>
             </div>
           </div>
@@ -891,7 +1131,7 @@ const Propuesta = () => {
           <div 
            className="position-absolute top-0 start-0 w-100 h-100"
           style={{ 
-            backgroundColor: 'rgba(242, 255, 237, 0.89)', // 
+            backgroundColor: 'rgba(255, 255, 255, 1)', // 
             zIndex: 1 
           }}
           ></div>
@@ -899,8 +1139,8 @@ const Propuesta = () => {
           <div className="container-fluid position-relative" style={{ maxWidth: '1200px', zIndex: 2 }}>
             {/* Título */}
             <div className="text-center mb-5">
-              <h2 className="fw-bold" style={{ color: '#2A2A2A', fontSize: '2.5rem' }}>
-                ¿Cómo funcionan las Baterías EcoFlow?
+              <h2 className="" style={{ color: '#2A2A2A', fontSize: '2.5rem' }}>
+                Funcionamiento de <strong>baterías</strong>
               </h2>
             </div>
 
@@ -908,115 +1148,121 @@ const Propuesta = () => {
             <div className="row g-4 mb-5 justify-content-center">
               {/* Card 01 - Generador de Electricidad */}
               <div className="col-lg-3 col-md-4">
-                <div className="bg-white rounded-4 p-4 h-100 shadow-lg position-relative" style={{ minHeight: '220px' }}>
-                  {/* Número verde */}
-                  <div className="position-absolute top-0 end-0 mt-3 me-3">
-                    <span 
-                      className="badge rounded-pill px-3 py-2 fw-bold"
-                      style={{ 
-                        backgroundColor: '#A0D034', 
-                        color: 'white', 
-                        fontSize: '1rem'
-                      }}
-                    >
-                      01
-                    </span>
+                <div className="bg-white rounded-4 p-4 h-100 shadow-lg text-center position-relative" style={{ minHeight: '280px' }}>
+                  {/* Número 01 */}
+                  <div className="position-absolute top-0 start-0 mt-3 ms-3">
+                    <span style={{ color: '#4BCCE2', fontSize: '1.2rem', fontWeight: 'bold' }}>01</span>
                   </div>
                   
-                  <h5 className="fw-bold mb-3" style={{ color: '#2A2A2A' }}>
-                    Generador de<br />Electricidad
+                  {/* Título */}
+                  <h5 className="mb-4" style={{ color: '#2A2A2A', fontSize: '1.2rem' }}>
+                    Generador de<br /> <strong>Electricidad</strong>
                   </h5>
                   
-                  <p className="mb-0" style={{ color: '#666', fontSize: '0.95rem', paddingRight: '90px', paddingBottom: '80px' }}>
+                  {/* Icono centrado */}
+                  <div className="d-flex justify-content-center mb-4">
+                    <svg width="80" height="80" viewBox="0 0 100 100" fill="#4BCCE2">
+                      <rect x="20" y="45" width="60" height="30" rx="5" fill="#4BCCE2"/>
+                      <rect x="25" y="35" width="10" height="15" fill="#4BCCE2"/>
+                      <rect x="35" y="30" width="10" height="20" fill="#4BCCE2"/>
+                      <rect x="45" y="25" width="10" height="25" fill="#4BCCE2"/>
+                      <rect x="55" y="30" width="10" height="20" fill="#4BCCE2"/>
+                      <rect x="65" y="35" width="10" height="15" fill="#4BCCE2"/>
+                      <circle cx="50" cy="15" r="8" fill="#FFD700"/>
+                      <path d="M50 5 L47 12 L53 12 Z" fill="#FFD700"/>
+                      <path d="M58 8 L55 15 L61 15 Z" fill="#FFD700"/>
+                      <path d="M42 8 L39 15 L45 15 Z" fill="#FFD700"/>
+                    </svg>
+                  </div>
+                  
+                  {/* Texto */}
+                  <p className="mb-0" style={{ color: '#666', fontSize: '0.9rem', lineHeight: '1.4' }}>
                     Durante el día se genera la energía gracias a los paneles y con sus excedentes se llenan las baterías.
                   </p>
                   
-                  {/* Icono de torre eléctrica - lado derecho debajo del texto */}
-                  <div className="position-absolute" style={{ bottom: '20px', right: '20px' }}>
-                    <svg width="70" height="70" viewBox="0 0 24 24" fill="#A0D034">
-                      <path d="M8.5 8.64L13 7.74V4.5h-1V2h3v2.5h-1v3.24l4.5.9v1.36h-1v10h-7v-10h-1V8.64zM12 6h1v1h-1V6zm2 5h1v8h-1v-8zm-3 0h1v8h-1v-8zm-2 0h1v8H9v-8z"/>
-                    </svg>
-                  </div>
                 </div>
               </div>
 
               {/* Card 02 - Carga de Baterías */}
               <div className="col-lg-3 col-md-4">
-                <div className="bg-white rounded-4 p-4 h-100 shadow-lg position-relative" style={{ minHeight: '220px' }}>
-                  {/* Número verde */}
-                  <div className="position-absolute top-0 end-0 mt-3 me-3">
-                    <span 
-                      className="badge rounded-pill px-3 py-2 fw-bold"
-                      style={{ 
-                        backgroundColor: '#A0D034', 
-                        color: 'white', 
-                        fontSize: '1rem'
-                      }}
-                    >
-                      02
-                    </span>
+                <div className="bg-white rounded-4 p-4 h-100 shadow-lg text-center position-relative" style={{ minHeight: '280px' }}>
+                  {/* Número 02 */}
+                  <div className="position-absolute top-0 start-0 mt-3 ms-3">
+                    <span style={{ color: '#4BCCE2', fontSize: '1.2rem', fontWeight: 'bold' }}>02</span>
                   </div>
                   
-                  <h5 className="fw-bold mb-3" style={{ color: '#2A2A2A' }}>
-                    Carga de<br />Baterías
+                  {/* Título */}
+                  <h5 className=" mb-4" style={{ color: '#2A2A2A', fontSize: '1.2rem' }}>
+                    Carga de<br /><strong>Baterías</strong>
                   </h5>
                   
-                  <p className="mb-0" style={{ color: '#666', fontSize: '0.95rem', paddingRight: '90px', paddingBottom: '80px' }}>
-                    Si la energía almacenada en tus excedentes no cubre tu consumo, podrás tomar el resto de la red.
-                  </p>
-                  
-                  {/* Icono de batería cargándose - lado derecho debajo del texto */}
-                  <div className="position-absolute" style={{ bottom: '20px', right: '20px' }}>
-                    <svg width="70" height="70" viewBox="0 0 24 24" fill="#A0D034">
-                      <path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/>
-                      <path d="M13 8L9 13h2v4l4-5h-2z" fill="#FFD700"/>
+                  {/* Icono centrado */}
+                  <div className="d-flex justify-content-center mb-4">
+                    <svg width="80" height="80" viewBox="0 0 100 100" fill="#4BCCE2">
+                      <rect x="25" y="20" width="40" height="60" rx="5" fill="#4BCCE2" stroke="#4BCCE2" strokeWidth="2"/>
+                      <rect x="45" y="15" width="10" height="8" rx="2" fill="#4BCCE2"/>
+                      <rect x="30" y="25" width="30" height="10" fill="white"/>
+                      <rect x="30" y="40" width="30" height="10" fill="white"/>
+                      <rect x="30" y="55" width="30" height="10" fill="white"/>
+                      <path d="M50 30 L42 45 L48 45 L48 55 L58 40 L52 40 L52 30 Z" fill="#FFD700"/>
+                      <circle cx="75" cy="30" r="3" fill="#A0D034"/>
+                      <circle cx="75" cy="50" r="3" fill="#A0D034"/>
+                      <circle cx="75" cy="70" r="3" fill="#A0D034"/>
+                      <path d="M70 30 L80 30 M70 50 L80 50 M70 70 L80 70" stroke="#A0D034" strokeWidth="2"/>
                     </svg>
                   </div>
+                  
+                  {/* Texto */}
+                  <p className="mb-0" style={{ color: '#666', fontSize: '0.9rem', lineHeight: '1.4' }}>
+                    Solo cogerás energía de la red si tus excedentes almacenados son menores a tu consumo.
+                  </p>
                 </div>
               </div>
 
               {/* Card 03 - Descarga de Electricidad */}
               <div className="col-lg-3 col-md-4">
-                <div className="bg-white rounded-4 p-4 h-100 shadow-lg position-relative" style={{ minHeight: '220px' }}>
-                  {/* Número verde */}
-                  <div className="position-absolute top-0 end-0 mt-3 me-3">
-                    <span 
-                      className="badge rounded-pill px-3 py-2 fw-bold"
-                      style={{ 
-                        backgroundColor: '#A0D034', 
-                        color: 'white', 
-                        fontSize: '1rem'
-                      }}
-                    >
-                      03
-                    </span>
+                <div className="bg-white rounded-4 p-4 h-100 shadow-lg text-center position-relative" style={{ minHeight: '280px' }}>
+                  {/* Número 03 */}
+                  <div className="position-absolute top-0 start-0 mt-3 ms-3">
+                    <span style={{ color: '#4BCCE2', fontSize: '1.2rem', fontWeight: 'bold' }}>03</span>
                   </div>
                   
-                  <h5 className="fw-bold mb-3" style={{ color: '#2A2A2A' }}>
-                    Descarga de<br />Electricidad
+                  {/* Título */}
+                  <h5 className=" mb-4" style={{ color: '#2A2A2A', fontSize: '1.2rem' }}>
+                    Descarga de<br /> <strong>Electricidad</strong>
                   </h5>
                   
-                  <p className="mb-0" style={{ color: '#666', fontSize: '0.95rem', paddingRight: '90px', paddingBottom: '80px' }}>
-                    De noche se almacena la energía para no coger de la red y así, ahorrar en las horas más caras.
-                  </p>
-                  
-                  {/* Icono de casa con energía - lado derecho debajo del texto */}
-                  <div className="position-absolute" style={{ bottom: '20px', right: '20px' }}>
-                    <svg width="70" height="70" viewBox="0 0 24 24" fill="#A0D034">
-                      <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-                      <circle cx="17" cy="7" r="1" fill="#A0D034"/>
-                      <circle cx="19" cy="9" r="1" fill="#A0D034"/>
-                      <path d="M16 6l1 1 1-1" stroke="#A0D034" fill="none"/>
+                  {/* Icono centrado */}
+                  <div className="d-flex justify-content-center mb-4">
+                    <svg width="80" height="80" viewBox="0 0 100 100" fill="#4BCCE2">
+                      <path d="M30 70 L50 45 L70 70 L30 70 Z" fill="#4BCCE2"/>
+                      <rect x="45" y="45" width="10" height="25" fill="#4BCCE2"/>
+                      <rect x="35" y="55" width="8" height="12" fill="#4BCCE2"/>
+                      <rect x="57" y="55" width="8" height="12" fill="#4BCCE2"/>
+                      <rect x="40" y="65" width="6" height="8" fill="#4BCCE2"/>
+                      <rect x="54" y="65" width="6" height="8" fill="#4BCCE2"/>
+                      <circle cx="20" cy="25" r="3" fill="#FFD700" opacity="0.7"/>
+                      <circle cx="75" cy="20" r="2" fill="#FFD700" opacity="0.5"/>
+                      <circle cx="85" cy="35" r="2" fill="#FFD700" opacity="0.6"/>
+                      <rect x="25" y="15" width="50" height="4" rx="2" fill="#333"/>
+                      <circle cx="30" cy="17" r="2" fill="#A0D034"/>
+                      <circle cx="70" cy="17" r="2" fill="#A0D034"/>
+                      <path d="M32 17 L68 17" stroke="#A0D034" strokeWidth="1"/>
                     </svg>
                   </div>
+                  
+                  {/* Texto */}
+                  <p className="mb-0" style={{ color: '#666', fontSize: '0.9rem', lineHeight: '1.4' }}>
+                    De noche podrás emplear la energía almacenada para no cogerla de la red y ahorrar en las horas más caras.
+                  </p>
                 </div>
               </div>
             </div>
 
             {/* Botón COMPRAR centrado */}
             <div className="text-center">
-              {requiereVisitaTecnica && tipoInstalacion === 'trifasica' ? (
-                // Botón para instalaciones trifásicas - redirige a visita técnica
+              {(requiereVisitaTecnica && tipoInstalacion === 'trifasica' && fsmState !== '06_VISITA_TECNICA') ? (
+                // Botón para instalaciones trifásicas que necesitan evaluación (solo antes de solicitar)
                 <button 
                   className="btn btn-lg px-5 py-3 fw-bold text-white border-0"
                   style={{
@@ -1030,161 +1276,192 @@ const Propuesta = () => {
                   SOLICITAR EVALUACIÓN
                 </button>
               ) : (
-                // Botón normal para instalaciones monofásicas
-                <button 
-                  className="btn btn-lg px-5 py-3 fw-bold text-white border-0 comprar-btn"
-                  style={{
-                    background: 'linear-gradient(90deg, #5CA00E, #B0D83E)',
-                    borderRadius: '100px',
-                    fontSize: '1.3rem',
-                    minWidth: '250px'
-                  }}
-                  onClick={handleComprar}
-                >
-                  CONTRATAR
-                </button>
+                // Solo mostrar CONTRATAR si NO estamos en estado 06_VISITA_TECNICA
+                fsmState !== '06_VISITA_TECNICA' && (
+                  <button 
+                    className="btn btn-lg px-5 py-3 fw-bold text-white border-0 comprar-btn"
+                    style={{
+                      background: 'linear-gradient(90deg, #58B9C6, #4BCCE2)',
+                      borderRadius: '100px',
+                      fontSize: '1.3rem',
+                      minWidth: '250px'
+                    }}
+                    onClick={handleComprar}
+                  >
+                    CONTRATAR
+                  </button>
+                )
               )}
             </div>
           </div>
         </div>
 
         {/* Sección: Ventajas Baterías EcoFlow */}
-        <div className="container-fluid mt-5" style={{ maxWidth: '1200px' }}>
-          {/* Título */}
-          <div className="mb-5">
-            <h3 className="fw-bold" style={{ color: '#A0D034', fontSize: '1.8rem', marginBottom: '0.5rem' }}>
-              Ventajas
-            </h3>
-            <h2 className="fw-bold" style={{ color: '#2A2A2A', fontSize: '2.5rem', marginBottom: '0' }}>
-              Baterías EcoFlow
-            </h2>
-          </div>
-
-          {/* Las 3 ventajas */}
-          <div className="row g-5 mb-5">
-            {/* Ventaja 1 - Resiliencia ante crisis */}
-            <div className="col-lg-4">
-              <div className="text-center mb-4">
-                {/* Icono circular verde */}
-                <div 
-                  className="d-inline-flex align-items-center justify-content-center rounded-circle mb-4"
-                  style={{ 
-                    width: '120px', 
-                    height: '120px', 
-                    backgroundColor: '#A0D034'
-                  }}
-                >
-                  <svg width="50" height="50" viewBox="0 0 24 24" fill="white">
-                    <path d="M9 21c0 .5.4 1 1 1h4c.6 0 1-.5 1-1v-1H9v1zm3-19C8.1 2 5 5.1 5 9c0 2.4 1.2 4.5 3 5.7V17c0 .5.4 1 1 1h6c.6 0 1-.5 1-1v-2.3c1.8-1.3 3-3.3 3-5.7 0-3.9-3.1-7-7-7z"/>
-                  </svg>
-                </div>
-              </div>
-              
-              <h4 className="fw-bold mb-3" style={{ color: '#A0D034', fontSize: '1.5rem' }}>
-                Resiliencia
-              </h4>
-              <h5 className="fw-bold mb-3" style={{ color: '#2A2A2A', fontSize: '1.2rem' }}>
-                ante crisis
-              </h5>
-              
-              <p style={{ color: '#666', fontSize: '0.95rem', lineHeight: '1.5' }}>
-                La Comisión Europea recomienda que los ciudadanos estén preparados para posibles emergencias o <strong>cortes de suministro</strong>, disponiendo de provisiones esenciales para garantizar su autonomía durante un mínimo de 72 horas.
-              </p>
+        <div className="container-fluid mt-5 py-5" style={{ maxWidth: '1200px', backgroundColor: '#EFFDFF', borderRadius: '20px' }}>
+          <div className="px-4">
+            {/* Título */}
+            <div className="mb-5">
+              <h3 className="fw-bold" style={{ color: '#4BCCE2', fontSize: '1.8rem', marginBottom: '0.5rem' }}>
+                Ventajas
+              </h3>
+              <h2 className="fw-bold" style={{ color: '#2A2A2A', fontSize: '2.5rem', marginBottom: '0' }}>
+                De tener baterías en casa
+              </h2>
             </div>
 
-            {/* Ventaja 2 - Seguridad y autonomía energética */}
-            <div className="col-lg-4">
-              <div className="text-center mb-4">
-                {/* Icono circular verde */}
-                <div 
-                  className="d-inline-flex align-items-center justify-content-center rounded-circle mb-4"
-                  style={{ 
-                    width: '120px', 
-                    height: '120px', 
-                    backgroundColor: '#A0D034'
-                  }}
-                >
-                  <svg width="50" height="50" viewBox="0 0 24 24" fill="white">
-                    <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M11,7H13V13H11V7M11,15H13V17H11V15Z"/>
-                    <path d="M13 7L11 12H15L13 17" fill="white" transform="translate(-1,-2)"/>
-                  </svg>
+            {/* Las 3 ventajas */}
+            <div className="row g-5 mb-5">
+              {/* Ventaja 1 - Resiliencia ante crisis */}
+              <div className="col-lg-4">
+                <div className="text-center mb-4">
+                  {/* Icono circular azul */}
+                  <div 
+                    className="d-inline-flex align-items-center justify-content-center rounded-circle mb-4"
+                    style={{ 
+                      width: '100px', 
+                      height: '100px', 
+                      backgroundColor: '#4BCCE2'
+                    }}
+                  >
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="white">
+                      <path d="M9 21c0 .5.4 1 1 1h4c.6 0 1-.5 1-1v-1H9v1zm3-19C8.1 2 5 5.1 5 9c0 2.4 1.2 4.5 3 5.7V17c0 .5.4 1 1 1h6c.6 0 1-.5 1-1v-2.3c1.8-1.3 3-3.3 3-5.7 0-3.9-3.1-7-7-7z"/>
+                    </svg>
+                  </div>
                 </div>
+                
+                <h4 className="fw-bold mb-2" style={{ color: '#4BCCE2', fontSize: '1.5rem' }}>
+                  Resiliencia
+                </h4>
+                <h5 className="fw-bold mb-3" style={{ color: '#2A2A2A', fontSize: '1.1rem' }}>
+                  ante crisis
+                </h5>
+                
+                <p style={{ color: '#666', fontSize: '0.9rem', lineHeight: '1.5' }}>
+                  La Comisión Europea recomienda que los ciudadanos estén preparados para posibles emergencias o <strong>cortes de suministro</strong>, disponiendo de provisiones esenciales para garantizar su autonomía durante un mínimo de 72 horas.
+                </p>
               </div>
-              
-              <h4 className="fw-bold mb-3" style={{ color: '#A0D034', fontSize: '1.5rem' }}>
-                Seguridad
-              </h4>
-              <h5 className="fw-bold mb-3" style={{ color: '#2A2A2A', fontSize: '1.2rem' }}>
-                y autonomía energética
-              </h5>
-              
-              <p style={{ color: '#666', fontSize: '0.95rem', lineHeight: '1.5' }}>
-                Contar con baterías en casa te permite <strong>almacenar energía</strong> de forma segura y garantizar el funcionamiento continuo de dispositivos esenciales en cortes o emergencias, <strong>reduciendo la dependencia de la red</strong> y mejorando el <strong>bienestar familiar</strong>.
-              </p>
+
+              {/* Ventaja 2 - Seguridad y autonomía energética */}
+              <div className="col-lg-4">
+                <div className="text-center mb-4">
+                  {/* Icono circular azul */}
+                  <div 
+                    className="d-inline-flex align-items-center justify-content-center rounded-circle mb-4"
+                    style={{ 
+                      width: '100px', 
+                      height: '100px', 
+                      backgroundColor: '#4BCCE2'
+                    }}
+                  >
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="white">
+                      <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M11,7H13V13H11V7M11,15H13V17H11V15Z"/>
+                      <path d="M13 8L9 13h2v4l4-5h-2z" fill="white"/>
+                    </svg>
+                  </div>
+                </div>
+                
+                <h4 className="fw-bold mb-2" style={{ color: '#4BCCE2', fontSize: '1.5rem' }}>
+                  Seguridad
+                </h4>
+                <h5 className="fw-bold mb-3" style={{ color: '#2A2A2A', fontSize: '1.1rem' }}>
+                  y autonomía energética
+                </h5>
+                
+                <p style={{ color: '#666', fontSize: '0.9rem', lineHeight: '1.5' }}>
+                  Contar con baterías en casa te permite <strong>almacenar energía</strong> de forma segura y garantizar el funcionamiento continuo de dispositivos esenciales en cortes o emergencias, <strong>reduciendo la dependencia de la red</strong> y mejorando el <strong>bienestar familiar</strong>.
+                </p>
+              </div>
+
+              {/* Ventaja 3 - Ahorro desde el primer día */}
+              <div className="col-lg-4">
+                <div className="text-center mb-4">
+                  {/* Icono circular azul */}
+                  <div 
+                    className="d-inline-flex align-items-center justify-content-center rounded-circle mb-4"
+                    style={{ 
+                      width: '100px', 
+                      height: '100px', 
+                      backgroundColor: '#4BCCE2'
+                    }}
+                  >
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="white">
+                      <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/>
+                    </svg>
+                  </div>
+                </div>
+                
+                <h4 className="fw-bold mb-2" style={{ color: '#4BCCE2', fontSize: '1.5rem' }}>
+                  Ahorro
+                </h4>
+                <h5 className="fw-bold mb-3" style={{ color: '#2A2A2A', fontSize: '1.1rem' }}>
+                  desde el primer día
+                </h5>
+                
+                <p style={{ color: '#666', fontSize: '0.9rem', lineHeight: '1.5' }}>
+                  Además de mejorar la seguridad, las baterías domésticas ayudan a <strong>optimizar el consumo eléctrico</strong>, almacenando energía en horas de bajo coste para utilizarla en momentos de mayor demanda, <strong>reduciendo así la factura de luz</strong>.
+                </p>
+              </div>
             </div>
 
-            {/* Ventaja 3 - Ahorro desde el primer día */}
-            <div className="col-lg-4">
-              <div className="text-center mb-4">
-                {/* Icono circular verde */}
-                <div 
-                  className="d-inline-flex align-items-center justify-content-center rounded-circle mb-4"
-                  style={{ 
-                    width: '120px', 
-                    height: '120px', 
-                    backgroundColor: '#A0D034'
-                  }}
-                >
-                  <svg width="50" height="50" viewBox="0 0 24 24" fill="white">
-                    <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/>
-                  </svg>
-                </div>
+            {/* Botones alineados: CONTRATAR a la izquierda, contacto a la derecha */}
+            <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
+              {/* Botón CONTRATAR alineado a la izquierda */}
+              <div>
+                {fsmState !== '06_VISITA_TECNICA' && (
+                  (requiereVisitaTecnica && tipoInstalacion === 'trifasica') ? (
+                    // Botón para instalaciones trifásicas que necesitan evaluación
+                    <button 
+                      className="btn btn-lg px-5 py-3 fw-bold text-white border-0"
+                      style={{
+                        background: 'linear-gradient(90deg, #FF6B35, #FFA726)',
+                        borderRadius: '100px',
+                        fontSize: '1.2rem',
+                        minWidth: '220px'
+                      }}
+                      onClick={handleSolicitarVisitaTecnica}
+                    >
+                      SOLICITAR EVALUACIÓN
+                    </button>
+                  ) : (
+                    // Botón CONTRATAR normal
+                    <button 
+                      className="btn btn-lg px-5 py-3 fw-bold text-white border-0"
+                      style={{
+                        background: 'linear-gradient(90deg, #58B9C6, #4BCCE2)',
+                        borderRadius: '100px',
+                        fontSize: '1.2rem',
+                        minWidth: '220px'
+                      }}
+                      onClick={handleComprar}
+                    >
+                      CONTRATAR
+                    </button>
+                  )
+                )}
               </div>
               
-              <h4 className="fw-bold mb-3" style={{ color: '#A0D034', fontSize: '1.5rem' }}>
-                Ahorro
-              </h4>
-              <h5 className="fw-bold mb-3" style={{ color: '#2A2A2A', fontSize: '1.2rem' }}>
-                desde el primer día
-              </h5>
-              
-              <p style={{ color: '#666', fontSize: '0.95rem', lineHeight: '1.5' }}>
-                Además de mejorar la seguridad, las baterías domésticas ayudan a <strong>optimizar el consumo eléctrico</strong>, almacenando energía en horas de bajo coste para utilizarla en momentos de mayor demanda, <strong>reduciendo así la factura de luz</strong>.
-              </p>
+              {/* Texto y botón de contacto alineados a la derecha */}
+              <div className="d-flex align-items-center gap-3">
+                <div className="d-flex align-items-center gap-2">
+                  <span style={{ color: '#4BCCE2', fontSize: '1.2rem' }}>ℹ️</span>
+                  <span style={{ color: '#4BCCE2', fontSize: '1rem' }}>¿Tienes dudas?</span>
+                </div>
+                <button 
+                  className="btn px-4 py-2"
+                  style={{
+                    background: 'white',
+                    color: '#4BCCE2',
+                    borderRadius: '100px',
+                    border: '2px solid #4BCCE2',
+                    fontSize: '1rem',
+                    fontWeight: '500'
+                  }}
+                  onClick={handleContactarAsesor}
+                >
+                  CONTACTA CON UN ASESOR
+                </button>
+              </div>
             </div>
-          </div>
-
-          {/* Botón COMPRAR centrado */}
-          <div className="text-center">
-            {requiereVisitaTecnica && tipoInstalacion === 'trifasica' ? (
-              // Botón para instalaciones trifásicas - redirige a visita técnica
-              <button 
-                className="btn btn-lg px-5 py-3 fw-bold text-white border-0"
-                style={{
-                  background: 'linear-gradient(90deg, #FF6B35, #FFA726)',
-                  borderRadius: '100px',
-                  fontSize: '1.3rem',
-                  minWidth: '250px'
-                }}
-                onClick={handleSolicitarVisitaTecnica}
-              >
-                SOLICITAR EVALUACIÓN
-              </button>
-            ) : (
-              // Botón normal para instalaciones monofásicas
-              <button 
-                className="btn btn-lg px-5 py-3 fw-bold text-white border-0 comprar-btn"
-                style={{
-                  background: 'linear-gradient(90deg, #5CA00E, #B0D83E)',
-                  borderRadius: '100px',
-                  fontSize: '1.3rem',
-                  minWidth: '250px'
-                }}
-                onClick={handleComprar}
-              >
-                CONTRATAR
-              </button>
-            )}
           </div>
         </div>
       </div>
@@ -1200,7 +1477,7 @@ const Propuesta = () => {
         /* Borde gradient personalizado con esquinas redondeadas */
         .gradient-border {
           position: relative;
-          background: linear-gradient(90deg, #79BC1C, #FFAD2A, #4BCCE2);
+          background: linear-gradient(90deg, #58B9C6, #FFAD2A, #4BCCE2);
           border-radius: 20px;
           padding: 3px;
         }
@@ -1228,7 +1505,7 @@ const Propuesta = () => {
           position: absolute;
           inset: 0;
           padding: 2px;
-          background: linear-gradient(90deg, #79BC1C, #FFB900, #4BCCE2);
+          background: linear-gradient(90deg, #58B9C6, #FFB900, #4BCCE2);
           border-radius: 100px;
           mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
           mask-composite: xor;
@@ -1236,13 +1513,13 @@ const Propuesta = () => {
         }
         
         .gradient-border-btn:hover::before {
-          background: linear-gradient(90deg, #79BC1C, #FFB900, #4BCCE2);
+          background: linear-gradient(90deg, #58B9C6, #FFB900, #4BCCE2);
         }
         
         /* Soporte para gradients de texto en navegadores */
         @supports (-webkit-background-clip: text) {
           .gradient-text {
-            background: linear-gradient(90deg, #79BC1C, #B0D83E);
+            background: linear-gradient(90deg, #58B9C6, #B0D83E);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;

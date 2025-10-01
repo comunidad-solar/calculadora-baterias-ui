@@ -66,6 +66,28 @@ const ClienteViewer = () => {
             console.error('❌ Estructura de datos inesperada para 04_DATOS_RECOGIDOS');
             navigate('/propuesta');
           }
+        
+        } else if (resultado.fsmState === '06_VISITA_TECNICA') {
+          console.log('🔧 Procesando fsmState: 06_VISITA_TECNICA');
+          
+          // Para fsmState "06_VISITA_TECNICA", navegar a propuesta con datos de visita técnica
+          if (resultado.datosParaStore && 'propuestaData' in resultado.datosParaStore) {
+            const datosVT = resultado.datosParaStore as any; // Cast para acceder a propiedades específicas
+            const tipoInstalacion = datosVT.tipoInstalacion || 'trifasica';
+            
+            navigate('/propuesta', { 
+              state: { 
+                propuestaData: resultado.datosParaStore.propuestaData,
+                fromFsmState: '06_VISITA_TECNICA',
+                tipoInstalacion: tipoInstalacion,
+                requiereVisitaTecnica: false, // Ya se realizó la visita técnica
+                visitaTecnicaCompletada: datosVT.visitaTecnicaCompletada || true
+              }
+            });
+          } else {
+            console.error('❌ Estructura de datos inesperada para 06_VISITA_TECNICA');
+            navigate('/propuesta');
+          }
           
         } else if (resultado.success && resultado.datosGuardados) {
           console.log('✅ Datos cargados automáticamente en Zustand');
