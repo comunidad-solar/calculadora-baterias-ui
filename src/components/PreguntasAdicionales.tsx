@@ -1215,19 +1215,16 @@ const PreguntasAdicionales = () => {
                         value={infoEditada.direccion}
                         onChange={(newAddress) => handleInputChange('direccion', newAddress)}
                         onPostalCodeChange={(codigoPostal) => {
-                          if (codigoPostal && codigoPostal.trim() !== '') {
-                            handleInputChange('codigoPostal', codigoPostal);
-                          }
+                          // Siempre actualizar el código postal (puede ser vacío para resetear)
+                          handleInputChange('codigoPostal', codigoPostal);
                         }}
                         onCityChange={(ciudad) => {
-                          if (ciudad && ciudad.trim() !== '') {
-                            handleInputChange('ciudad', ciudad);
-                          }
+                          // Siempre actualizar la ciudad (puede ser vacía para resetear)
+                          handleInputChange('ciudad', ciudad);
                         }}
                         onProvinceChange={(provincia) => {
-                          if (provincia && provincia.trim() !== '') {
-                            handleInputChange('provincia', provincia);
-                          }
+                          // Siempre actualizar la provincia (puede ser vacía para resetear)
+                          handleInputChange('provincia', provincia);
                         }}
                       />
                       <small className="form-text text-muted">

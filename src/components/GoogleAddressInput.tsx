@@ -261,41 +261,47 @@ const GoogleAddressInput: React.FC<GoogleAddressInputProps> = ({
         //   success: true
         // });
         
-        // Actualizar cada componente si se proporcionó el callback correspondiente y se encontró el valor
-        if (onPostalCodeChange && postalCode) {
-          // console.log('📍 Ejecutando onPostalCodeChange con:', postalCode);
+        // SIEMPRE ejecutar todos los callbacks para resetear completamente la información de dirección
+        // Esto evita que se mantengan valores antiguos de direcciones previas
+        
+        if (onPostalCodeChange) {
+          const finalPostalCode = postalCode || ''; // Usar string vacío si no hay código postal
+          // console.log('📍 Ejecutando onPostalCodeChange con:', finalPostalCode);
           try {
-            onPostalCodeChange(postalCode);
+            onPostalCodeChange(finalPostalCode);
             // console.log('✅ onPostalCodeChange ejecutado exitosamente');
           } catch (err) {
             console.error('❌ Error en onPostalCodeChange:', err);
           }
         }
         
-        if (onCityChange && city) {
-          // console.log('🏙️ Ejecutando onCityChange con:', city);
+        if (onCityChange) {
+          const finalCity = city || ''; // Usar string vacío si no hay ciudad
+          // console.log('🏙️ Ejecutando onCityChange con:', finalCity);
           try {
-            onCityChange(city);
+            onCityChange(finalCity);
             // console.log('✅ onCityChange ejecutado exitosamente');
           } catch (err) {
             console.error('❌ Error en onCityChange:', err);
           }
         }
         
-        if (onProvinceChange && province) {
-          // console.log('🗺️ Ejecutando onProvinceChange con:', province);
+        if (onProvinceChange) {
+          const finalProvince = province || ''; // Usar string vacío si no hay provincia
+          // console.log('🗺️ Ejecutando onProvinceChange con:', finalProvince);
           try {
-            onProvinceChange(province);
+            onProvinceChange(finalProvince);
             // console.log('✅ onProvinceChange ejecutado exitosamente');
           } catch (err) {
             console.error('❌ Error en onProvinceChange:', err);
           }
         }
         
-        if (onCountryChange && country) {
-          // console.log('🌍 Ejecutando onCountryChange con:', country);
+        if (onCountryChange) {
+          const finalCountry = country || ''; // Usar string vacío si no hay país
+          // console.log('🌍 Ejecutando onCountryChange con:', finalCountry);
           try {
-            onCountryChange(country);
+            onCountryChange(finalCountry);
             // console.log('✅ onCountryChange ejecutado exitosamente');
           } catch (err) {
             console.error('❌ Error en onCountryChange:', err);
