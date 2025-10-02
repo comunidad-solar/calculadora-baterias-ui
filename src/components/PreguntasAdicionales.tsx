@@ -42,6 +42,15 @@ const PreguntasAdicionales = () => {
       fullForm: form
     });
   }, []);
+
+  // Protección para usuarios outZone - redirigir a página específica
+  useEffect(() => {
+    if (form.enZona === 'outZone') {
+      console.log('🚫 Usuario outZone detectado en PreguntasAdicionales, redirigiendo a página fuera de zona');
+      navigate('/fuera-de-zona', { replace: true });
+      return;
+    }
+  }, [form.enZona, navigate]);
   
   // Obtener respuestas de preguntas del store principal
   const {

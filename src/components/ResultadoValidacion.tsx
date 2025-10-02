@@ -42,11 +42,11 @@ const ResultadoValidacion = () => {
         setDireccionOriginalVacia(true);
       }
       
-      // Auto-activar edición si está en zona (inZone, inZoneWithCost o NoCPAvailable) y no hay dirección
-      const isInZoneOrNeedsAddress = validacionData?.enZona === "inZone" || 
-                                     validacionData?.enZona === "inZoneWithCost" || 
-                                     validacionData?.enZona === "NoCPAvailable";
-      if (isInZoneOrNeedsAddress && usuario && (!usuario.direccion || usuario.direccion.trim() === '')) {
+      // Auto-activar edición solo si está en zona que puede generar propuesta y no hay dirección
+      const canGenerateProposal = validacionData?.enZona === "inZone" || 
+                                  validacionData?.enZona === "inZoneWithCost" || 
+                                  validacionData?.enZona === "NoCPAvailable";
+      if (canGenerateProposal && usuario && (!usuario.direccion || usuario.direccion.trim() === '')) {
         setEditMode(true);
       }
     }, 150);
@@ -61,11 +61,12 @@ const ResultadoValidacion = () => {
   }
 
   const handleSaveChanges = async () => {
-    // Validar campos obligatorios para usuarios en zona (inZone, inZoneWithCost o NoCPAvailable)
-    const needsCompleteData = validacionData.enZona === "inZone" || 
-                              validacionData.enZona === "inZoneWithCost" || 
-                              validacionData.enZona === "NoCPAvailable";
-    if (needsCompleteData) {
+    // Validar campos obligatorios solo para usuarios que pueden generar propuesta
+    const canGenerateProposal = validacionData.enZona === "inZone" || 
+                                validacionData.enZona === "inZoneWithCost" || 
+                                validacionData.enZona === "NoCPAvailable";
+    
+    if (canGenerateProposal) {
       if (!editData.direccion || editData.direccion.trim() === '') {
         showToast('Por favor completa tu dirección', 'error');
         return;
@@ -106,30 +107,30 @@ const ResultadoValidacion = () => {
   };
 
   const handleContinuarPropuesta = () => {
+    // Solo permitir continuar si puede generar propuesta (no para outZone)
+    const canGenerateProposal = validacionData.enZona === "inZone" || 
+                                validacionData.enZona === "inZoneWithCost" || 
+                                validacionData.enZona === "NoCPAvailable";
+    
+    if (!canGenerateProposal) {
+      showToast('No es posible generar propuesta para esta ubicación', 'warning');
+      return;
+    }
+    
     // Verificar que los campos obligatorios estén completos
-    const needsCompleteData = validacionData.enZona === "inZone" || 
-                              validacionData.enZona === "inZoneWithCost" || 
-                              validacionData.enZona === "NoCPAvailable";
-    
-    if (needsCompleteData) {
-      if (!usuario.tipoInstalacion) {
-        showToast('Por favor completa el tipo de instalación antes de continuar', 'warning');
-        setEditMode(true);
-        return;
-      }
-      if (usuario.tieneBaterias === undefined || usuario.tieneBaterias === null) {
-        showToast('Por favor indica si ya tienes baterías instaladas', 'warning');
-        setEditMode(true);
-        return;
-      }
+    if (!usuario.tipoInstalacion) {
+      showToast('Por favor completa el tipo de instalación antes de continuar', 'warning');
+      setEditMode(true);
+      return;
+    }
+    if (usuario.tieneBaterias === undefined || usuario.tieneBaterias === null) {
+      showToast('Por favor indica si ya tienes baterías instaladas', 'warning');
+      setEditMode(true);
+      return;
     }
     
-    // Navegar a preguntas adicionales si necesita datos completos (inZone, inZoneWithCost o NoCPAvailable)
-    if (needsCompleteData) {
-      navigate('/preguntas-adicionales', { replace: true });
-    } else {
-      navigate('/propuesta');
-    }
+    // Navegar a preguntas adicionales
+    navigate('/preguntas-adicionales', { replace: true });
   };
 
   return (
@@ -197,21 +198,41 @@ const ResultadoValidacion = () => {
           
           {/* Header con estado */}
           <div className="text-center mb-4 fade-in-result">
-            <div className={`bg-${(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost" || validacionData.enZona === "NoCPAvailable") ? 'success' : (bypass ? 'info' : 'warning')} bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3 status-icon-result`} style={{width: '80px', height: '80px'}}>
+            <div className={`bg-${(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost" || validacionData.enZona === "NoCPAvailable") ? 'success' : (validacionData.enZona === "outZone" ? 'warning' : (bypass ? 'info' : 'warning'))} bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3 status-icon-result`} style={{width: '80px', height: '80px'}}>
               <span style={{fontSize: '2.5rem'}}>
-                {(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost" || validacionData.enZona === "NoCPAvailable") ? '✅' : (bypass ? '📋' : '⚠️')}
+                {(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost" || validacionData.enZona === "NoCPAvailable") 
+                  ? '✅' 
+                  : (validacionData.enZona === "outZone" 
+                      ? '📍' 
+                      : (bypass ? '📋' : '⚠️')
+                    )
+                }
               </span>
             </div>
             <h2 className="h4 fw-bold mb-2">
               {(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost" || validacionData.enZona === "NoCPAvailable")
                 ? '¡Genial! Podemos ayudarte' 
-                : (bypass 
-                    ? '¡Perfecto! Hemos guardado tus datos'
-                    : 'Zona fuera de cobertura'
+                : (validacionData.enZona === "outZone"
+                    ? 'Esta es la información que tenemos:'
+                    : (bypass 
+                        ? '¡Perfecto! Hemos guardado tus datos'
+                        : 'Zona fuera de cobertura'
+                      )
                   )
               }
             </h2>
-            {(validacionData.enZona !== "inZone" && validacionData.enZona !== "inZoneWithCost" && validacionData.enZona !== "NoCPAvailable") && (
+            {validacionData.enZona === "outZone" && (
+              <div className="bg-light rounded-3 p-4 mb-3">
+                <p className="text-muted mb-2" style={{ fontSize: '1.1rem', lineHeight: '1.6' }}>
+                  Por el momento no podemos ofrecerte una propuesta para tu ubicación, pero 
+                  <strong> todos los días agregamos nuevas ubicaciones</strong> a nuestro servicio.
+                </p>
+                <p className="text-primary fw-medium mb-0">
+                  Como ya tenemos tus datos, <strong>te contactaremos apenas tengamos una propuesta disponible para ti</strong>.
+                </p>
+              </div>
+            )}
+            {(validacionData.enZona !== "inZone" && validacionData.enZona !== "inZoneWithCost" && validacionData.enZona !== "NoCPAvailable" && validacionData.enZona !== "outZone") && (
               <p className="text-muted">
                 {bypass 
                   ? 'Tu solicitud de información ha sido registrada correctamente. Un asesor especializado se pondrá en contacto contigo próximamente para brindarte toda la información sobre nuestras soluciones de energía solar.'
@@ -300,6 +321,7 @@ const ResultadoValidacion = () => {
                     </small>
                   )}
                 </div>
+                {/* Solo mostrar campos de instalación para usuarios que pueden generar propuesta */}
                 {(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost" || validacionData.enZona === "NoCPAvailable") && (
                   <>
                     <div className="col-md-6 form-field-result">
@@ -389,6 +411,7 @@ const ResultadoValidacion = () => {
                     </div>
                   )}
                 </div>
+                {/* Solo mostrar información de instalación para usuarios que pueden generar propuesta */}
                 {(validacionData.enZona === "inZone" || validacionData.enZona === "inZoneWithCost" || validacionData.enZona === "NoCPAvailable") && (
                   <>
                     <div className="col-md-6">
@@ -433,6 +456,22 @@ const ResultadoValidacion = () => {
                 Te mostraremos una propuesta personalizada basada en tu ubicación
               </small>
             </>
+          ) : validacionData.enZona === "outZone" ? (
+            // Caso especial para outZone: solo mostrar información de contacto
+            <div className="text-center">
+              <div className="bg-info bg-opacity-10 rounded-3 p-4 mb-3">
+                <span className="text-info" style={{fontSize: '2rem'}}>📞</span>
+                <p className="fw-bold text-info mb-2 mt-2">Nos pondremos en contacto contigo</p>
+                <p className="text-muted mb-0">
+                  Te contactaremos al <strong>{usuario.telefono}</strong> tan pronto como tengamos 
+                  cobertura disponible en tu zona.
+                </p>
+              </div>
+              <div className="d-flex justify-content-center align-items-center text-muted">
+                <span className="me-2">✉️</span>
+                <small>También te enviaremos información a {usuario.email}</small>
+              </div>
+            </div>
           ) : (
             <>
               {bypass ? (

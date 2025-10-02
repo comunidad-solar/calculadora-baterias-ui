@@ -13,6 +13,7 @@ import GraciasContacto from '../components/GraciasContacto';
 import ClienteViewer from '../components/ClienteViewer';
 import FirmaContrato from '../components/FirmaContrato';
 import ContratoFirmado from '../components/ContratoFirmado';
+import FueraDeZona from '../components/FueraDeZona';
 
 const AppRoutes = ({ onSelect }: { onSelect: (isComunero: boolean) => void }) => (
 	<Routes>
@@ -27,6 +28,7 @@ const AppRoutes = ({ onSelect }: { onSelect: (isComunero: boolean) => void }) =>
 		<Route path="/resultado" element={<ResultadoValidacion />} />
 		<Route path="/propuesta" element={<Propuesta />} />
 		<Route path="/preguntas-adicionales" element={<PreguntasAdicionales />} />
+		<Route path="/fuera-de-zona" element={<FueraDeZona />} />
 		<Route path="/gracias-contacto" element={<GraciasContacto />} />
 		<Route path="/comunero/:id" element={<ClienteViewer />} />
 		<Route path="/contratacion/firma-contrato" element={<FirmaContrato />} />

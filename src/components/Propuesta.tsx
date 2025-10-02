@@ -2,7 +2,7 @@ import { useUsuario } from '../context/UsuarioContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import BackButton from './BackButton';
 import PageTransition from './PageTransition';
-import logoCS from '../assets/logocircularcs.png';
+// import logoCS from '../assets/logocircularcs.png';
 import bateriaEcoflow from '../assets/bateriaEcoflow1.png';
 import ecoflowProposalBattery from '../assets/EcoFlowProposalBattery.png';
 import ecoflowLogo from '../assets/ECOFLOWLOGO.png';
