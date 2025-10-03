@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import BackButton from './BackButton';
 import CodeInput from './CodeInput';
 import PageTransition from './PageTransition';
@@ -14,6 +15,7 @@ const ComuneroCodigoForm = () => {
   const [resendLoading, setResendLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [lastResendTime, setLastResendTime] = useState<number | null>(null);
+  const [showNoContactModal, setShowNoContactModal] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const email = location.state?.email;
@@ -83,6 +85,17 @@ const ComuneroCodigoForm = () => {
         // Flujo normal de comunero: usar endpoint estándar
         console.log('🔍 Validando código estándar con email:', email);
         response = await comuneroService.validarCodigo(codigo, email);
+        // Verificar si es el caso específico de contacto no encontrado
+        if (!response.success && (response as any).data?.contactoEncontrado === false) {
+          console.log('🚫 Contacto no encontrado en el sistema, mostrando modal de opciones');
+          setShowNoContactModal(true);
+          return;
+        }
+        if (response.success && (response as any).data?.contactoEncontrado === false) {
+          console.log('🚫 Contacto no encontrado en el sistema, mostrando modal de opciones');
+          setShowNoContactModal(true);
+          return;
+        }
         
         // Para flujo normal, esperamos estructura completa
         if (response.success && response.data) {
@@ -136,8 +149,9 @@ const ComuneroCodigoForm = () => {
           throw new Error('Código incorrecto. Inténtalo de nuevo.');
         }
       }
-    } catch (err) {
-      const errorMsg = 'No se pudo conectar con el servidor. Comprueba tu conexión a internet.';
+    } catch (err: any) {
+      console.error('❌ Error inesperado en validación de código:', err);
+      const errorMsg = 'Error inesperado. Por favor, inténtalo de nuevo.';
       setError(errorMsg);
       showToast(errorMsg, 'error');
     } finally {
@@ -167,6 +181,20 @@ const ComuneroCodigoForm = () => {
     } finally {
       setResendLoading(false);
     }
+  };
+
+  const handleIntentarOtroEmail = () => {
+    setShowNoContactModal(false);
+    navigate('/comunero', { replace: true });
+  };
+
+  const handleContinuarComoNoSoyComunero = () => {
+    setShowNoContactModal(false);
+    navigate('/nuevo-comunero', { replace: true });
+  };
+
+  const handleCerrarModal = () => {
+    setShowNoContactModal(false);
   };
 
   return (
@@ -230,6 +258,104 @@ const ComuneroCodigoForm = () => {
         </div>
       </form>
       </div>
+
+      {/* Modal para contacto no encontrado */}
+      {showNoContactModal && createPortal(
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 999999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            padding: '20px'
+          }}
+          onClick={handleCerrarModal}
+        >
+          <div 
+            className="bg-white border-0 shadow-lg" 
+            style={{
+              borderRadius: '20px',
+              maxWidth: '500px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflow: 'auto'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center p-4" style={{background: 'linear-gradient(135deg, #dc3545, #c82333)', borderRadius: '20px 20px 0 0'}}>
+              <h4 className="text-white fw-bold mb-0">
+                <span className="me-2">❌</span>
+                Comunero no encontrado
+              </h4>
+              <p className="text-white-50 mb-0 small mt-2">
+                No pudimos encontrar tu información en nuestro sistema
+              </p>
+            </div>
+            
+            <div className="p-4">
+              <div className="text-center mb-4">
+                <div className="bg-light rounded-3 p-3 mb-3">
+                  <span className="display-1 mb-0">🔍</span>
+                </div>
+                <h5 className="fw-bold text-dark mb-2">
+                  No encontramos ningún comunero con el correo:
+                </h5>
+                <div className="bg-light rounded-2 p-2 mb-3">
+                  <span className="fw-semibold text-primary">{email}</span>
+                </div>
+                <p className="text-muted mb-0">
+                  Esto puede suceder si el correo no está registrado en nuestro sistema 
+                  o si hay algún error tipográfico.
+                </p>
+              </div>
+
+              <div className="alert alert-info border-0 mb-4">
+                <div className="d-flex align-items-start">
+                  <span className="me-2">💡</span>
+                  <div>
+                    <small>
+                      <strong>¿Qué puedes hacer?</strong><br/>
+                      Verifica que el correo sea correcto o continúa como usuario nuevo si no tienes cuenta previa.
+                    </small>
+                  </div>
+                </div>
+              </div>
+
+              <div className="d-grid gap-3">
+                <button
+                  className="btn btn-primary btn-lg"
+                  onClick={handleIntentarOtroEmail}
+                >
+                  <span className="me-2">📧</span>
+                  Intentar con otro correo
+                </button>
+                
+                <button
+                  className="btn btn-success btn-lg"
+                  onClick={handleContinuarComoNoSoyComunero}
+                >
+                  <span className="me-2">👤</span>
+                  Continuar como "No soy comunero"
+                </button>
+                
+                <button
+                  className="btn btn-outline-secondary"
+                  onClick={handleCerrarModal}
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </PageTransition>
   );
 };

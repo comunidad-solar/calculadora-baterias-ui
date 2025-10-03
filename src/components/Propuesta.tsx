@@ -135,6 +135,8 @@ const Propuesta = () => {
   // Estado para los modales
   const [showModal, setShowModal] = useState(false);
   const [showVisitaTecnicaModal, setShowVisitaTecnicaModal] = useState(false);
+  const [showDniModal, setShowDniModal] = useState(false);
+  const [dniInput, setDniInput] = useState('');
   
   console.log('💰 Precio a mostrar:', amount);
   console.log('📦 Items a mostrar:', items);
@@ -254,23 +256,46 @@ const Propuesta = () => {
   };
 
   const handleComprar = async () => {
+    // Obtener propuestaId del store (ya guardada previamente)
+    const propuestaIdFromStore = form.propuestaId;
+    
+    if (!propuestaIdFromStore) {
+      console.error('❌ No se encontró propuestaId para el proceso de compra');
+      alert('Error: No se puede procesar la compra. Contacta con soporte.');
+      return;
+    }
+
+    // Mostrar modal para pedir DNI antes de continuar
+    setShowDniModal(true);
+  };
+
+  const handleConfirmarCompra = async () => {
+    // Validar DNI
+    if (!dniInput || dniInput.trim() === '') {
+      alert('Por favor, ingresa tu DNI para continuar.');
+      return;
+    }
+
+    // Validar formato básico de DNI español (8 números + 1 letra)
+    const dniRegex = /^[0-9]{8}[TRWAGMYFPDXBNJZSQVHLCKE]$/i;
+    if (!dniRegex.test(dniInput.trim())) {
+      alert('Por favor, ingresa un DNI válido (8 números + letra, ejemplo: 12345678A).');
+      return;
+    }
+
     try {
-      // Obtener propuestaId del store (ya guardada previamente)
       const propuestaIdFromStore = form.propuestaId;
-      
-      if (!propuestaIdFromStore) {
-        console.error('❌ No se encontró propuestaId para el proceso de compra');
-        alert('Error: No se puede procesar la compra. Contacta con soporte.');
-        return;
-      }
+      console.log('🛒 Iniciando proceso de compra para propuestaId:', propuestaIdFromStore, 'con DNI:', dniInput);
 
-      console.log('🛒 Iniciando proceso de compra para propuestaId:', propuestaIdFromStore);
-
-      // Enviar código de validación usando el propuestaId
-      const resultado = await comuneroService.enviarCodigoPorPropuestaId(propuestaIdFromStore);
+      // Enviar código de validación usando el propuestaId y el DNI
+      const resultado = await comuneroService.enviarCodigoPorPropuestaId(propuestaIdFromStore!, dniInput.trim());
 
       if (resultado.success) {
-        console.log('✅ Código enviado exitosamente para compra');
+        console.log('✅ Código enviado exitosamente para compra con DNI:', dniInput);
+        
+        // Cerrar modal y limpiar estado
+        setShowDniModal(false);
+        setDniInput('');
         
         // Asegurar que el propuestaId esté guardado en el formStore
         if (form.propuestaId !== propuestaIdFromStore) {
@@ -1746,6 +1771,126 @@ const Propuesta = () => {
               >
                 Entendido
               </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Modal para pedir DNI antes de contratar */}
+      {showDniModal && createPortal(
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 999999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            padding: '20px'
+          }}
+          onClick={() => setShowDniModal(false)}
+        >
+          <div 
+            className="bg-white border-0 shadow-lg" 
+            style={{
+              borderRadius: '20px',
+              maxWidth: '500px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflow: 'auto'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center p-4" style={{background: 'linear-gradient(135deg, #007bff, #0056b3)', borderRadius: '20px 20px 0 0'}}>
+              <h4 className="text-white fw-bold mb-0">
+                <span className="me-2">📝</span>
+                Datos para continuar
+              </h4>
+              <p className="text-white-50 mb-0 small mt-2">
+                Necesitamos tu DNI para procesar la contratación
+              </p>
+            </div>
+            
+            <div className="p-4">
+              <div className="text-center mb-4">
+                {/* <div className="bg-light rounded-3 p-3 mb-3">
+                  <span className="display-1 mb-0">🆔</span>
+                </div> */}
+                <p className="text-muted mb-0">
+                  Para procesar tu contratación de manera segura, necesitamos que ingreses tu DNI.
+                </p>
+              </div>
+
+              <div className="mb-4">
+                <label className="form-label fw-semibold">
+                  <span className="me-2">🆔</span>
+                  DNI <span className="text-danger">*</span>
+                </label>
+                <input
+                  type="text"
+                  className="form-control form-control-lg"
+                  placeholder="Ej: 12345678A"
+                  value={dniInput}
+                  onChange={(e) => setDniInput(e.target.value)}
+                  maxLength={9}
+                  style={{
+                    textTransform: 'uppercase',
+                    fontSize: '1.1rem',
+                    textAlign: 'center',
+                    letterSpacing: '1px'
+                  }}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleConfirmarCompra();
+                    }
+                  }}
+                  autoFocus
+                />
+                <div className="form-text">
+                  <small className="text-muted">
+                    <strong>Formato:</strong> 8 números seguidos de una letra (ej: 12345678A)
+                  </small>
+                </div>
+              </div>
+
+              <div className="alert alert-info border-0">
+                <div className="d-flex align-items-start">
+                  <span className="me-2">🔒</span>
+                  <div>
+                    <small>
+                      <strong>Tu información está segura:</strong> El DNI se utiliza únicamente 
+                      para el proceso de contratación y cumple con todas las normativas de protección de datos.
+                    </small>
+                  </div>
+                </div>
+              </div>
+
+              <div className="d-grid gap-3">
+                <button
+                  className="btn btn-primary btn-lg"
+                  onClick={handleConfirmarCompra}
+                  disabled={!dniInput || dniInput.trim().length < 9}
+                >
+                  <span className="me-2">✓</span>
+                  Continuar con la contratación
+                </button>
+                
+                <button
+                  className="btn btn-outline-secondary"
+                  onClick={() => {
+                    setShowDniModal(false);
+                    setDniInput('');
+                  }}
+                >
+                  Cancelar
+                </button>
+              </div>
             </div>
           </div>
         </div>,

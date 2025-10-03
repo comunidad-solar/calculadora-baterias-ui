@@ -53,6 +53,7 @@ const makeRequest = async <T = any>(
       return {
         success: false,
         error: data.error || data.message || `Error ${response.status}: ${response.statusText}`,
+        data: data.data, // Preservar datos específicos para casos como contactoEncontrado: false
       };
     }
 
@@ -101,12 +102,13 @@ export const comuneroService = {
   },
 
   // Enviar código de validación usando propuestaId (para flujo de compra)
-  async enviarCodigoPorPropuestaId(propuestaId: string): Promise<ApiResponse<{ codigoEnviado: boolean }>> {
+  async enviarCodigoPorPropuestaId(propuestaId: string, dni?: string): Promise<ApiResponse<{ codigoEnviado: boolean }>> {
     return makeRequest('baterias/comunero/enviar-codigo-por-propuesta', {
       method: 'POST',
       body: JSON.stringify({ 
         propuestaId,
-        fsmState: DEFAULT_FSM_STATE
+        fsmState: DEFAULT_FSM_STATE,
+        ...(dni && { dni: dni.trim().toUpperCase() })
       }),
     });
   },
