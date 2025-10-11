@@ -5,11 +5,15 @@ import { bateriaService, comuneroService, nuevoComuneroService } from '../servic
 import { useFormStore } from '../zustand/formStore';
 import PageTransition from './PageTransition';
 import GoogleAddressInput from './GoogleAddressInput';
+import ejemploCuadroMonofasico from '../assets/Ejemplo_Cuadro_Monofasico.png';
+import ejemploCuadroTrifasico from '../assets/Ejemplo_Cuadro_Trifasico.png';
 
 const PreguntasAdicionales = () => {
   const [loading, setLoading] = useState(false);
   const [editandoInfo, setEditandoInfo] = useState(false);
   const [loadingDatosActualizados, setLoadingDatosActualizados] = useState(false);
+  const [showAnalisisModal, setShowAnalisisModal] = useState(false);
+  const [analisisModalContent, setAnalisisModalContent] = useState('');
   
   const [infoEditada, setInfoEditada] = useState({
     nombre: '',
@@ -1068,11 +1072,20 @@ const PreguntasAdicionales = () => {
               const tipoTexto = tipoDetectado === 'monofasico' ? 'monofásico' : 'trifásico';
               showToast(`¡Excelente! Se detectó un cuadro eléctrico ${tipoTexto}. Continuaremos con tu propuesta.`, 'success');
               
-              // Mostrar descripción detallada de la IA en un toast largo
+              // Mostrar descripción detallada de la IA en un modal centrado
               if (descripcion) {
                 setTimeout(() => {
-                  showToast(`🤖 Análisis de IA: ${descripcion}`, 'info', 20000);
-                }, 1000); // Delay de 1 segundo para que se vea después del primer toast
+                  setAnalisisModalContent(descripcion);
+                  setShowAnalisisModal(true);
+                  
+                  
+                  setTimeout(() => {
+                    window.scrollTo({
+                      top: 110,
+                      behavior: 'smooth'
+                    });
+                  }, 100); // Pequeño delay para que el modal se renderice primero
+                }, 500); // Delay de 1 segundo para que se vea después del primer toast
               }
               
               // Autoseleccionar el tipo de instalación según el análisis
@@ -1725,7 +1738,7 @@ const PreguntasAdicionales = () => {
                       checked={instalacionCerca10m === true}
                       onChange={() => handleInstalacionCerca10mChange(true)}
                     />
-                    <label className="form-check-label fw-bold text-success" htmlFor="instalacionCercaSi">
+                    <label className="form-check-label fw-bold " htmlFor="instalacionCercaSi">
                       Sí
                     </label>
                   </div>
@@ -1739,7 +1752,7 @@ const PreguntasAdicionales = () => {
                       checked={instalacionCerca10m === false}
                       onChange={() => handleInstalacionCerca10mChange(false)}
                     />
-                    <label className="form-check-label fw-bold text-danger" htmlFor="instalacionCercaNo">
+                    <label className="form-check-label fw-bold" htmlFor="instalacionCercaNo">
                       No
                     </label>
                   </div>
@@ -1822,7 +1835,7 @@ const PreguntasAdicionales = () => {
                           className={`btn w-100 btn-option ${metrosExtra === 'lo desconoce' ? 'btn-primary' : 'btn-outline-primary'}`}
                           onClick={() => setRespuestaPregunta('metrosExtra', 'lo desconoce')}
                         >
-                          Lo desconoce
+                          Lo desconozco
                         </button>
                       </div>
                       
@@ -1832,7 +1845,7 @@ const PreguntasAdicionales = () => {
                           className={`btn w-100 btn-option ${metrosExtra === 'prefiero hablar con un asesor' ? 'btn-primary' : 'btn-outline-primary'}`}
                           onClick={() => setRespuestaPregunta('metrosExtra', 'prefiero hablar con un asesor')}
                         >
-                           Hablar con un asesor
+                           Prefiero hablar con un asesor
                         </button>
                       </div>
                     </div>
@@ -1892,14 +1905,15 @@ const PreguntasAdicionales = () => {
                         onChange={(e) => handleTipoCuadroElectricoChange(e.target.value)}
                       />
                       <label className="form-check-label d-block" htmlFor="cuadroTipo1">
-                        <div className="border rounded-3 overflow-hidden mb-2" style={{ cursor: 'pointer' }}>
+                        <div className=" rounded-3 overflow-hidden mb-2 d-flex align-items-center justify-content-center" style={{ cursor: 'pointer', height: '340px', backgroundColor: '' }}>
                           <img 
-                            src="https://placehold.co/600x400/e3f2fd/1976d2?text=Cuadro+Tipo+1" 
-                            alt="Cuadro eléctrico tipo 1" 
-                            className="w-100 h-auto"
+                            src={ejemploCuadroMonofasico} 
+                            alt="Cuadro eléctrico monofásico - Ejemplo tipo 1" 
+                            className="img-fluid"
+                            style={{ objectFit: 'contain', maxHeight: '100%', maxWidth: '100%' }}
                           />
                         </div>
-                        <strong className="d-block text-center">Tipo 1 - Cuadro Monofásico</strong>
+                        <strong className="d-block text-center">Cuadro Monofásico</strong>
                       </label>
                     </div>
                   </div>
@@ -1917,14 +1931,15 @@ const PreguntasAdicionales = () => {
                         onChange={(e) => handleTipoCuadroElectricoChange(e.target.value)}
                       />
                       <label className="form-check-label d-block" htmlFor="cuadroTipo2">
-                        <div className="border rounded-3 overflow-hidden mb-2" style={{ cursor: 'pointer' }}>
+                        <div className=" rounded-3 overflow-hidden mb-2 d-flex align-items-center justify-content-center" style={{ cursor: 'pointer', height: '340px', backgroundColor: '' }}>
                           <img 
-                            src="https://placehold.co/600x400/f3e5f5/7b1fa2?text=Cuadro+Tipo+2" 
-                            alt="Cuadro eléctrico tipo 2" 
-                            className="w-100 h-auto"
+                            src={ejemploCuadroTrifasico} 
+                            alt="Cuadro eléctrico trifásico - Ejemplo tipo 2" 
+                            className="img-fluid"
+                            style={{ objectFit: 'contain', maxHeight: '100%', maxWidth: '100%' }}
                           />
                         </div>
-                        <strong className="d-block text-center">Tipo 2 - Cuadro Trifásico</strong>
+                        <strong className="d-block text-center">Cuadro Trifásico</strong>
                       </label>
                     </div>
                   </div>
@@ -1972,12 +1987,12 @@ const PreguntasAdicionales = () => {
                         ¿Quieres acelerar el proceso?
                       </h6>
                       <p className="text-muted mb-3 small">
-                        Puedes subir una foto de tu disyuntor para que nuestra IA la analice y te demos una respuesta más rápida.
+                        Puedes subir una foto de tu cuadro eléctrico para que nuestra IA la analice y te demos una respuesta más rápida.
                       </p>
                       
                       <div className="mb-3">
                         <label htmlFor="fotoDisyuntor" className="form-label fw-semibold">
-                          Foto del disyuntor (opcional)
+                          Foto del cuadro eléctrico (opcional)
                         </label>
                         <input
                           type="file"
@@ -1988,7 +2003,7 @@ const PreguntasAdicionales = () => {
                         />
                         <div className="form-text">
                           <small className="text-muted">
-                            📸 Toma una foto clara de tu cuadro eléctrico principal donde esté el disyuntor general
+                            📸 Toma una foto clara de tu cuadro eléctrico principal
                           </small>
                         </div>
                       </div>
@@ -2102,6 +2117,41 @@ const PreguntasAdicionales = () => {
           `}</style>
         </div>
       </div>
+
+      {/* Modal de Análisis de IA */}
+      {showAnalisisModal && (
+        <div className="modal fade show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)'}} tabIndex={-1}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content border-0 shadow-lg">
+              <div className="modal-header bg-primary text-white">
+                <h5 className="modal-title fw-bold">
+                  <i className="fas fa-robot me-2"></i>
+                  Análisis Inteligente Completado
+                </h5>
+              </div>
+              <div className="modal-body text-center py-4">
+                <div className="mb-3">
+                  <div className="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style={{width: 60, height: 60}}>
+                    <i className="fas fa-brain text-primary fs-3"></i>
+                  </div>
+                </div>
+                <p className="lead mb-0">{analisisModalContent}</p>
+              </div>
+              <div className="modal-footer justify-content-center border-0">
+                <button 
+                  type="button" 
+                  className="btn btn-primary px-4"
+                  onClick={() => setShowAnalisisModal(false)}
+                >
+                  <i className="fas fa-check me-2"></i>
+                  Entendido
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </PageTransition>
   );
 };

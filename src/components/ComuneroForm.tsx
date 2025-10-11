@@ -28,6 +28,14 @@ const ComuneroForm = () => {
   // Validación para teléfonos españoles (solo 9 dígitos, móvil 6/7, fijo 8/9)
   const validateTelefono = (value: string) => {
     const cleaned = value.replace(/\D/g, '');
+    
+    // Validar que no tenga 7 o más dígitos iguales consecutivos
+    const hasRepeatedDigits = /(.)\1{6,}/.test(cleaned);
+    if (hasRepeatedDigits) {
+      setTelefonoError('El número no puede tener 7 o más dígitos iguales consecutivos');
+      return false;
+    }
+    
     if (cleaned.length === 9) {
       if (/^[67]/.test(cleaned)) {
         setTelefonoError('');

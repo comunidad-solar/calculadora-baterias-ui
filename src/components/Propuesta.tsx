@@ -276,10 +276,20 @@ const Propuesta = () => {
       return;
     }
 
-    // Validar formato básico de DNI español (8 números + 1 letra)
-    const dniRegex = /^[0-9]{8}[TRWAGMYFPDXBNJZSQVHLCKE]$/i;
-    if (!dniRegex.test(dniInput.trim())) {
-      alert('Por favor, ingresa un DNI válido (8 números + letra, ejemplo: 12345678A).');
+    // Validar formato de DNI, NIE o TIE español
+    const dniInput_clean = dniInput.trim().toUpperCase();
+    
+    // DNI español: 8 números + 1 letra
+    const dniRegex = /^[0-9]{8}[TRWAGMYFPDXBNJZSQVHLCKE]$/;
+    
+    // NIE: X, Y o Z + 7 números + 1 letra
+    const nieRegex = /^[XYZ][0-9]{7}[TRWAGMYFPDXBNJZSQVHLCKE]$/;
+    
+    // TIE: T + 8 números + 1 letra
+    const tieRegex = /^T[0-9]{8}[TRWAGMYFPDXBNJZSQVHLCKE]$/;
+    
+    if (!dniRegex.test(dniInput_clean) && !nieRegex.test(dniInput_clean) && !tieRegex.test(dniInput_clean)) {
+      alert('Por favor, ingresa un documento válido:\n• DNI: 8 números + letra (ej: 12345678A)\n• NIE: X/Y/Z + 7 números + letra (ej: X1234567A)\n• TIE: T + 8 números + letra (ej: T12345678A)');
       return;
     }
 
@@ -434,7 +444,7 @@ const Propuesta = () => {
                         ? 'Instalación Trifásica - Visita Técnica Pendiente'
                         : visitaTecnicaCompletada 
                           ? 'Instalación Trifásica - Visita Técnica Completada' 
-                          : 'Instalación Trifásica Detectada'
+                          : 'Instalación Trifásica'
                       }
                     </h5>
                     <p className="mb-2" style={{ 
@@ -536,7 +546,7 @@ const Propuesta = () => {
                             }}
                             onClick={handleSolicitarVisitaTecnica}
                           >
-                            SOLICITAR EVALUACIÓN
+                            CONTRATAR
                           </button>
                         ) : (
                           <button 
@@ -598,7 +608,7 @@ const Propuesta = () => {
                             }}
                             onClick={handleSolicitarVisitaTecnica}
                           >
-                            SOLICITAR EVALUACIÓN
+                            CONTRATAR
                           </button>
                         ) : (
                           <button 
@@ -959,7 +969,7 @@ const Propuesta = () => {
                           }}
                           onClick={handleSolicitarVisitaTecnica}
                         >
-                          SOLICITAR EVALUACIÓN
+                          CONTRATAR
                         </button>
                       ) : (
                         // Botón CONTRATAR normal
@@ -1298,7 +1308,7 @@ const Propuesta = () => {
                   }}
                   onClick={handleSolicitarVisitaTecnica}
                 >
-                  SOLICITAR EVALUACIÓN
+                  CONTRATAR
                 </button>
               ) : (
                 // Solo mostrar CONTRATAR si NO estamos en estado 06_VISITA_TECNICA
@@ -1445,7 +1455,7 @@ const Propuesta = () => {
                       }}
                       onClick={handleSolicitarVisitaTecnica}
                     >
-                      SOLICITAR EVALUACIÓN
+                      CONTRATAR
                     </button>
                   ) : (
                     // Botón CONTRATAR normal
@@ -1854,7 +1864,10 @@ const Propuesta = () => {
                 />
                 <div className="form-text">
                   <small className="text-muted">
-                    <strong>Formato:</strong> 8 números seguidos de una letra (ej: 12345678A)
+                    <strong>Formatos válidos:</strong><br/>
+                    • DNI: 8 números + letra (ej: 12345678A)<br/>
+                    • NIE: X/Y/Z + 7 números + letra (ej: X1234567A)<br/>
+                    • TIE: T + 8 números + letra (ej: T12345678A)
                   </small>
                 </div>
               </div>

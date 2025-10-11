@@ -171,18 +171,18 @@ const FirmaContrato = () => {
           {/* Título principal */}
           <div className="text-center mb-3">
             <h1 className="fw-bold mb-1" style={{ color: '#2A2A2A', fontSize: '2rem' }}>
-              Firma de Contrato
+              Firma de términos y condiciones
             </h1>
             <p className="text-muted mb-0" style={{ fontSize: '1rem' }}>
-              Revisa y firma tu contrato para completar la compra
+              Revisa y firma los términos y condiciones de la contratación para completar la compra.
             </p>
           </div>
 
           {/* Contenedor del iframe o estados de carga/error */}
           <div className="bg-white rounded-4 shadow-lg overflow-hidden" style={{ minHeight: '80vh' }}>
             {preparingContract && (
-              <div className="d-flex align-items-center justify-content-center" style={{ minHeight: '600px' }}>
-                <div className="text-center">
+              <div className="d-flex align-items-center justify-content-center p-4" style={{ minHeight: '600px' }}>
+                <div className="text-center" style={{ maxWidth: '500px', margin: '0 auto', padding: '2rem' }}>
                   <div className="mb-4">
                     <div 
                       className="spinner-border" 
@@ -200,11 +200,11 @@ const FirmaContrato = () => {
                   <h4 className="fw-bold mb-3" style={{ color: '#2A2A2A' }}>
                     🔄 Estamos preparando tu contrato
                   </h4>
-                  <p className="text-muted" style={{ fontSize: '1.1rem', maxWidth: '400px', margin: '0 auto' }}>
+                  <p className="text-muted mb-4" style={{ fontSize: '1.1rem', lineHeight: '1.5' }}>
                     Nuestro sistema está generando tu contrato personalizado. 
                     Este proceso toma unos segundos para asegurar que todos los datos sean correctos.
                   </p>
-                  <div className="mt-4">
+                  <div className="mt-4 px-3">
                     <div className="progress" style={{ height: '8px', borderRadius: '10px' }}>
                       <div 
                         className="progress-bar progress-bar-striped progress-bar-animated" 
@@ -214,7 +214,7 @@ const FirmaContrato = () => {
                         }}
                       ></div>
                     </div>
-                    <p className="text-muted mt-2" style={{ fontSize: '0.9rem' }}>
+                    <p className="text-muted mt-3" style={{ fontSize: '0.9rem' }}>
                       Esto puede tomar hasta 10 segundos...
                     </p>
                   </div>
