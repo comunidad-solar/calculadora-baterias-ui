@@ -83,7 +83,7 @@ const ComuneroForm = () => {
     
     try {
       const response = await nuevoComuneroService.crear({
-        nombre: form.nombre,
+        nombre: `${form.nombre} ${form.apellidos}`.trim(),
         mail: form.mail,
         telefono: form.telefono,
         direccion: form.direccion,
@@ -131,7 +131,7 @@ const ComuneroForm = () => {
               console.log('📋 Usando datos del backend para comunero');
               comuneroObject = {
                 id: comuneroData.id || comuneroData.contactId || response.data.id || 'temp-' + Date.now(),
-                nombre: comuneroData.nombre || comuneroData.name || form.nombre,
+                nombre: comuneroData.nombre || comuneroData.name || `${form.nombre} ${form.apellidos}`.trim(),
                 email: comuneroData.email || comuneroData.mail || form.mail,
                 telefono: comuneroData.telefono || comuneroData.phone || form.telefono,
                 direccion: comuneroData.direccion || comuneroData.address || form.direccion,
@@ -143,7 +143,7 @@ const ComuneroForm = () => {
               console.log('⚠️ Backend no devolvió datos válidos del comunero, usando datos del formulario');
               comuneroObject = {
                 id: response.data.id || 'temp-' + Date.now(),
-                nombre: form.nombre,
+                nombre: `${form.nombre} ${form.apellidos}`.trim(),
                 email: form.mail,
                 telefono: form.telefono,
                 direccion: form.direccion,
@@ -156,7 +156,7 @@ const ComuneroForm = () => {
             console.log('⚠️ Backend no devolvió data, usando datos del formulario');
             comuneroObject = {
               id: 'temp-' + Date.now(),
-              nombre: form.nombre,
+              nombre: `${form.nombre} ${form.apellidos}`.trim(),
               email: form.mail,
               telefono: form.telefono,
               direccion: form.direccion,
@@ -238,15 +238,29 @@ const ComuneroForm = () => {
         className="d-grid gap-3"
         onSubmit={handleSubmit}
       >
-        <div>
-          <label className="form-label">Nombre y Apellidos</label>
-          <input
-            type="text"
-            required
-            className="form-control form-control-lg"
-            value={form.nombre}
-            onChange={e => setField('nombre', e.target.value)}
-          />
+        <div className="row g-2">
+          <div className="col-md-6">
+            <label className="form-label">Nombre</label>
+            <input
+              type="text"
+              required
+              className="form-control form-control-lg"
+              value={form.nombre}
+              onChange={e => setField('nombre', e.target.value)}
+              placeholder="Tu nombre"
+            />
+          </div>
+          <div className="col-md-6">
+            <label className="form-label">Apellidos</label>
+            <input
+              type="text"
+              required
+              className="form-control form-control-lg"
+              value={form.apellidos}
+              onChange={e => setField('apellidos', e.target.value)}
+              placeholder="Tus apellidos"
+            />
+          </div>
         </div>
         <div className="position-relative">
           <label className="form-label">Correo electrónico</label>

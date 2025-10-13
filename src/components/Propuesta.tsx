@@ -93,13 +93,33 @@ const Propuesta = () => {
   const amount = propuestaData?.amount || defaultAmount;
   const baseItems: (ProductItem | string)[] = propuestaData?.productData?.mapped_items || defaultItems;
   
-  // Items adicionales hardcodeados que siempre se agregan
-  const additionalItems: string[] = [
+  // Items adicionales básicos que siempre se agregan
+  const basicAdditionalItems: string[] = [
     "Instalación profesional certificada",
     "Material eléctrico", 
     "Sistema de respaldo incorporado (BackUp)",
-    "Legalización (*Solo si se tiene instalación fotovoltaica)",
   ];
+  
+  // Obtener la respuesta sobre instalación fotovoltaica desde el store
+  const tieneInstalacionFV = form.respuestasPreguntas?.tieneInstalacionFV;
+  
+  // Debug: verificar el valor de tieneInstalacionFV
+  console.log('🔍 Debug tieneInstalacionFV:', tieneInstalacionFV, 'tipo:', typeof tieneInstalacionFV);
+  console.log('🔍 Debug respuestasPreguntas completo:', form.respuestasPreguntas);
+  
+  // Items adicionales condicionados
+  const conditionalItems: string[] = [];
+  
+  // Solo agregar legalización si tiene instalación fotovoltaica
+  if (tieneInstalacionFV === true) {
+    conditionalItems.push("Legalización (*Solo si se tiene instalación fotovoltaica)");
+    console.log('✅ Agregando item de legalización porque tiene instalación FV');
+  } else {
+    console.log('❌ NO agregando item de legalización. Valor:', tieneInstalacionFV);
+  }
+  
+  // Combinar todos los items adicionales
+  const additionalItems: string[] = [...basicAdditionalItems, ...conditionalItems];
   
   // Combinar items base con items adicionales
   const items: (ProductItem | string)[] = [...baseItems, ...additionalItems];

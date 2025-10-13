@@ -1578,7 +1578,7 @@ const PreguntasAdicionales = () => {
             {tieneInstalacionFV === false && (
               <div className="fade-in-result">
                 <label className="form-label h5 fw-bold mb-3">
-                  Tipo de instalación <span className="text-danger">*</span>
+                  Tipo de instalación en tu vivienda<span className="text-danger">*</span>
                 </label>
                 <select
                   className="form-select form-select-lg"

@@ -6,6 +6,7 @@ import { FSM_STATES } from '../types/fsmTypes';
 interface FormState {
   // Datos básicos del formulario
   nombre: string;
+  apellidos: string;
   mail: string;
   telefono: string;
   direccion: string;
@@ -99,6 +100,7 @@ interface FormStore {
 
 const initialState: FormState = {
   nombre: '',
+  apellidos: '',
   mail: '',
   telefono: '',
   direccion: '',
