@@ -45,8 +45,8 @@ const Header = ({ showHeader }: HeaderProps) => {
             <div className="col-auto">
               <div className="d-flex align-items-center text-dark me-5">
                 {isAsesores && (
-                  <span className="badge bg-warning text-dark me-2" style={{ fontSize: '10px' }}>
-                    ASESORES
+                  <span className="badge bg-warning text-dark me-2" style={{ fontSize: '1.1rem' }}>
+                    WEB PRIVADA DE ASESORES
                   </span>
                 )}
                 <img 
