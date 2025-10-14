@@ -20,6 +20,7 @@ interface FormState {
   campaignSource: string;
   bypass: boolean;
   asesores: boolean;
+  fromAsesoresDeal: boolean;
   fsmState: FSMState;
   
   // Datos de validación del backend
@@ -115,6 +116,7 @@ const initialState: FormState = {
   campaignSource: '',
   bypass: false,
   asesores: false,
+  fromAsesoresDeal: false,
   fsmState: FSM_STATES.INITIAL, // Estado inicial de la máquina de estados
   
   // Inicializar respuestas de preguntas

@@ -43,9 +43,34 @@ const PreguntasAdicionales = () => {
       propuestaId: form.propuestaId,
       enZona: form.enZona,
       fsmState: form.fsmState,
+      fromAsesoresDeal: form.fromAsesoresDeal,
+      asesores: form.asesores,
+      dealId: form.dealId,
       fullForm: form
     });
-  }, []);
+
+    // Verificar si venimos de un deal de asesores
+    const fromAsesoresDeal = form.fromAsesoresDeal || 
+                            sessionStorage.getItem('fromAsesoresDeal') === 'true' ||
+                            location.state?.fromAsesoresDeal;
+    
+    if (fromAsesoresDeal && form.asesores) {
+      console.log('🎯 Cargando desde deal de asesores con datos prellenados');
+      console.log('📊 Respuestas de preguntas desde deal:', form.respuestasPreguntas);
+      
+      // Si hay datos del comunero y no se ha inicializado la info editada, inicializarla
+      if (form.comunero && !infoEditada.nombre) {
+        setInfoEditada({
+          nombre: form.comunero.nombre || '',
+          telefono: form.comunero.telefono || '',
+          direccion: form.comunero.direccion || '',
+          codigoPostal: form.comunero.codigoPostal || '',
+          ciudad: form.comunero.ciudad || '',
+          provincia: form.comunero.provincia || ''
+        });
+      }
+    }
+  }, [form, location.state, infoEditada.nombre]);
 
   // Protección para usuarios outZone - redirigir a página específica
   useEffect(() => {

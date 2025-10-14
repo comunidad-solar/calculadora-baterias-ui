@@ -548,6 +548,14 @@ export const bateriaService = {
       }),
     });
   },
+
+  // Obtener información del deal por ID
+  async obtenerDealPorId(dealId: string): Promise<ApiResponse<any>> {
+    console.log('📋 Obteniendo información del deal:', dealId);
+    return makeRequest(`baterias/deal/${dealId}`, {
+      method: 'GET',
+    });
+  },
 };
 
 export default {
