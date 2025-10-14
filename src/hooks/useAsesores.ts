@@ -1,7 +1,7 @@
 import { useFormStore } from '../zustand/formStore';
 import { isAsesoresDomain, getAsesoresMode, validateAsesoresDealContext, getDealIdIfAsesores } from '../utils/domainUtils';
 import { bateriaService } from '../services/apiService';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 /**
  * Hook personalizado para acceder al modo asesores
@@ -12,21 +12,34 @@ export const useAsesores = () => {
   const [dealData, setDealData] = useState<any>(null);
   const [isLoadingDeal, setIsLoadingDeal] = useState(false);
   const [dealError, setDealError] = useState<string | null>(null);
+  const processingRef = useRef(false);
+  const processedRef = useRef(false);
 
-  // Validar contexto de asesores al cargar
+  // Validar contexto de asesores al cargar (solo una vez)
   useEffect(() => {
     const context = validateAsesoresDealContext();
     
-    if (context.shouldProcessDeal) {
+    if (context.shouldProcessDeal && !processingRef.current && !processedRef.current) {
+      console.log('🔄 Iniciando procesamiento único del deal:', context.dealId);
       procesarDeal(context.dealId!);
+    } else if (context.shouldProcessDeal && processingRef.current) {
+      console.log('⏳ Ya hay un procesamiento de deal en curso, ignorando duplicado');
     }
   }, []);
 
   const procesarDeal = async (dealId: string) => {
+    // Evitar múltiples llamadas simultáneas
+    if (processingRef.current || processedRef.current) {
+      console.log('🚫 Deal ya está siendo procesado o ya fue procesado, ignorando');
+      return;
+    }
+
+    processingRef.current = true;
     setIsLoadingDeal(true);
     setDealError(null);
     
     try {
+      console.log('📡 Realizando llamada única al backend para deal:', dealId);
       const response = await bateriaService.obtenerDealPorId(dealId);
       
       if (response.success && response.data) {
@@ -61,6 +74,7 @@ export const useAsesores = () => {
           setField('fromAsesoresDeal', true);
         }
         
+        processedRef.current = true;
       } else {
         throw new Error(response.error || 'Error al obtener información del deal');
       }
@@ -68,6 +82,7 @@ export const useAsesores = () => {
       console.error('❌ Error cargando deal:', error);
       setDealError(error instanceof Error ? error.message : 'Error desconocido');
     } finally {
+      processingRef.current = false;
       setIsLoadingDeal(false);
     }
   };
@@ -80,6 +95,15 @@ export const useAsesores = () => {
       console.error('Error validando deal:', error);
       return null;
     }
+  };
+
+  const resetDealProcessing = () => {
+    processingRef.current = false;
+    processedRef.current = false;
+    setDealData(null);
+    setDealError(null);
+    setIsLoadingDeal(false);
+    console.log('🔄 Estado del deal reseteado');
   };
   
   return {
@@ -109,7 +133,8 @@ export const useAsesores = () => {
 
     // Funciones de utilidad
     procesarDeal,
-    validarDealId
+    validarDealId,
+    resetDealProcessing
   };
 };
 
