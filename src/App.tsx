@@ -1,22 +1,20 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import AppRoutes from "./routes/routes";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
-import AsesoresDealLoader from "./components/AsesoresDealLoader";
 import { ToastProvider } from "./context/ToastContext";
 import { UsuarioProvider } from "./context/UsuarioContext";
 import { useFormStore } from "./zustand/formStore";
 import { validateAsesoresDealContext, logDomainInfo } from "./utils/domainUtils";
-import { useAsesores } from "./hooks/useAsesores";
-
+import { bateriaService } from "./services/apiService";
 
 function App() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { setField } = useFormStore();
-  const { isAsesores, hasValidDeal, isLoadingDeal, dealData } = useAsesores();
-
+  const { setField, setValidacionData, setRespuestasPreguntas } = useFormStore();
+  const [isLoadingDeal, setIsLoadingDeal] = useState(false);
+  const [dealProcessed, setDealProcessed] = useState(false);
 
   useEffect(() => {
     // Log información del dominio
@@ -29,60 +27,81 @@ function App() {
     setField('asesores', context.isAsesores);
     (window as any).asesores = context.isAsesores;
     
-    if (context.isAsesores) {
-      console.log('� Modo asesores activado');
-    } else {
-      console.log('🌐 Modo normal activado');
-    }
+    console.log(context.isAsesores ? '🎯 Modo asesores' : '🌐 Modo normal');
 
-    // Si tenemos un deal válido en modo asesores, guardarlo en el store
-    if (context.shouldProcessDeal) {
-      console.log('🎯 DealId detectado en modo asesores:', context.dealId);
+    // Si tenemos un deal válido Y no se ha procesado
+    if (context.shouldProcessDeal && context.dealId && !dealProcessed) {
+      console.log('📋 Procesando deal UNA VEZ:', context.dealId);
       setField('dealId', context.dealId);
-      // El hook useAsesores se encarga de cargar automáticamente el deal
+      procesarDeal(context.dealId);
     }
 
-    // Verificar si hay bypass=true en la URL
+    // Verificar bypass
     const bypass = searchParams.get('bypass');
     if (bypass === 'true') {
-      // Guardar bypass en el store
       setField('bypass', true);
-      // Redirigir directamente al formulario (no es comunero)
       navigate('/nuevo-comunero', { replace: true });
     }
-  }, [searchParams, navigate, setField]);
+  }, [searchParams, navigate, setField, dealProcessed]);
 
-  // Efecto para navegar cuando el deal se haya cargado completamente
-  useEffect(() => {
-    if (isAsesores && hasValidDeal() && !isLoadingDeal && dealData) {
-      console.log('✅ Deal cargado completamente, navegando a preguntas adicionales');
+  const procesarDeal = async (dealId: string) => {
+    if (dealProcessed) return;
+
+    setDealProcessed(true);
+    setIsLoadingDeal(true);
+
+    try {
+      console.log('📡 UNA llamada al backend:', dealId);
+      const response = await bateriaService.obtenerDealPorId(dealId);
       
-      // Limpiar flags previos y establecer que venimos de asesores
-      sessionStorage.removeItem('datosActualizadosObtenidos');
-      sessionStorage.setItem('fromAsesoresDeal', 'true');
-      
-      // Navegar a preguntas adicionales con los datos prellenados
-      navigate('/preguntas-adicionales', {
-        state: { 
-          fromAsesoresDeal: true,
-          dealData: dealData
-        },
-        replace: true
-      });
+      if (response.success && response.data?.data) {
+        console.log('✅ Deal procesado exitosamente');
+        
+        setValidacionData({
+          token: response.data.data.token,
+          comunero: response.data.data.comunero,
+          enZona: response.data.data.enZona,
+          motivo: response.data.data.motivo || '',
+          propuestaId: response.data.data.propuestaId,
+          analisisTratos: response.data.data.analisisTratos,
+          dealId: response.data.data.dealId
+        });
+        
+        if (response.data.data.respuestasPreguntas) {
+          setRespuestasPreguntas(response.data.data.respuestasPreguntas);
+        }
+        
+        setField('fromAsesoresDeal', true);
+        
+        navigate('/preguntas-adicionales', { replace: true });
+      }
+    } catch (error) {
+      console.error('❌ Error procesando deal:', error);
+    } finally {
+      setIsLoadingDeal(false);
     }
-  }, [isAsesores, hasValidDeal, isLoadingDeal, dealData, navigate]);
+  };
+
+  // Mostrar loader si está cargando deal
+  if (isLoadingDeal) {
+    return (
+      <div className="d-flex justify-content-center align-items-center vh-100">
+        <div className="text-center">
+          <div className="spinner-border text-primary mb-3" role="status">
+            <span className="visually-hidden">Cargando...</span>
+          </div>
+          <h5>Cargando información del deal...</h5>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <ToastProvider>
       <UsuarioProvider>
-        {/* Loader específico para deals de asesores */}
-        <AsesoresDealLoader />
-        
         <div className="d-flex flex-column min-vh-100" style={{background: '#FCFCF7'}}>
-          {/* Header */}
           <Header />
           
-          {/* Contenido principal */}
           <main className="flex-grow-1 d-flex justify-content-center align-items-start w-100 py-4">
             <AppRoutes onSelect={isComunero => {
               if (isComunero) {
@@ -93,7 +112,6 @@ function App() {
             }} />
           </main>
           
-          {/* Footer */}
           <Footer />
         </div>
       </UsuarioProvider>
