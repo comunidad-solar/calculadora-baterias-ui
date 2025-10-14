@@ -1,4 +1,5 @@
 import { useFormStore } from '../zustand/formStore';
+import { useAsesores } from '../hooks/useAsesores';
 
 interface HeaderProps {
   showHeader?: boolean;
@@ -7,6 +8,7 @@ interface HeaderProps {
 const Header = ({ showHeader }: HeaderProps) => {
   const { form } = useFormStore();
   const bypass = form.bypass;
+  const { isAsesores } = useAsesores();
 
   // Lógica de visibilidad - misma que Footer
   // Si bypass = true y showHeader no está definido, por defecto false
@@ -42,6 +44,11 @@ const Header = ({ showHeader }: HeaderProps) => {
             {/* Contador de comuneros */}
             <div className="col-auto">
               <div className="d-flex align-items-center text-dark me-5">
+                {isAsesores && (
+                  <span className="badge bg-warning text-dark me-2" style={{ fontSize: '10px' }}>
+                    ASESORES
+                  </span>
+                )}
                 <img 
                   src="https://comunidadsolar.es/wp-content/uploads/2023/07/Recurso-18.png"
                   alt="Comuneros"

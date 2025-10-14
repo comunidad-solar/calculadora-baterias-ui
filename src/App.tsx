@@ -6,6 +6,7 @@ import Footer from "./components/Footer";
 import { ToastProvider } from "./context/ToastContext";
 import { UsuarioProvider } from "./context/UsuarioContext";
 import { useFormStore } from "./zustand/formStore";
+import { isAsesoresDomain, logDomainInfo } from "./utils/domainUtils";
 
 
 function App() {
@@ -14,6 +15,21 @@ function App() {
   const { setField } = useFormStore();
 
   useEffect(() => {
+    // Detectar y configurar el modo asesores
+    const isAsesores = isAsesoresDomain();
+    logDomainInfo();
+    
+    if (isAsesores) {
+      console.log('🎯 Modo asesores activado');
+      setField('asesores', true);
+      // También establecer como variable global para acceso desde cualquier parte
+      (window as any).asesores = true;
+    } else {
+      console.log('🌐 Modo normal activado');
+      setField('asesores', false);
+      (window as any).asesores = false;
+    }
+
     // Verificar si hay bypass=true en la URL
     const bypass = searchParams.get('bypass');
     if (bypass === 'true') {

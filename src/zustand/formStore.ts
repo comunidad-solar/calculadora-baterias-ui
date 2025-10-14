@@ -19,6 +19,7 @@ interface FormState {
   utm: string;
   campaignSource: string;
   bypass: boolean;
+  asesores: boolean;
   fsmState: FSMState;
   
   // Datos de validación del backend
@@ -113,6 +114,7 @@ const initialState: FormState = {
   utm: '', // Aquí puedes inicializar con el valor UTM si lo tienes
   campaignSource: '',
   bypass: false,
+  asesores: false,
   fsmState: FSM_STATES.INITIAL, // Estado inicial de la máquina de estados
   
   // Inicializar respuestas de preguntas
