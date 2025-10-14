@@ -1,5 +1,5 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import AppRoutes from "./routes/routes";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
