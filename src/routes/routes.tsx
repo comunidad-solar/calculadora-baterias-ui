@@ -14,6 +14,8 @@ import ClienteViewer from '../components/ClienteViewer';
 import FirmaContrato from '../components/FirmaContrato';
 import ContratoFirmado from '../components/ContratoFirmado';
 import FueraDeZona from '../components/FueraDeZona';
+import PagoPago from '../components/PagoPago';
+import PagoExitoso from '../components/PagoExitoso';
 
 const AppRoutes = ({ onSelect }: { onSelect: (isComunero: boolean) => void }) => (
 	<Routes>
@@ -33,6 +35,8 @@ const AppRoutes = ({ onSelect }: { onSelect: (isComunero: boolean) => void }) =>
 		<Route path="/comunero/:id" element={<ClienteViewer />} />
 		<Route path="/contratacion/firma-contrato" element={<FirmaContrato />} />
 		<Route path="/contrato/:propuestaId/firmado" element={<ContratoFirmado />} />
+		<Route path="/pago" element={<PagoPago />} />
+		<Route path="/pago-exitoso" element={<PagoExitoso />} />
 		<Route path="/nuevo-comunero" element={
 			<div className="w-100" style={{ maxWidth: 700 }}>
 				<ComuneroForm />

@@ -185,6 +185,7 @@ export const comuneroService = {
     token?: string;
     comuneroId?: string;
     fsmState?: string;
+    mpkLogId?: string;
   }): Promise<ApiResponse<{ 
     propuestaId: string;
     updatedInfo: {
@@ -198,12 +199,19 @@ export const comuneroService = {
     };
     lastUpdated: string;
   }>> {
+    const payload: any = {
+      ...datosEdicion,
+      fsmState: datosEdicion.fsmState || DEFAULT_FSM_STATE
+    };
+    
+    // Incluir mpkLogId en el payload si está disponible
+    if (datosEdicion.mpkLogId) {
+      payload.mpkLogId = datosEdicion.mpkLogId;
+    }
+    
     return makeRequest('baterias/comunero/edit-existing-info-comunero', {
       method: 'POST',
-      body: JSON.stringify({
-        ...datosEdicion,
-        fsmState: datosEdicion.fsmState || DEFAULT_FSM_STATE
-      }),
+      body: JSON.stringify(payload),
     });
   },
 };
@@ -553,6 +561,35 @@ export const bateriaService = {
   async obtenerDealPorId(dealId: string): Promise<ApiResponse<any>> {
     console.log('📋 Obteniendo información del deal:', dealId);
     return makeRequest(`baterias/deal/${dealId}`, {
+      method: 'GET',
+    });
+  },
+
+  // Generar enlace de pago para reserva
+  async generarEnlacePago(datos: {
+    propuestaId: string;
+    dni: string;
+    mpkLogId?: string;
+  }): Promise<ApiResponse<{
+    paymentURL: string;
+    propuestaId: string;
+    invoiceId: string;
+  }>> {
+    console.log('💳 Generando enlace de pago para reserva:', datos);
+    return makeRequest('baterias/reserva/enlace-de-pago', {
+      method: 'POST',
+      body: JSON.stringify(datos),
+    });
+  },
+
+  // Verificar estado del pago
+  async verificarEstadoPago(propuestaId: string): Promise<ApiResponse<{
+    status: 'pending' | 'processing' | 'success' | 'failed';
+    invoiceId?: string;
+    paymentDetails?: any;
+  }>> {
+    console.log('🔍 Verificando estado de pago para propuesta:', propuestaId);
+    return makeRequest(`baterias/reserva/estado-pago/${propuestaId}`, {
       method: 'GET',
     });
   },

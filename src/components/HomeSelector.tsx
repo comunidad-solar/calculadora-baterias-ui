@@ -64,7 +64,8 @@ const HomeSelector: React.FC<HomeSelectorProps> = ({ onSelect }) => {
           motivo: response.data.data.motivo || '',
           propuestaId: response.data.data.propuestaId,
           analisisTratos: response.data.data.analisisTratos,
-          dealId: response.data.data.dealId
+          dealId: response.data.data.dealId,
+          mpkLogId: response.data.mpk_log_id // Guardar el mpk_log_id que viene en la respuesta
         });
         
         // Si hay respuestas de preguntas, cargarlas también

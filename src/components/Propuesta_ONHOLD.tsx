@@ -10,7 +10,7 @@ import imagenFondoPropuesta4 from '../assets/imagenFondoPropuesta4.png';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useFormStore } from '../zustand/formStore';
-import { bateriaService } from '../services/apiService';
+import { bateriaService, comuneroService } from '../services/apiService';
 
 // Tipos para los datos de la propuesta
 interface ProductItem {
@@ -41,9 +41,9 @@ interface PropuestaData {
   [key: string]: any;
 }
 
-const Propuesta = () => {
+const PropuestaOnHold = () => {
   const { validacionData, usuario } = useUsuario();
-  const { form } = useFormStore();
+  const { form, setField } = useFormStore();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -157,7 +157,6 @@ const Propuesta = () => {
   const [showVisitaTecnicaModal, setShowVisitaTecnicaModal] = useState(false);
   const [showDniModal, setShowDniModal] = useState(false);
   const [dniInput, setDniInput] = useState('');
-  const [loadingReserva, setLoadingReserva] = useState(false);
   
   console.log('💰 Precio a mostrar:', amount);
   console.log('📦 Items a mostrar:', items);
@@ -314,37 +313,41 @@ const Propuesta = () => {
       return;
     }
 
-    setLoadingReserva(true);
-    
     try {
       const propuestaIdFromStore = form.propuestaId;
-      console.log('� Iniciando proceso de reserva para propuestaId:', propuestaIdFromStore, 'con DNI:', dniInput);
+      console.log('🛒 Iniciando proceso de compra para propuestaId:', propuestaIdFromStore, 'con DNI:', dniInput);
 
-      // Generar enlace de pago para la reserva
-      const resultado = await bateriaService.generarEnlacePago({
-        propuestaId: propuestaIdFromStore!,
-        dni: dniInput.trim(),
-        mpkLogId: form.mpkLogId || undefined
-      });
+      // Enviar código de validación usando el propuestaId y el DNI
+      const resultado = await comuneroService.enviarCodigoPorPropuestaId(propuestaIdFromStore!, dniInput.trim());
 
       if (resultado.success) {
-        console.log('✅ Enlace de pago generado exitosamente:', resultado.data);
+        console.log('✅ Código enviado exitosamente para compra con DNI:', dniInput);
         
         // Cerrar modal y limpiar estado
         setShowDniModal(false);
         setDniInput('');
         
-        // Redirigir a la URL de pago
-        window.location.href = `/pago?url=${encodeURIComponent(resultado.data!.paymentURL)}&propuestaId=${resultado.data!.propuestaId}&invoiceId=${resultado.data!.invoiceId}`;
+        // Asegurar que el propuestaId esté guardado en el formStore
+        if (form.propuestaId !== propuestaIdFromStore) {
+          setField('propuestaId', propuestaIdFromStore);
+        }
+        
+        // Redirigir a la página de validación de código
+        navigate('/comunero/validar', { 
+          state: { 
+            fromCompra: true,
+            propuestaId: propuestaIdFromStore,
+            email: usuarioDisplay.email,
+            flujo: 'compra'
+          } 
+        });
       } else {
-        console.error('❌ Error al generar enlace de pago:', resultado.error);
-        alert('Error al procesar la reserva. Por favor, inténtalo de nuevo o contacta con soporte.');
+        console.error('❌ Error al enviar código para compra:', resultado.error);
+        alert('Error al procesar la compra. Por favor, inténtalo de nuevo o contacta con soporte.');
       }
     } catch (error) {
-      console.error('❌ Error inesperado en reserva:', error);
+      console.error('❌ Error inesperado en compra:', error);
       alert('Error inesperado. Por favor, inténtalo de nuevo más tarde.');
-    } finally {
-      setLoadingReserva(false);
     }
   };
 
@@ -483,7 +486,7 @@ const Propuesta = () => {
                       {fsmState === '06_VISITA_TECNICA' 
                         ? null
                         : visitaTecnicaCompletada 
-                          ? <><strong>¡Listo para reservar!</strong> Los precios y componentes mostrados incluyen todas las modificaciones técnicas necesarias para tu instalación trifásica.</>
+                          ? <><strong>¡Listo para contratar!</strong> Los precios y componentes mostrados incluyen todas las modificaciones técnicas necesarias para tu instalación trifásica.</>
                           : <><strong>¿Qué significa esto?</strong> La propuesta mostrada es orientativa. Nuestro equipo técnico debe evaluar tu instalación específica para garantizar la compatibilidad y seguridad del sistema.</>
                       }
                     </p>
@@ -563,7 +566,7 @@ const Propuesta = () => {
                             }}
                             onClick={handleSolicitarVisitaTecnica}
                           >
-                            RESERVAR
+                            CONTRATAR
                           </button>
                         ) : (
                           <button 
@@ -575,7 +578,7 @@ const Propuesta = () => {
                             }}
                             onClick={handleComprar}
                           >
-                            RESERVAR
+                            CONTRATAR
                           </button>
                         )
                       )}
@@ -625,7 +628,7 @@ const Propuesta = () => {
                             }}
                             onClick={handleSolicitarVisitaTecnica}
                           >
-                            RESERVAR
+                            CONTRATAR
                           </button>
                         ) : (
                           <button 
@@ -637,7 +640,7 @@ const Propuesta = () => {
                             }}
                             onClick={handleComprar}
                           >
-                            RESERVAR
+                            CONTRATAR
                           </button>
                         )
                       )}
@@ -986,10 +989,10 @@ const Propuesta = () => {
                           }}
                           onClick={handleSolicitarVisitaTecnica}
                         >
-                          RESERVAR
+                          CONTRATAR
                         </button>
                       ) : (
-                        // Botón RESERVAR normal
+                        // Botón CONTRATAR normal
                         <button 
                           className="btn btn-lg px-4 py-2 fw-bold text-white border-0"
                           style={{
@@ -1000,7 +1003,7 @@ const Propuesta = () => {
                           }}
                           onClick={handleComprar}
                         >
-                          RESERVAR
+                          CONTRATAR
                         </button>
                       )
                     )}
@@ -1325,10 +1328,10 @@ const Propuesta = () => {
                   }}
                   onClick={handleSolicitarVisitaTecnica}
                 >
-                  RESERVAR
+                  CONTRATAR
                 </button>
               ) : (
-                // Solo mostrar RESERVAR si NO estamos en estado 06_VISITA_TECNICA
+                // Solo mostrar CONTRATAR si NO estamos en estado 06_VISITA_TECNICA
                 fsmState !== '06_VISITA_TECNICA' && (
                   <button 
                     className="btn btn-lg px-5 py-3 fw-bold text-white border-0 comprar-btn"
@@ -1340,7 +1343,7 @@ const Propuesta = () => {
                     }}
                     onClick={handleComprar}
                   >
-                    RESERVAR
+                    CONTRATAR
                   </button>
                 )
               )}
@@ -1455,9 +1458,9 @@ const Propuesta = () => {
               </div>
             </div>
 
-            {/* Botones alineados: RESERVAR a la izquierda, contacto a la derecha */}
+            {/* Botones alineados: CONTRATAR a la izquierda, contacto a la derecha */}
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
-              {/* Botón RESERVAR alineado a la izquierda */}
+              {/* Botón CONTRATAR alineado a la izquierda */}
               <div>
                 {fsmState !== '06_VISITA_TECNICA' && (
                   (requiereVisitaTecnica && tipoInstalacion === 'trifasica') ? (
@@ -1472,10 +1475,10 @@ const Propuesta = () => {
                       }}
                       onClick={handleSolicitarVisitaTecnica}
                     >
-                      RESERVAR
+                      CONTRATAR
                     </button>
                   ) : (
-                    // Botón RESERVAR normal
+                    // Botón CONTRATAR normal
                     <button 
                       className="btn btn-lg px-5 py-3 fw-bold text-white border-0"
                       style={{
@@ -1486,7 +1489,7 @@ const Propuesta = () => {
                       }}
                       onClick={handleComprar}
                     >
-                      RESERVAR
+                      CONTRATAR
                     </button>
                   )
                 )}
@@ -1804,7 +1807,7 @@ const Propuesta = () => {
         document.body
       )}
 
-      {/* Modal para pedir DNI antes de reservar */}
+      {/* Modal para pedir DNI antes de contratar */}
       {showDniModal && createPortal(
         <div 
           style={{
@@ -1905,21 +1908,10 @@ const Propuesta = () => {
                 <button
                   className="btn btn-primary btn-lg"
                   onClick={handleConfirmarCompra}
-                  disabled={!dniInput || dniInput.trim().length < 9 || loadingReserva}
+                  disabled={!dniInput || dniInput.trim().length < 9}
                 >
-                  {loadingReserva ? (
-                    <>
-                      <div className="spinner-border spinner-border-sm me-2" role="status">
-                        <span className="visually-hidden">Cargando...</span>
-                      </div>
-                      Procesando reserva...
-                    </>
-                  ) : (
-                    <>
-                      <span className="me-2">✓</span>
-                      Continuar con la reserva
-                    </>
-                  )}
+                  <span className="me-2">✓</span>
+                  Continuar con la contratación
                 </button>
                 
                 <button
@@ -1928,7 +1920,6 @@ const Propuesta = () => {
                     setShowDniModal(false);
                     setDniInput('');
                   }}
-                  disabled={loadingReserva}
                 >
                   Cancelar
                 </button>
@@ -1942,4 +1933,4 @@ const Propuesta = () => {
   );
 };
 
-export default Propuesta;
+export default PropuestaOnHold;

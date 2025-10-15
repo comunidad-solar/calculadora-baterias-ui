@@ -39,6 +39,7 @@ interface FormState {
   motivo?: string;
   dealId?: string;
   propuestaId?: string;
+  mpkLogId?: string; // ID de log de MPK del backend
   
   // Análisis de tratos (datos del backend)
   analisisTratos?: {
@@ -92,6 +93,7 @@ interface FormStore {
     motivo?: string;
     dealId?: string;
     propuestaId?: string;
+    mpkLogId?: string;
     analisisTratos?: any;
   }) => void;
   setRespuestaPregunta: (pregunta: string, respuesta: any) => void;
@@ -169,6 +171,7 @@ export const useFormStore = create<FormStore>()(
               motivo: data.motivo,
               dealId: data.dealId,
               propuestaId: data.propuestaId,
+              mpkLogId: data.mpkLogId,
               analisisTratos: data.analisisTratos,
             },
           }),

@@ -293,33 +293,51 @@ const PreguntasAdicionales = () => {
       return;
     }
 
-    // Validación para inversor Huawei
-    if (tieneInstalacionFV && !tieneInversorHuawei) {
-      showToast('Por favor indica si tienes un inversor híbrido Huawei', 'error');
+    // Si tiene instalación FV, ir directamente a contactar asesor (sin validaciones adicionales)
+    if (tieneInstalacionFV === true) {
+      // Proceder directamente con el flujo de contactar asesor
+      try {
+        const datosCompletos = {
+          propuestaId: form.propuestaId || '',
+          contactId: form.comunero?.id || '',
+          email: form.comunero?.email || form.mail || '',
+          
+          tieneInstalacionFV: true,
+          requiereContactoManual: true,
+          
+          nombre: form.comunero?.nombre || form.nombre || '',
+          telefono: form.comunero?.telefono || form.telefono || '',
+          direccion: form.comunero?.direccion || form.direccion || '',
+          ciudad: form.comunero?.ciudad || form.ciudad || '',
+          provincia: form.comunero?.provincia || form.provincia || '',
+          codigoPostal: form.comunero?.codigoPostal || form.codigoPostal || '',
+          
+          token: form.token || '',
+          dealId: form.dealId || '',
+          mpkLogId: form.mpkLogId || '',
+          enZona: form.enZona || 'inZone',
+          fsmState: form.fsmState || 'INITIAL'
+        };
+
+        console.log('📞 Contactando asesor para usuario con instalación FV:', datosCompletos);
+        const response = await bateriaService.contactarAsesorDesconoceUnidad(datosCompletos);
+        
+        if (response.success) {
+          showToast('¡Perfecto! Un asesor se pondrá en contacto contigo pronto para evaluar tu instalación fotovoltaica.', 'success');
+          navigate('/gracias-contacto');
+        } else {
+          throw new Error('Error en la respuesta del servidor');
+        }
+      } catch (error) {
+        console.error('❌ Error contactando asesor:', error);
+        showToast('Hubo un error al procesar tu solicitud. Por favor, inténtalo de nuevo.', 'error');
+      }
       setLoading(false);
       return;
     }
 
-    // Si tiene Huawei y respondió "sí", validar tipo
-    if (tieneInstalacionFV && tieneInversorHuawei === 'si' && !tipoInversorHuawei) {
-      showToast('Por favor selecciona el tipo de inversor Huawei', 'error');
-      setLoading(false);
-      return;
-    }
-
-    // Si tiene Huawei "sí" y tipo "desconozco", validar foto
-    if (tieneInstalacionFV && tieneInversorHuawei === 'si' && tipoInversorHuawei === 'desconozco' && !fotoInversor) {
-      showToast('Por favor sube una foto del inversor', 'error');
-      setLoading(false);
-      return;
-    }
-
-    // Si tiene Huawei y respondió "desconozco", validar foto
-    if (tieneInstalacionFV && tieneInversorHuawei === 'desconozco' && !fotoInversor) {
-      showToast('Por favor sube una foto del inversor', 'error');
-      setLoading(false);
-      return;
-    }
+    // Validaciones para usuarios SIN instalación fotovoltaica (flujo normal)
+    // (Las validaciones del inversor Huawei han sido eliminadas ya que solo aplican para quienes ya tienen instalación FV)
 
     if (!tieneInstalacionFV && !tipoInstalacion) {
       showToast('Por favor selecciona el tipo de instalación', 'error');
@@ -882,6 +900,11 @@ const PreguntasAdicionales = () => {
 
   // Función helper para determinar si debe contactar un asesor
   const debeContactarAsesor = () => {
+    // Caso 0: Si tiene instalación fotovoltaica (respuesta SÍ), debe contactar directamente con asesor
+    if (tieneInstalacionFV === true) {
+      return true;
+    }
+    
     // Caso 1: Si seleccionó "ninguno" de los cuadros eléctricos
     if (!tieneInstalacionFV && tipoInstalacion === 'desconozco' && tipoCuadroElectrico === 'ninguno') {
       return true;
@@ -961,7 +984,8 @@ const PreguntasAdicionales = () => {
         ciudad: infoEditada.ciudad,
         provincia: infoEditada.provincia,
         token: form.token,
-        comuneroId: form.comunero.id
+        comuneroId: form.comunero.id,
+        mpkLogId: form.mpkLogId || ''
       };
 
       console.log('📤 Enviando datos actualizados al backend:', datosEdicion);
@@ -1407,7 +1431,7 @@ const PreguntasAdicionales = () => {
             {/* Pregunta 1: ¿Tienes instalación fotovoltaica? */}
             <div>
               <label className={`form-label h5 fw-bold mb-3 ${!codigoPostalDisponible ? 'text-muted' : ''}`}>
-                ¿Tienes instalación fotovoltaica instalada? <span className="text-danger">*</span>
+                ¿Tienes instalación fotovoltaica instalada en tu vivienda? <span className="text-danger">*</span>
                 {!codigoPostalDisponible && (
                   <small className="d-block text-warning mt-1">
                     <i className="fas fa-lock me-1"></i>
@@ -1447,8 +1471,23 @@ const PreguntasAdicionales = () => {
               </div>
             </div>
 
-            {/* Pregunta sobre inversor Huawei - Solo si tiene instalación FV */}
+            {/* Cuando tiene instalación FV, mostrar mensaje y proceder directamente a contactar asesor */}
             {tieneInstalacionFV === true && (
+              <div className="fade-in-result">
+                <div className="alert alert-info border-0">
+                  <div className="d-flex align-items-center">
+                    <span className="me-2">✅</span>
+                    <div>
+                      <strong>Perfecto.</strong> Ya tienes instalación fotovoltaica.<br />
+                      <small>Nuestro equipo especializado evaluará tu instalación actual para ofrecerte la mejor solución de baterías.</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Pregunta sobre inversor Huawei - Solo si tiene instalación FV (OCULTA PARA FLUJO DIRECTO) */}
+            {false && tieneInstalacionFV === true && (
               <div className="fade-in-result">
                 <label className="form-label h5 fw-bold mb-3">
                   ¿Tienes un inversor híbrido Huawei? <span className="text-danger">*</span>
@@ -1497,8 +1536,8 @@ const PreguntasAdicionales = () => {
               </div>
             )}
 
-            {/* Si tiene Huawei = SÍ - Tipo de inversor Huawei */}
-            {tieneInstalacionFV === true && tieneInversorHuawei === 'si' && (
+            {/* Si tiene Huawei = SÍ - Tipo de inversor Huawei (OCULTA PARA FLUJO DIRECTO) */}
+            {false && tieneInstalacionFV === true && tieneInversorHuawei === 'si' && (
               <div className="fade-in-result">
                 <label className="form-label h5 fw-bold mb-3">
                   Tipo de inversor Huawei <span className="text-danger">*</span>
@@ -1517,8 +1556,8 @@ const PreguntasAdicionales = () => {
               </div>
             )}
 
-            {/* Si tipo de inversor Huawei = DESCONOZCO - Upload foto */}
-            {tieneInstalacionFV === true && tieneInversorHuawei === 'si' && tipoInversorHuawei === 'desconozco' && (
+            {/* Si tipo de inversor Huawei = DESCONOZCO - Upload foto (OCULTA PARA FLUJO DIRECTO) */}
+            {false && tieneInstalacionFV === true && tieneInversorHuawei === 'si' && tipoInversorHuawei === 'desconozco' && (
               <div className="fade-in-result">
                 <label className="form-label h5 fw-bold mb-3">
                   Foto del inversor <span className="text-danger">*</span>
@@ -1535,7 +1574,7 @@ const PreguntasAdicionales = () => {
                     {fotoInversor ? (
                       <>
                         <span className="me-2">✅</span>
-                        {fotoInversor.name}
+                        {fotoInversor?.name}
                       </>
                     ) : (
                       <>
@@ -1551,8 +1590,8 @@ const PreguntasAdicionales = () => {
               </div>
             )}
 
-            {/* Si tiene Huawei = DESCONOZCO - Upload foto */}
-            {tieneInstalacionFV === true && tieneInversorHuawei === 'desconozco' && (
+            {/* Si tiene Huawei = DESCONOZCO - Upload foto (OCULTA PARA FLUJO DIRECTO) */}
+            {false && tieneInstalacionFV === true && tieneInversorHuawei === 'desconozco' && (
               <div className="fade-in-result">
                 <label className="form-label h5 fw-bold mb-3">
                   Foto del inversor <span className="text-danger">*</span>
@@ -1569,7 +1608,7 @@ const PreguntasAdicionales = () => {
                     {fotoInversor ? (
                       <>
                         <span className="me-2">✅</span>
-                        {fotoInversor.name}
+                        {fotoInversor?.name}
                       </>
                     ) : (
                       <>
@@ -1585,8 +1624,8 @@ const PreguntasAdicionales = () => {
               </div>
             )}
 
-            {/* Si tiene Huawei = NO - Mensaje informativo */}
-            {tieneInstalacionFV === true && tieneInversorHuawei === 'no' && (
+            {/* Si tiene Huawei = NO - Mensaje informativo (OCULTA PARA FLUJO DIRECTO) */}
+            {false && tieneInstalacionFV === true && tieneInversorHuawei === 'no' && (
               <div className="fade-in-result">
                 <div className="alert alert-info border-0">
                   <div className="d-flex align-items-center">
