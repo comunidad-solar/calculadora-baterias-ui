@@ -569,6 +569,8 @@ export const bateriaService = {
   async generarEnlacePago(datos: {
     propuestaId: string;
     dni: string;
+    name: string;
+    lastname: string;
     mpkLogId?: string;
   }): Promise<ApiResponse<{
     paymentURL: string;

@@ -320,10 +320,20 @@ const Propuesta = () => {
       const propuestaIdFromStore = form.propuestaId;
       console.log('� Iniciando proceso de reserva para propuestaId:', propuestaIdFromStore, 'con DNI:', dniInput);
 
+      // Extraer nombre y apellido del usuario
+      const nombreCompleto = usuarioDisplay.nombre || 'Usuario';
+      const partesNombre = nombreCompleto.trim().split(' ');
+      const name = partesNombre[0] || 'Usuario';
+      const lastname = partesNombre.slice(1).join(' ') || '';
+
+      console.log('👤 Datos del usuario:', { name, lastname, email: usuarioDisplay.email });
+
       // Generar enlace de pago para la reserva
       const resultado = await bateriaService.generarEnlacePago({
         propuestaId: propuestaIdFromStore!,
         dni: dniInput.trim(),
+        name: name,
+        lastname: lastname,
         mpkLogId: form.mpkLogId || undefined
       });
 

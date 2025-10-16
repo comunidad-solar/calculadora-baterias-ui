@@ -11,10 +11,16 @@ const PagoExitoso = () => {
   const { propuestaId, invoiceId } = location.state || {};
 
   useEffect(() => {
-    // Si no hay datos del pago, redirigir al home
-    if (!propuestaId) {
-      console.warn('⚠️ No hay datos de pago, redirigiendo al home');
-      setTimeout(() => navigate('/'), 2000);
+    // Debug: verificar qué datos llegan del state
+    console.log('🔍 Datos recibidos en PagoExitoso:', location.state);
+    console.log('📋 PropuestaId:', propuestaId);
+    console.log('📋 InvoiceId:', invoiceId);
+
+    // Solo redirigir si realmente no hay ningún dato útil Y el usuario no llegó desde una URL válida
+    if (!propuestaId && !invoiceId && !location.state) {
+      console.warn('⚠️ No hay datos de pago válidos');
+      // Comentamos la redirección automática para evitar el problema
+      // setTimeout(() => navigate('/'), 2000);
     }
 
     // Opcional: Confirmar el pago en el backend
@@ -35,7 +41,7 @@ const PagoExitoso = () => {
     };
 
     confirmarPago();
-  }, [propuestaId, invoiceId, navigate]);
+  }, [propuestaId, invoiceId, navigate, location.state]);
 
   return (
     <PageTransition>
@@ -66,38 +72,46 @@ const PagoExitoso = () => {
                   </p>
 
                   {/* Información del pago */}
-                  {propuestaId && (
-                    <div className="bg-light rounded-3 p-4 mb-4">
-                      <h5 className="text-dark mb-3">
-                        <i className="fas fa-receipt me-2 text-primary"></i>
-                        Detalles de la Reserva
-                      </h5>
-                      <div className="row text-start">
+                  <div className="bg-light rounded-3 p-4 mb-4">
+                    <h5 className="text-dark mb-3">
+                      <i className="fas fa-receipt me-2 text-primary"></i>
+                      Detalles de la Reserva
+                    </h5>
+                    <div className="row text-start">
+                      {propuestaId && (
                         <div className="col-sm-6 mb-2">
                           <strong>Propuesta ID:</strong><br />
                           <small className="text-muted font-monospace">{propuestaId}</small>
                         </div>
-                        {invoiceId && (
-                          <div className="col-sm-6 mb-2">
-                            <strong>Factura ID:</strong><br />
-                            <small className="text-muted font-monospace">{invoiceId}</small>
-                          </div>
-                        )}
-                        <div className="col-12 mt-2">
-                          <strong>Fecha y Hora:</strong><br />
+                      )}
+                      {invoiceId && (
+                        <div className="col-sm-6 mb-2">
+                          <strong>Factura ID:</strong><br />
+                          <small className="text-muted font-monospace">{invoiceId}</small>
+                        </div>
+                      )}
+                      {!propuestaId && !invoiceId && (
+                        <div className="col-12 mb-2">
                           <small className="text-muted">
-                            {new Date().toLocaleString('es-ES', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
+                            <i className="fas fa-info-circle me-1"></i>
+                            Tu pago ha sido procesado exitosamente. Los detalles específicos se enviarán por email.
                           </small>
                         </div>
+                      )}
+                      <div className="col-12 mt-2">
+                        <strong>Fecha y Hora:</strong><br />
+                        <small className="text-muted">
+                          {new Date().toLocaleString('es-ES', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </small>
                       </div>
                     </div>
-                  )}
+                  </div>
 
                   {/* Próximos pasos */}
                   <div className="text-start bg-info bg-opacity-10 rounded-3 p-4 mb-4">
