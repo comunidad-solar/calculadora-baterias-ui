@@ -68,7 +68,7 @@ const PagoExitoso = () => {
                   
                   <p className="lead text-muted mb-4">
                     Tu reserva ha sido confirmada exitosamente. 
-                    Hemos recibido tu pago y tu instalación de baterías está en proceso.
+                    Hemos recibido tu pago.
                   </p>
 
                   {/* Información del pago */}
@@ -126,16 +126,16 @@ const PagoExitoso = () => {
                       </li>
                       <li className="mb-2">
                         <i className="fas fa-phone text-primary me-2"></i>
-                        Nuestro equipo técnico se pondrá en contacto contigo en 24-48 horas
+                        Nuestro equipo de asesores se pondrá en contacto contigo en las próximas horas
                       </li>
-                      <li className="mb-2">
+                      {/* <li className="mb-2">
                         <i className="fas fa-calendar text-primary me-2"></i>
                         Programaremos la instalación según tu disponibilidad
                       </li>
                       <li>
                         <i className="fas fa-tools text-primary me-2"></i>
                         Instalación profesional en tu hogar
-                      </li>
+                      </li> */}
                     </ul>
                   </div>
 

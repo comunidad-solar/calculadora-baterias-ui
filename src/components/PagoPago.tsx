@@ -11,7 +11,7 @@ const PagoPago = () => {
   // const invoiceId = searchParams.get('invoiceId');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [paymentStatus, setPaymentStatus] = useState<'pending' | 'processing' | 'success' | 'failed'>('pending');
+  const [paymentStatus] = useState<'pending' | 'processing' | 'success' | 'failed'>('pending');
 
   useEffect(() => {
     if (!paymentURL) {
