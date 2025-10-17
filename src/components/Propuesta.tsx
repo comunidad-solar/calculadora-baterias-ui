@@ -96,7 +96,6 @@ const Propuesta = () => {
   // Items adicionales básicos que siempre se agregan
   const basicAdditionalItems: string[] = [
     "Instalación profesional certificada",
-    "Material eléctrico", 
     "Sistema de respaldo incorporado (BackUp)",
   ];
   
@@ -158,6 +157,7 @@ const Propuesta = () => {
   const [showDniModal, setShowDniModal] = useState(false);
   const [dniInput, setDniInput] = useState('');
   const [loadingReserva, setLoadingReserva] = useState(false);
+  const [showConfirmacionEnvio, setShowConfirmacionEnvio] = useState(false);
   
   console.log('💰 Precio a mostrar:', amount);
   console.log('📦 Items a mostrar:', items);
@@ -210,9 +210,10 @@ const Propuesta = () => {
   const handleContactarAsesor = () => {
     window.open('https://comunidadsolar.zohobookings.eu/#/108535000004860368', '_blank');
   };
-
+  const [buttonVTDisabled, setButtonVTDisabled] = useState(false);
   const handleSolicitarVisitaTecnica = async () => {
     try {
+      setButtonVTDisabled(true);
       // Obtener propuestaId del store (ya guardada previamente)
       const propuestaIdFromStore = form.propuestaId;
       
@@ -338,16 +339,14 @@ const Propuesta = () => {
       });
 
       if (resultado.success) {
-        console.log('✅ Enlace de pago generado exitosamente:', resultado.data);
+        console.log('✅ Solicitud de enlace de pago enviada exitosamente');
         
-        // Cerrar modal y limpiar estado
+        // Cerrar modal DNI y mostrar confirmación de envío
         setShowDniModal(false);
         setDniInput('');
-        
-        // Redirigir a la URL de pago
-        window.location.href = `/pago?url=${encodeURIComponent(resultado.data!.paymentURL)}&propuestaId=${resultado.data!.propuestaId}&invoiceId=${resultado.data!.invoiceId}`;
+        setShowConfirmacionEnvio(true);
       } else {
-        console.error('❌ Error al generar enlace de pago:', resultado.error);
+        console.error('❌ Error al enviar solicitud de enlace de pago:', resultado.error);
         alert('Error al procesar la reserva. Por favor, inténtalo de nuevo o contacta con soporte.');
       }
     } catch (error) {
@@ -571,7 +570,7 @@ const Propuesta = () => {
                               borderRadius: '50px',
                               fontSize: '1rem'
                             }}
-                            onClick={handleSolicitarVisitaTecnica}
+                            onClick={handleComprar}
                           >
                             RESERVAR
                           </button>
@@ -633,7 +632,7 @@ const Propuesta = () => {
                               borderRadius: '50px',
                               fontSize: '1rem'
                             }}
-                            onClick={handleSolicitarVisitaTecnica}
+                            onClick={handleComprar}
                           >
                             RESERVAR
                           </button>
@@ -690,6 +689,7 @@ const Propuesta = () => {
                     backgroundClip: 'padding-box'
                   }}
                   onClick={handleSolicitarVisitaTecnica}
+                  disabled={buttonVTDisabled}
                 >
                   SOLICITAR VISITA TÉCNICA
                 </button>
@@ -994,7 +994,7 @@ const Propuesta = () => {
                             fontSize: '1.1rem',
                             minWidth: '220px'
                           }}
-                          onClick={handleSolicitarVisitaTecnica}
+                          onClick={handleComprar}
                         >
                           RESERVAR
                         </button>
@@ -1333,7 +1333,7 @@ const Propuesta = () => {
                     fontSize: '1.3rem',
                     minWidth: '250px'
                   }}
-                  onClick={handleSolicitarVisitaTecnica}
+                  onClick={handleComprar}
                 >
                   RESERVAR
                 </button>
@@ -1480,7 +1480,7 @@ const Propuesta = () => {
                         fontSize: '1.2rem',
                         minWidth: '220px'
                       }}
-                      onClick={handleSolicitarVisitaTecnica}
+                      onClick={handleComprar}
                     >
                       RESERVAR
                     </button>
@@ -1760,24 +1760,26 @@ const Propuesta = () => {
                 <div className="mx-auto mb-3" style={{width: '80px', height: '80px', background: 'linear-gradient(135deg, #5CA00E, #B0D83E)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
                   <span style={{fontSize: '2rem'}}>🏠</span>
                 </div>
-                <h5 className="fw-bold text-dark mb-3">Tu solicitud ha sido registrada</h5>
+                <h5 className="fw-bold text-dark mb-3">La solicitud ha sido registrada</h5>
                 <p className="text-muted mb-3" style={{fontSize: '1.1rem', lineHeight: '1.6'}}>
-                  ¡Perfecto! Nuestro equipo técnico se pondrá en contacto contigo en las próximas 24-48 horas 
-                  para coordinar la visita y evaluar tu instalación.
+                 El enlace de pago ha sido enviado al cliente. El cliente recibirá un email con las instrucciones para completar su reserva.
+                </p>
+                  <p className="text-muted mb-3" style={{fontSize: '1.1rem', lineHeight: '1.6', fontWeight: 'bold'}}>
+                 Ya puedes cerrar esta ventana.
                 </p>
                 <div className="text-start">
-                  <h6 className="fw-bold text-dark mb-2">📋 Próximos pasos:</h6>
-                  <ul className="text-muted" style={{fontSize: '0.95rem', lineHeight: '1.5'}}>
+                  {/* <h6 className="fw-bold text-dark mb-2">📋 Próximos pasos:</h6> */}
+                  {/* <ul className="text-muted" style={{fontSize: '0.95rem', lineHeight: '1.5'}}>
                     <li>Recibirás una llamada de confirmación</li>
                     <li>Coordinaremos la fecha y hora que mejor te convenga</li>
                     <li>El técnico evaluará tu instalación actual</li>
                     <li>Te proporcionará un presupuesto personalizado</li>
-                  </ul>
+                  </ul> */}
                 </div>
               </div>
             </div>
             <div className="text-center pb-4">
-              <button 
+              {/* <button 
                 type="button" 
                 className="btn btn-lg me-3" 
                 style={{
@@ -1792,7 +1794,7 @@ const Propuesta = () => {
                 onClick={handleContactarAsesor}
               >
                 Contactar Asesor
-              </button>
+              </button> */}
               <button 
                 type="button" 
                 className="btn btn-lg" 
@@ -1941,6 +1943,89 @@ const Propuesta = () => {
                   disabled={loadingReserva}
                 >
                   Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Modal de confirmación de envío */}
+      {showConfirmacionEnvio && createPortal(
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 999999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            padding: '20px'
+          }}
+          onClick={() => setShowConfirmacionEnvio(false)}
+        >
+          <div 
+            className="bg-white border-0 shadow-lg" 
+            style={{
+              borderRadius: '20px',
+              maxWidth: '500px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflow: 'auto'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-center p-4" style={{background: 'linear-gradient(135deg, #28a745, #20c997)', borderRadius: '20px 20px 0 0'}}>
+              <h4 className="text-white fw-bold mb-0">
+                <span className="me-2">✅</span>
+                Solicitud Enviada
+              </h4>
+              <p className="text-white-50 mb-0 small mt-2">
+                El enlace de pago ha sido enviado al cliente
+              </p>
+            </div>
+            
+            <div className="p-4 text-center">
+              <div className="mb-4">
+                <div 
+                  className="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 rounded-circle mx-auto mb-3"
+                  style={{ width: '80px', height: '80px' }}
+                >
+                  <i className="fas fa-paper-plane text-success" style={{ fontSize: '2rem' }}></i>
+                </div>
+                
+                <h5 className="text-success mb-3">¡Solicitud Procesada Exitosamente!</h5>
+                
+                <p className="text-muted mb-4">
+                  El enlace de pago ha sido enviado al cliente. El cliente recibirá un email con las instrucciones para completar su reserva.
+                </p>
+                
+                <div className="alert alert-info" role="alert">
+                  <i className="fas fa-info-circle me-2"></i>
+                  <strong>Puedes cerrar esta página.</strong> La solicitud ya fue procesada correctamente.
+                </div>
+              </div>
+              
+              <div className="d-grid gap-2">
+                <button
+                  className="btn btn-success btn-lg"
+                  onClick={() => setShowConfirmacionEnvio(false)}
+                >
+                  <i className="fas fa-check me-2"></i>
+                  Entendido
+                </button>
+                
+                <button
+                  className="btn btn-outline-secondary"
+                  onClick={() => window.close()}
+                >
+                  <i className="fas fa-times me-2"></i>
+                  Cerrar Página
                 </button>
               </div>
             </div>
