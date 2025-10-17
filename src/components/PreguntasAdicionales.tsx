@@ -1440,7 +1440,8 @@ const PreguntasAdicionales = () => {
                 )}
               </label>
               <div className="d-flex gap-4">
-                <div className="form-check">
+                {/* disabled temporal  */}
+                <div className="form-check" >
                   <input
                     className="form-check-input"
                     type="radio"
@@ -1448,7 +1449,8 @@ const PreguntasAdicionales = () => {
                     id="instalacionSi"
                     checked={tieneInstalacionFV === true}
                     onChange={() => handleInstalacionChange(true)}
-                    disabled={!codigoPostalDisponible}
+                    // disabled={!codigoPostalDisponible}
+                    disabled={true}
                   />
                   <label className={`form-check-label fw-semibold ${!codigoPostalDisponible ? 'text-muted' : ''}`} htmlFor="instalacionSi">
                     Sí
@@ -1659,6 +1661,7 @@ const PreguntasAdicionales = () => {
             )}
 
             {/* Si NO tiene instalación FV y conoce el tipo (monofásica/trifásica) - Pregunta sobre baterías */}
+            {/* disabled temporal */}
             {tieneInstalacionFV === false && (tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') && (
               <div className="fade-in-result">
                 <label className="form-label h5 fw-bold mb-3">
@@ -1673,6 +1676,7 @@ const PreguntasAdicionales = () => {
                       id="bateriasSi"
                       checked={tieneBaterias === true}
                       onChange={() => handleTieneBateriasChange(true)}
+                      disabled={true}
                     />
                     <label className="form-check-label fw-semibold" htmlFor="bateriasSi">
                       Sí
