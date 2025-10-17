@@ -175,8 +175,8 @@ const PagoExitoso = () => {
                     <small className="text-muted">
                       <strong>¿Necesitas ayuda?</strong><br />
                       Contacta con nuestro equipo en{' '}
-                      <a href="mailto:soporte@comunidad.solar" className="text-decoration-none">
-                        soporte@comunidad.solar
+                      <a href="mailto:info@comunidad.solar" className="text-decoration-none">
+                        info@comunidad.solar
                       </a>
                     </small>
                   </div>
