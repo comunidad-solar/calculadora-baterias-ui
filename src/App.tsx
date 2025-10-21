@@ -90,7 +90,7 @@ function App() {
   return (
     <ToastProvider>
       <UsuarioProvider>
-        <div className="d-flex flex-column min-vh-100" style={{background: '#FCFCF7'}}>
+        <div className="d-flex flex-column min-vh-100" style={{background: 'white'}}>
           <Header />
           
           <main className="flex-grow-1 d-flex justify-content-center align-items-start w-100 py-4">
