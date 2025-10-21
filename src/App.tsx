@@ -11,7 +11,7 @@ import { validateAsesoresDealContext, logDomainInfo } from "./utils/domainUtils"
 function App() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { setField } = useFormStore();
+  const { setField, form } = useFormStore();
 
 
   useEffect(() => {
@@ -42,8 +42,9 @@ function App() {
     }
   }, [searchParams, navigate, setField]);
 
-  
-
+  if(!form.bypass){
+    return null;
+  }
   // Mostrar loader si está cargando deal
   // if (isLoadingDeal) {
   //   return (
