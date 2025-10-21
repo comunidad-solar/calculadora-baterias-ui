@@ -88,7 +88,15 @@ const ComuneroForm = () => {
         telefono: form.telefono,
         direccion: form.direccion,
         direccionComplementaria: form.direccionComplementaria,
+        // Parámetros UTM
+        utm_source: form.utm_source,
+        utm_medium: form.utm_medium,
+        utm_campaign: form.utm_campaign,
+        utm_term: form.utm_term,
+        utm_content: form.utm_content,
+        // Campos legacy mantenidos para compatibilidad
         campaignSource: form.campaignSource,
+        utm: form.utm,
         fsmState: "01_IN_ZONE_LEAD", // Estado inicial fijo
         codigoPostal: form.codigoPostal, // Nuevo campo de código postal
         ciudad: form.ciudad,

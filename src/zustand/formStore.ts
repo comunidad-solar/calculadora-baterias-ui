@@ -16,8 +16,14 @@ interface FormState {
   provincia: string; // Agregado para provincia extraída de Google Places
   pais: string; // Agregado para país extraído de Google Places
   proteccionDatos: boolean;
-  utm: string;
-  campaignSource: string;
+  // Parámetros UTM
+  utm_source: string;
+  utm_medium: string;
+  utm_campaign: string;
+  utm_term: string;
+  utm_content: string;
+  utm: string; // Campo legacy mantenido para compatibilidad
+  campaignSource: string; // Campo legacy mantenido para compatibilidad
   bypass: boolean;
   bypassActive: boolean; // Nuevo campo para mantener el estado de bypass durante toda la sesión
   asesores: boolean;
@@ -115,7 +121,13 @@ const initialState: FormState = {
   provincia: '', // Provincia extraída de Google Places
   pais: '', // País extraído de Google Places
   proteccionDatos: false,
-  utm: '', // Aquí puedes inicializar con el valor UTM si lo tienes
+  // Parámetros UTM
+  utm_source: '',
+  utm_medium: '',
+  utm_campaign: '',
+  utm_term: '',
+  utm_content: '',
+  utm: '', // Campo legacy mantenido para compatibilidad
   campaignSource: '',
   bypass: false,
   bypassActive: false, // Inicialmente false, se activa cuando se detecta bypass=true en URL
