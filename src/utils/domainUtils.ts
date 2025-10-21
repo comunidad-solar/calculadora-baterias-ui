@@ -7,7 +7,6 @@
  * @returns {boolean} true si el dominio contiene "asesores.dbig"
  */
 export const isAsesoresDomain = (): boolean => {
-   //   return true
   return window.location.hostname.includes('asesores.dbig');
 };
 
