@@ -19,6 +19,7 @@ interface FormState {
   utm: string;
   campaignSource: string;
   bypass: boolean;
+  bypassActive: boolean; // Nuevo campo para mantener el estado de bypass durante toda la sesión
   asesores: boolean;
   fromAsesoresDeal: boolean;
   fsmState: FSMState;
@@ -117,6 +118,7 @@ const initialState: FormState = {
   utm: '', // Aquí puedes inicializar con el valor UTM si lo tienes
   campaignSource: '',
   bypass: false,
+  bypassActive: false, // Inicialmente false, se activa cuando se detecta bypass=true en URL
   asesores: false,
   fromAsesoresDeal: false,
   fsmState: FSM_STATES.INITIAL, // Estado inicial de la máquina de estados

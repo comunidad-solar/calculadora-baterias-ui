@@ -566,7 +566,7 @@ const Propuesta = () => {
                           <button 
                             className="btn btn-lg px-4 py-2 fw-bold text-white border-0 w-100"
                             style={{
-                              background: 'linear-gradient(90deg, #FF6B35, #FFA726)',
+                              background: 'linear-gradient(90deg, #58B9C6, #4BCCE2)',
                               borderRadius: '50px',
                               fontSize: '1rem'
                             }}
@@ -628,7 +628,7 @@ const Propuesta = () => {
                           <button 
                             className="btn btn-lg px-4 py-2 fw-bold text-white border-0 w-100"
                             style={{
-                              background: 'linear-gradient(90deg, #FF6B35, #FFA726)',
+                              background: 'linear-gradient(90deg, #58B9C6, #4BCCE2)',
                               borderRadius: '50px',
                               fontSize: '1rem'
                             }}
@@ -989,7 +989,7 @@ const Propuesta = () => {
                         <button 
                           className="btn btn-lg px-4 py-2 fw-bold text-white border-0"
                           style={{
-                            background: 'linear-gradient(90deg, #FF6B35, #FFA726)',
+                            background: 'linear-gradient(90deg, #58B9C6, #4BCCE2)',
                             borderRadius: '100px',
                             fontSize: '1.1rem',
                             minWidth: '220px'
@@ -1328,7 +1328,7 @@ const Propuesta = () => {
                 <button 
                   className="btn btn-lg px-5 py-3 fw-bold text-white border-0"
                   style={{
-                    background: 'linear-gradient(90deg, #FF6B35, #FFA726)',
+                    background: 'linear-gradient(90deg, #58B9C6, #4BCCE2)',
                     borderRadius: '100px',
                     fontSize: '1.3rem',
                     minWidth: '250px'
@@ -1475,7 +1475,7 @@ const Propuesta = () => {
                     <button 
                       className="btn btn-lg px-5 py-3 fw-bold text-white border-0"
                       style={{
-                        background: 'linear-gradient(90deg, #FF6B35, #FFA726)',
+                        background: 'linear-gradient(90deg, #58B9C6, #4BCCE2)',
                         borderRadius: '100px',
                         fontSize: '1.2rem',
                         minWidth: '220px'

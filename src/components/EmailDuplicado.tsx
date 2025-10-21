@@ -52,7 +52,7 @@ const EmailDuplicado = () => {
           <p className="text-muted mb-4">
             {bypass ? (
               <>
-                Hemos registrado tu interés en nuestras soluciones de energía solar con el email <strong>{email}</strong>.
+                Hemos registrado tu interés en nuestras soluciones con el email <strong>{email}</strong>.
                 <span className="d-block mt-2">
                   <strong>Un asesor especializado se contactará contigo próximamente</strong> para brindarte toda la información personalizada que necesitas.
                 </span>
@@ -70,7 +70,7 @@ const EmailDuplicado = () => {
           </p>
         </div>
 
-        <div className="alert alert-info border-0 mb-4">
+        {/* <div className="alert alert-info border-0 mb-4">
           <div className="d-flex align-items-start">
             <span className="me-2">ℹ️</span>
             <div>
@@ -98,7 +98,7 @@ const EmailDuplicado = () => {
               )}
             </div>
           </div>
-        </div>
+        </div> */}
 
         <div className="d-grid gap-3">
           {bypass ? (
@@ -120,7 +120,7 @@ const EmailDuplicado = () => {
             </button>
           )}
           
-          <div className="text-center">
+          {/* <div className="text-center">
             <span className="text-muted">¿Te equivocaste de email? </span>
             <button
               type="button"
@@ -130,26 +130,27 @@ const EmailDuplicado = () => {
             >
               Volver al registro
             </button>
-          </div>
+          </div> */}
         </div>
 
         <div className="border-top mt-4 pt-4">
           {bypass ? (
             // Modo bypass: pasos de contacto
-            <div className="row text-center">
-              <div className="col">
-                <div className="text-success fw-bold h5 mb-1">✅</div>
-                <small className="text-muted">Solicitud recibida</small>
-              </div>
-              <div className="col">
-                <div className="text-primary fw-bold h5 mb-1">📞</div>
-                <small className="text-muted">Contacto personal</small>
-              </div>
-              <div className="col">
-                <div className="text-muted fw-bold h5 mb-1">☀️</div>
-                <small className="text-muted">Solución solar</small>
-              </div>
-            </div>
+            // <div className="row text-center">
+            //   <div className="col">
+            //     <div className="text-success fw-bold h5 mb-1">✅</div>
+            //     <small className="text-muted">Solicitud recibida</small>
+            //   </div>
+            //   <div className="col">
+            //     <div className="text-primary fw-bold h5 mb-1">📞</div>
+            //     <small className="text-muted">Contacto personal</small>
+            //   </div>
+            //   <div className="col">
+            //     <div className="text-muted fw-bold h5 mb-1">☀️</div>
+            //     <small className="text-muted">Solución solar</small>
+            //   </div>
+            // </div>
+            <span className="text-muted small"> </span>
           ) : (
             // Modo normal: pasos de validación
             <div className="row text-center">
