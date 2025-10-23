@@ -343,7 +343,8 @@ const Propuesta = () => {
         dni: dniInput.trim(),
         name: name,
         lastname: lastname,
-        mpkLogId: form.mpkLogId || undefined
+        mpkLogId: form.mpkLogId || undefined,
+        email: usuarioDisplay.email || undefined,
       });
 
       if (resultado.success) {

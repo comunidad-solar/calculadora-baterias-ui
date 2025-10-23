@@ -572,6 +572,7 @@ export const bateriaService = {
     name: string;
     lastname: string;
     mpkLogId?: string;
+    email?: string;
   }): Promise<ApiResponse<{
     paymentURL: string;
     propuestaId: string;
