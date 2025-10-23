@@ -3,14 +3,22 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import BackButton from './BackButton';
 import PageTransition from './PageTransition';
 // import logoCS from '../assets/logocircularcs.png';
-import bateriaEcoflow from '../assets/bateriaEcoflow1.png';
-import ecoflowProposalBattery from '../assets/EcoFlowProposalBattery.png';
-import ecoflowLogo from '../assets/ECOFLOWLOGO.png';
+// import bateriaEcoflow from '../assets/bateriaEcoflow1.png';
+import bateriaSolax from '../assets/Bateria_SolaXCover_Image.png';
+// import ecoflowProposalBattery from '../assets/EcoFlowProposalBattery.png';
+import solaxProposalBattery from '../assets/BateríaSolaXTransparentBackground.png';
+// import ecoflowLogo from '../assets/ECOFLOWLOGO.png';
+import solaxLogo from '../assets/SolaXBatteryLogo.png';
 import imagenFondoPropuesta4 from '../assets/imagenFondoPropuesta4.png';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useFormStore } from '../zustand/formStore';
 import { bateriaService } from '../services/apiService';
+import iconoBateria from '../assets/SolaXBatteryIcon.svg'
+import iconoDescargaElectricidad from '../assets/BateriaSolaXElectricidadIcon.svg'
+import iconResilence from '../assets/SolaXResilienceIcon.svg'
+import iconAhorro from '../assets/SolaXBatteryIcono.svg'
+import iconSeguridad from '../assets/BateriaSolaxIcono.svg'
 
 // Tipos para los datos de la propuesta
 interface ProductItem {
@@ -422,6 +430,7 @@ const Propuesta = () => {
                     alt="Comunidad Solar" 
                     style={{ width: '100px', height: '100px' }}
                   />
+
                   {/* Fallback logo 
                   <div 
                     className="bg-primary bg-opacity-10 rounded-circle d-none align-items-center justify-content-center"
@@ -597,7 +606,7 @@ const Propuesta = () => {
                          style={{ backgroundColor: '#F8F9FA' }}>
                       <div className="mb-3">
                         <p className="mb-2 fw-medium" style={{ color: '#58B9C6', fontSize: '1rem' }}>
-                          Financialo solo por
+                          Financiado desde 
                         </p>
                         <div className="d-flex align-items-baseline justify-content-center gap-1 mb-2">
                           <span className="fw-bold" style={{ 
@@ -605,14 +614,14 @@ const Propuesta = () => {
                             fontSize: '2.5rem',
                             lineHeight: '1'
                           }}>
-                            XX€/mes
+                            49€/mes
                           </span>
                         </div>
                         <p className="mb-0" style={{ 
                           color: '#666', 
                           fontSize: '0.9rem'
                         }}>
-                          (sin intereses)
+                          (IVA incluido)
                         </p>
                         <p className="mb-3 mt-2" style={{ 
                           color: '#9D9D9D', 
@@ -660,8 +669,8 @@ const Propuesta = () => {
               <div className="col-lg-6">
                 <div className="h-100 d-flex align-items-center justify-content-center p-4">
                   <img 
-                    src={bateriaEcoflow} 
-                    alt="Batería EcoFlow" 
+                    src={bateriaSolax} 
+                    alt="Batería Solax" 
                     className="img-fluid rounded-4"
                     style={{ 
                       maxHeight: '100%',
@@ -897,18 +906,18 @@ const Propuesta = () => {
                     className="position-absolute rounded-4"
                     style={{ 
                       backgroundColor: '#BFF2F9',
-                      width: '95%',
-                      height: '60%',
+                      width: '100%',
+                      height: '80%',
                       top: '10%',
-                      left: '20%',
-                      transform: 'rotate(-10deg)',
+                      left: '10%',
+                      transform: 'rotate(-12deg)',
                       zIndex: 0
                     }}
                   ></div>
                   
                   <div className="position-relative p-1 d-flex align-items-center justify-content-center" style={{ zIndex: 1, width: '100%', minHeight: '500px' }}>
                     <img 
-                      src={ecoflowProposalBattery} 
+                      src={solaxProposalBattery} 
                       alt="EcoFlow Battery System" 
                       className="img-fluid"
                       style={{ 
@@ -922,12 +931,12 @@ const Propuesta = () => {
                   </div>
                   
                   {/* Logo EcoFlow - centrado debajo de la imagen */}
-                  <div className="text-center mt-3" style={{ zIndex: 1 }}>
+                  <div className="text-center" style={{ zIndex: 1 }}>
                     <img 
-                      src={ecoflowLogo} 
+                      src={solaxLogo} 
                       alt="EcoFlow Logo" 
                       style={{ 
-                        height: '60px',
+                        height: '90px',
                         width: 'auto'
                       }}
                     />
@@ -1044,8 +1053,7 @@ const Propuesta = () => {
                         width: '40px', 
                         height: '40px', 
                         backgroundColor: '#58B9C6',
-                        color: 'white',
-                        fontWeight: 'bold'
+                        color: 'white'
                       }}
                     >
                       01
@@ -1054,7 +1062,7 @@ const Propuesta = () => {
                   
                   {/* Título del paso */}
                   <h4 className="fw-bold mb-3" style={{ color: '#58B9C6', fontSize: '1.4rem' }}>
-                    Contratación
+                    Formulario
                   </h4>
                   
                   {/* Descripción */}
@@ -1098,7 +1106,7 @@ const Propuesta = () => {
                   
                   {/* Título del paso */}
                   <h4 className="fw-bold mb-3" style={{ color: '#58B9C6', fontSize: '1.4rem' }}>
-                    Instalación
+                    Propuesta
                   </h4>
                   
                   {/* Descripción */}
@@ -1164,7 +1172,7 @@ const Propuesta = () => {
                   
                   {/* Título del paso */}
                   <h4 className="fw-bold mb-3" style={{ color: '#58B9C6', fontSize: '1.4rem' }}>
-                    Legalización
+                    Pago de reserva
                   </h4>
                   
                   {/* Descripción */}
@@ -1218,47 +1226,40 @@ const Propuesta = () => {
                   
                   {/* Título */}
                   <h5 className="mb-4" style={{ color: '#2A2A2A', fontSize: '1.2rem' }}>
-                    Generador de<br /> <strong>Electricidad</strong>
+                    Carga de<br /> <strong>baterías</strong>
                   </h5>
                   
                   {/* Icono centrado */}
                   <div className="d-flex justify-content-center mb-4">
-                    <svg width="80" height="80" viewBox="0 0 100 100" fill="#4BCCE2">
-                      <rect x="20" y="45" width="60" height="30" rx="5" fill="#4BCCE2"/>
-                      <rect x="25" y="35" width="10" height="15" fill="#4BCCE2"/>
-                      <rect x="35" y="30" width="10" height="20" fill="#4BCCE2"/>
-                      <rect x="45" y="25" width="10" height="25" fill="#4BCCE2"/>
-                      <rect x="55" y="30" width="10" height="20" fill="#4BCCE2"/>
-                      <rect x="65" y="35" width="10" height="15" fill="#4BCCE2"/>
-                      <circle cx="50" cy="15" r="8" fill="#FFD700"/>
-                      <path d="M50 5 L47 12 L53 12 Z" fill="#FFD700"/>
-                      <path d="M58 8 L55 15 L61 15 Z" fill="#FFD700"/>
-                      <path d="M42 8 L39 15 L45 15 Z" fill="#FFD700"/>
-                    </svg>
+                    <img 
+                      src={iconoBateria} 
+                      alt="Comunidad Solar" 
+                      style={{ width: '100px', height: '100px' }}
+                    />
                   </div>
                   
                   {/* Texto */}
                   <p className="mb-0" style={{ color: '#666', fontSize: '0.9rem', lineHeight: '1.4' }}>
-                    Durante el día se genera la energía gracias a los paneles y con sus excedentes se llenan las baterías.
+                    La batería se carga con la energía de la red en las horas más baratas. De esta manera se mantiene cargada y lista para usarse en cualquier tipo de situación.​
                   </p>
                   
                 </div>
               </div>
 
               {/* Card 02 - Carga de Baterías */}
-              <div className="col-lg-3 col-md-4">
+              {/* <div className="col-lg-3 col-md-4">
                 <div className="bg-white rounded-4 p-4 h-100 shadow-lg text-center position-relative" style={{ minHeight: '280px' }}>
-                  {/* Número 02 */}
+                  {/* Número 02 
                   <div className="position-absolute top-0 start-0 mt-3 ms-3">
                     <span style={{ color: '#4BCCE2', fontSize: '1.2rem', fontWeight: 'bold' }}>02</span>
                   </div>
                   
-                  {/* Título */}
+                  {/* Título 
                   <h5 className=" mb-4" style={{ color: '#2A2A2A', fontSize: '1.2rem' }}>
                     Carga de<br /><strong>Baterías</strong>
                   </h5>
                   
-                  {/* Icono centrado */}
+                  {/* Icono centrado 
                   <div className="d-flex justify-content-center mb-4">
                     <svg width="80" height="80" viewBox="0 0 100 100" fill="#4BCCE2">
                       <rect x="25" y="20" width="40" height="60" rx="5" fill="#4BCCE2" stroke="#4BCCE2" strokeWidth="2"/>
@@ -1274,19 +1275,19 @@ const Propuesta = () => {
                     </svg>
                   </div>
                   
-                  {/* Texto */}
+                  {/* Texto 
                   <p className="mb-0" style={{ color: '#666', fontSize: '0.9rem', lineHeight: '1.4' }}>
                     Solo cogerás energía de la red si tus excedentes almacenados son menores a tu consumo.
                   </p>
                 </div>
-              </div>
+              </div> */}
 
               {/* Card 03 - Descarga de Electricidad */}
               <div className="col-lg-3 col-md-4">
                 <div className="bg-white rounded-4 p-4 h-100 shadow-lg text-center position-relative" style={{ minHeight: '280px' }}>
                   {/* Número 03 */}
                   <div className="position-absolute top-0 start-0 mt-3 ms-3">
-                    <span style={{ color: '#4BCCE2', fontSize: '1.2rem', fontWeight: 'bold' }}>03</span>
+                    <span style={{ color: '#4BCCE2', fontSize: '1.2rem', fontWeight: 'bold' }}>02</span>
                   </div>
                   
                   {/* Título */}
@@ -1296,26 +1297,16 @@ const Propuesta = () => {
                   
                   {/* Icono centrado */}
                   <div className="d-flex justify-content-center mb-4">
-                    <svg width="80" height="80" viewBox="0 0 100 100" fill="#4BCCE2">
-                      <path d="M30 70 L50 45 L70 70 L30 70 Z" fill="#4BCCE2"/>
-                      <rect x="45" y="45" width="10" height="25" fill="#4BCCE2"/>
-                      <rect x="35" y="55" width="8" height="12" fill="#4BCCE2"/>
-                      <rect x="57" y="55" width="8" height="12" fill="#4BCCE2"/>
-                      <rect x="40" y="65" width="6" height="8" fill="#4BCCE2"/>
-                      <rect x="54" y="65" width="6" height="8" fill="#4BCCE2"/>
-                      <circle cx="20" cy="25" r="3" fill="#FFD700" opacity="0.7"/>
-                      <circle cx="75" cy="20" r="2" fill="#FFD700" opacity="0.5"/>
-                      <circle cx="85" cy="35" r="2" fill="#FFD700" opacity="0.6"/>
-                      <rect x="25" y="15" width="50" height="4" rx="2" fill="#333"/>
-                      <circle cx="30" cy="17" r="2" fill="#A0D034"/>
-                      <circle cx="70" cy="17" r="2" fill="#A0D034"/>
-                      <path d="M32 17 L68 17" stroke="#A0D034" strokeWidth="1"/>
-                    </svg>
+                    <img 
+                      src={iconoDescargaElectricidad} 
+                      alt="Comunidad Solar" 
+                      style={{ width: '100px', height: '100px' }}
+                    />
                   </div>
                   
                   {/* Texto */}
                   <p className="mb-0" style={{ color: '#666', fontSize: '0.9rem', lineHeight: '1.4' }}>
-                    De noche podrás emplear la energía almacenada para no cogerla de la red y ahorrar en las horas más caras.
+                    En las emergencias eléctricas y en las noches se utiliza la energía almacenada. Así, se reduce tu factura eléctrica además de proteger tu suministro eléctrico.​
                   </p>
                 </div>
               </div>
@@ -1335,7 +1326,7 @@ const Propuesta = () => {
                   }}
                   onClick={handleComprar}
                 >
-                  RESERVAR
+                  COMPRAR EN GRUPO
                 </button>
               ) : (
                 // Solo mostrar RESERVAR si NO estamos en estado 06_VISITA_TECNICA
@@ -1350,7 +1341,7 @@ const Propuesta = () => {
                     }}
                     onClick={handleComprar}
                   >
-                    RESERVAR
+                    COMPRAR EN GRUPO
                   </button>
                 )
               )}
@@ -1375,21 +1366,14 @@ const Propuesta = () => {
             <div className="row g-5 mb-5">
               {/* Ventaja 1 - Resiliencia ante crisis */}
               <div className="col-lg-4">
-                <div className="text-center mb-4">
-                  {/* Icono circular azul */}
-                  <div 
-                    className="d-inline-flex align-items-center justify-content-center rounded-circle mb-4"
-                    style={{ 
-                      width: '100px', 
-                      height: '100px', 
-                      backgroundColor: '#4BCCE2'
-                    }}
-                  >
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="white">
-                      <path d="M9 21c0 .5.4 1 1 1h4c.6 0 1-.5 1-1v-1H9v1zm3-19C8.1 2 5 5.1 5 9c0 2.4 1.2 4.5 3 5.7V17c0 .5.4 1 1 1h6c.6 0 1-.5 1-1v-2.3c1.8-1.3 3-3.3 3-5.7 0-3.9-3.1-7-7-7z"/>
-                    </svg>
+                
+                 <div className="d-flex justify-content-center mb-4">
+                    <img 
+                      src={iconResilence} 
+                      alt="Comunidad Solar" 
+                      style={{ width: '100px', height: '100px' }}
+                    />
                   </div>
-                </div>
                 
                 <h4 className="fw-bold mb-2" style={{ color: '#4BCCE2', fontSize: '1.5rem' }}>
                   Resiliencia
@@ -1407,18 +1391,12 @@ const Propuesta = () => {
               <div className="col-lg-4">
                 <div className="text-center mb-4">
                   {/* Icono circular azul */}
-                  <div 
-                    className="d-inline-flex align-items-center justify-content-center rounded-circle mb-4"
-                    style={{ 
-                      width: '100px', 
-                      height: '100px', 
-                      backgroundColor: '#4BCCE2'
-                    }}
-                  >
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="white">
-                      <path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M11,7H13V13H11V7M11,15H13V17H11V15Z"/>
-                      <path d="M13 8L9 13h2v4l4-5h-2z" fill="white"/>
-                    </svg>
+                  <div className="d-flex justify-content-center mb-4">
+                    <img 
+                      src={iconSeguridad} 
+                      alt="Comunidad Solar" 
+                      style={{ width: '100px', height: '100px' }}
+                    />
                   </div>
                 </div>
                 
@@ -1436,21 +1414,13 @@ const Propuesta = () => {
 
               {/* Ventaja 3 - Ahorro desde el primer día */}
               <div className="col-lg-4">
-                <div className="text-center mb-4">
-                  {/* Icono circular azul */}
-                  <div 
-                    className="d-inline-flex align-items-center justify-content-center rounded-circle mb-4"
-                    style={{ 
-                      width: '100px', 
-                      height: '100px', 
-                      backgroundColor: '#4BCCE2'
-                    }}
-                  >
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="white">
-                      <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/>
-                    </svg>
+                <div className="d-flex justify-content-center mb-4">
+                    <img 
+                      src={iconAhorro} 
+                      alt="Comunidad Solar" 
+                      style={{ width: '100px', height: '100px' }}
+                    />
                   </div>
-                </div>
                 
                 <h4 className="fw-bold mb-2" style={{ color: '#4BCCE2', fontSize: '1.5rem' }}>
                   Ahorro
