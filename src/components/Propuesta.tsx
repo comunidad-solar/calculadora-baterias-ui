@@ -256,7 +256,16 @@ const Propuesta = () => {
         dealId: (fallbackValidacionData as any)?.dealId,
         enZona: fallbackValidacionData?.enZona,
         tipoSolicitud: 'visita_tecnica' as const,
-        motivo: 'Solicitud de visita técnica desde propuesta de baterías'
+        motivo: 'Solicitud de visita técnica desde propuesta de baterías',
+        // Parámetros UTM desde el store
+        utm_source: form.utm_source || '',
+        utm_medium: form.utm_medium || '',
+        utm_campaign: form.utm_campaign || '',
+        utm_term: form.utm_term || '',
+        utm_content: form.utm_content || '',
+        // Campos legacy mantenidos para compatibilidad
+        campaignSource: form.campaignSource || '',
+        utm: form.utm || '',
       };
 
       console.log('📋 Datos para enviar:', datosVisitaTecnica);
