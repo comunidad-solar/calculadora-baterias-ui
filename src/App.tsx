@@ -11,7 +11,7 @@ import { validateAsesoresDealContext, logDomainInfo } from "./utils/domainUtils"
 function App() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { setField, form } = useFormStore();
+  const { setField } = useFormStore();
 
 
   useEffect(() => {
