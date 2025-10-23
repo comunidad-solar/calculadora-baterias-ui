@@ -70,9 +70,9 @@ function App() {
     }
   }, [searchParams, navigate, setField]);
 
-  if(!form.bypass){
-    return null;
-  }
+  // if(!form.bypass){
+  //   return null;
+  // }
   // Mostrar loader si está cargando deal
   // if (isLoadingDeal) {
   //   return (
