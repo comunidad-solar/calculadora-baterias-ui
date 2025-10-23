@@ -23,6 +23,18 @@ const PreguntasAdicionales = () => {
     ciudad: '',
     provincia: ''
   });
+
+  // Helper function para obtener parámetros UTM del store
+  const getUTMParams = () => ({
+    utm_source: form.utm_source || '',
+    utm_medium: form.utm_medium || '',
+    utm_campaign: form.utm_campaign || '',
+    utm_term: form.utm_term || '',
+    utm_content: form.utm_content || '',
+    // Campos legacy mantenidos para compatibilidad
+    campaignSource: form.campaignSource || '',
+    utm: form.utm || '',
+  });
   const navigate = useNavigate();
   const location = useLocation();
   const { showToast } = useToast();
@@ -312,6 +324,9 @@ const PreguntasAdicionales = () => {
           provincia: form.comunero?.provincia || form.provincia || '',
           codigoPostal: form.comunero?.codigoPostal || form.codigoPostal || '',
           
+          // Parámetros UTM
+          ...getUTMParams(),
+          
           token: form.token || '',
           dealId: form.dealId || '',
           mpkLogId: form.mpkLogId || '',
@@ -409,6 +424,9 @@ const PreguntasAdicionales = () => {
           tipoBaterias: 'otra',
           requiereContactoManual: true,
           
+          // Parámetros UTM
+          ...getUTMParams(),
+          
           nombre: form.comunero?.nombre || '',
           telefono: form.comunero?.telefono || '',
           direccion: form.comunero?.direccion || '',
@@ -470,6 +488,9 @@ const PreguntasAdicionales = () => {
           provincia: form.comunero?.provincia || '',
           codigoPostal: form.comunero?.codigoPostal || '',
           
+          // Parámetros UTM
+          ...getUTMParams(),
+          
           token: form.token || '',
           dealId: form.dealId || '',
           enZona: form.enZona || 'outZone'
@@ -529,6 +550,9 @@ const PreguntasAdicionales = () => {
               ciudad: form.comunero?.ciudad || '',
               provincia: form.comunero?.provincia || '',
               codigoPostal: form.comunero?.codigoPostal || '',
+              
+              // Parámetros UTM
+              ...getUTMParams(),
               
               token: form.token || '',
               dealId: form.dealId || '', // Mantener por compatibilidad
@@ -603,6 +627,9 @@ const PreguntasAdicionales = () => {
             ciudad: form.comunero?.ciudad || '',
             provincia: form.comunero?.provincia || '',
             codigoPostal: form.comunero?.codigoPostal || '',
+            
+            // Parámetros UTM
+            ...getUTMParams(),
             
             token: form.token || '',
             dealId: form.dealId || '', // Mantener por compatibilidad
@@ -723,6 +750,8 @@ const PreguntasAdicionales = () => {
         ciudad: form.comunero?.ciudad || '',
         provincia: form.comunero?.provincia || '',
         codigoPostal: form.comunero?.codigoPostal || '',
+        // Parámetros UTM
+        ...getUTMParams(),
         // Datos técnicos del formulario
         tieneInstalacionFV,
         ...(tieneInstalacionFV ? { 

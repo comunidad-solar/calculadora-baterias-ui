@@ -29,10 +29,10 @@ const EmailDuplicado = () => {
     navigate('/comunero', { state: { prefilledEmail: email } });
   };
 
-  const handleVolverRegistro = () => {
-    // Volver al registro pero mantener los datos excepto el email
-    navigate('/nuevo-comunero');
-  };
+  // const handleVolverRegistro = () => {
+  //   // Volver al registro pero mantener los datos excepto el email
+  //   navigate('/nuevo-comunero');
+  // };
 
   return (
     <PageTransition>

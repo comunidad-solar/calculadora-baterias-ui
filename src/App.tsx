@@ -11,12 +11,40 @@ import { validateAsesoresDealContext, logDomainInfo } from "./utils/domainUtils"
 function App() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { setField } = useFormStore();
+  const { setField, form } = useFormStore();
 
 
   useEffect(() => {
     // Log información del dominio
     logDomainInfo();
+    
+    // Capturar parámetros UTM de la URL
+    const utmParams = {
+      utm_source: searchParams.get('utm_source') || '',
+      utm_medium: searchParams.get('utm_medium') || '',
+      utm_campaign: searchParams.get('utm_campaign') || '',
+      utm_term: searchParams.get('utm_term') || '',
+      utm_content: searchParams.get('utm_content') || '',
+    };
+
+    // Guardar parámetros UTM en el store
+    Object.entries(utmParams).forEach(([key, value]) => {
+      if (value) {
+        setField(key as keyof typeof utmParams, value);
+        console.log(`📊 UTM capturado: ${key}=${value}`);
+      }
+    });
+
+    // También mantener los campos legacy
+    const utmSource = searchParams.get('utm_source');
+    const campaignSource = searchParams.get('campaign_source') || searchParams.get('utm_source');
+    
+    if (utmSource) {
+      setField('utm', utmSource);
+    }
+    if (campaignSource) {
+      setField('campaignSource', campaignSource);
+    }
     
     // Validar contexto completo de asesores
     const context = validateAsesoresDealContext();
@@ -35,15 +63,16 @@ function App() {
     // }
 
     // Verificar bypass
-    const bypass = searchParams.get('bypass');
+    const bypass = searchParams.get('form');
     if (bypass === 'true') {
       setField('bypass', true);
       navigate('/nuevo-comunero', { replace: true });
     }
   }, [searchParams, navigate, setField]);
 
-  
-
+  if(!form.bypass){
+    return null;
+  }
   // Mostrar loader si está cargando deal
   // if (isLoadingDeal) {
   //   return (
@@ -61,7 +90,7 @@ function App() {
   return (
     <ToastProvider>
       <UsuarioProvider>
-        <div className="d-flex flex-column min-vh-100" style={{background: '#FCFCF7'}}>
+        <div className="d-flex flex-column min-vh-100" style={{background: 'white'}}>
           <Header />
           
           <main className="flex-grow-1 d-flex justify-content-center align-items-start w-100 py-4">
