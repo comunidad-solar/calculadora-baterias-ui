@@ -359,10 +359,31 @@ const Propuesta = () => {
       if (resultado.success) {
         console.log('✅ Solicitud de enlace de pago enviada exitosamente');
         
-        // Cerrar modal DNI y mostrar confirmación de envío
-        setShowDniModal(false);
-        setDniInput('');
-        setShowConfirmacionEnvio(true);
+        
+        // Verificar si está en modo asesores
+        const isAsesores = form.asesores;
+        
+        if (!isAsesores && resultado.data?.paymentURL) {
+          // No está en dominio de asesores - redirigir a Stripe Checkout
+          
+          
+          // Cerrar modal y mostrar loading brevemente antes de redirigir
+          setShowDniModal(false);
+          setDniInput('');
+          
+          // Pequeño delay para que el usuario vea que se está procesando
+          setTimeout(() => {
+            if (resultado.data?.paymentURL) {
+              window.location.href = resultado.data.paymentURL;
+            }
+          }, 500);
+        } else {
+          // Está en dominio de asesores - mostrar confirmación tradicional
+          setShowDniModal(false);
+          setDniInput('');
+          setShowConfirmacionEnvio(true);
+          console.log('📧 Mostrando confirmación de envío para asesores');
+        }
       } else {
         console.error('❌ Error al enviar solicitud de enlace de pago:', resultado.error);
         alert('Error al procesar la reserva. Por favor, inténtalo de nuevo o contacta con soporte.');
