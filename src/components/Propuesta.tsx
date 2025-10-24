@@ -283,7 +283,26 @@ const Propuesta = () => {
 
       if (resultado.success) {
         console.log('✅ Visita técnica solicitada exitosamente:', resultado);
-        setShowVisitaTecnicaModal(true);
+        console.log('💳 Verificando URL de pago:', resultado.data?.paymentLink);
+        
+        // Verificar si está en modo asesores
+        const isAsesores = form.asesores;
+        
+        if (!isAsesores && resultado.data?.paymentLink) {
+          // No está en dominio de asesores - redirigir a Stripe Checkout
+          console.log('🔗 Redirigiendo a Stripe Checkout para visita técnica (usuario externo)');
+          
+          // Pequeño delay para feedback visual
+          setTimeout(() => {
+            if (resultado.data?.paymentLink) {
+              window.location.href = resultado.data.paymentLink;
+            }
+          }, 500);
+        } else {
+          // Está en dominio de asesores o no hay URL de pago - mostrar modal tradicional
+          setShowVisitaTecnicaModal(true);
+          console.log('📧 Mostrando confirmación tradicional para visita técnica');
+        }
       } else {
         console.error('❌ Error al solicitar visita técnica:', resultado.error);
         alert('Error al procesar tu solicitud. Por favor, inténtalo de nuevo o contacta con soporte.');
@@ -291,6 +310,12 @@ const Propuesta = () => {
     } catch (error) {
       console.error('❌ Error inesperado:', error);
       alert('Error inesperado. Por favor, inténtalo de nuevo más tarde.');
+    } finally {
+      // Solo resetear el botón si no hay redirección
+      if (form.asesores) {
+        setButtonVTDisabled(false);
+      }
+      // Si no es asesor y hay redirección, no reseteamos ya que el usuario será redirigido
     }
   };
 
