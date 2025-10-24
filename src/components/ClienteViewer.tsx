@@ -67,6 +67,62 @@ const ClienteViewer = () => {
             navigate('/propuesta');
           }
         
+        } else if (resultado.success && resultado.fsmState === '17_RESERVA_PAGADA') {
+          console.log('✅ Reserva pagada detectada, navegando a vista de propuesta sin botones de reservar');
+          
+          // Para fsmState "17_RESERVA_PAGADA", usar los datos reales de la propuesta que vienen del backend
+          if (resultado.datosParaStore && 'propuestaData' in resultado.datosParaStore) {
+            // Usar tipoInstalacion por defecto ya que no tenemos respuestasPreguntas en la nueva estructura
+            const tipoInstalacion = 'monofasica'; // Por defecto, se puede ajustar según necesidades
+            
+            navigate('/propuesta', { 
+              state: { 
+                propuestaData: resultado.datosParaStore.propuestaData,
+                fromFsmState: '17_RESERVA_PAGADA',
+                tipoInstalacion: tipoInstalacion,
+                requiereVisitaTecnica: false, // Para monofásica no requiere visita técnica
+                reservaPagada: true
+              }
+            });
+          } else {
+            console.error('❌ Estructura de datos inesperada para 17_RESERVA_PAGADA');
+            // Navegar con datos mínimos
+            navigate('/propuesta', {
+              state: {
+                fromFsmState: '17_RESERVA_PAGADA',
+                reservaPagada: true
+              }
+            });
+          }
+        
+        } else if (resultado.success && resultado.fsmState === '07_VISITA_PAGADA') {
+          console.log('✅ Visita pagada detectada, navegando a vista de propuesta sin botones de reservar');
+          
+          // Para fsmState "07_VISITA_PAGADA", usar los datos reales de la propuesta que vienen del backend
+          if (resultado.datosParaStore && 'propuestaData' in resultado.datosParaStore) {
+            // Usar tipoInstalacion por defecto ya que no tenemos respuestasPreguntas en la nueva estructura
+            const tipoInstalacion = 'monofasica'; // Por defecto, se puede ajustar según necesidades
+            
+            navigate('/propuesta', { 
+              state: { 
+                propuestaData: resultado.datosParaStore.propuestaData,
+                fromFsmState: '07_VISITA_PAGADA',
+                tipoInstalacion: tipoInstalacion,
+                requiereVisitaTecnica: false, // Para monofásica no requiere visita técnica
+                visitaPagada: true
+              }
+            });
+          } else {
+            console.error('❌ Estructura de datos inesperada para 07_VISITA_PAGADA');
+            // Navegar con datos mínimos
+            navigate('/propuesta', {
+              state: {
+                fromFsmState: '07_VISITA_PAGADA',
+                visitaPagada: true
+              }
+            });
+          }
+        
         } else if (resultado.fsmState === '06_VISITA_TECNICA') {
           console.log('🔧 Procesando fsmState: 06_VISITA_TECNICA');
           

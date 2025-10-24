@@ -6,7 +6,7 @@ import ComuneroForm from '../components/ComuneroForm';
 import ComuneroEmailForm from '../components/ComuneroEmailForm';
 import ComuneroCodigoForm from '../components/ComuneroCodigoForm';
 import ResultadoValidacion from '../components/ResultadoValidacion';
-import Propuesta from '../components/Propuesta';
+
 import PreguntasAdicionales from '../components/PreguntasAdicionales';
 import EmailDuplicado from '../components/EmailDuplicado';
 import GraciasContacto from '../components/GraciasContacto';
@@ -17,6 +17,7 @@ import FueraDeZona from '../components/FueraDeZona';
 import PagoPago from '../components/PagoPago';
 import PagoExitoso from '../components/PagoExitoso';
 import PagoExitosoContrataVisita from '../components/PagoExitosoContrataVisita';
+import Propuesta from '../components/Propuesta';
 // import PagoExitosoPropuestaContrata from '../components/PagoExitosoPropuestaContrata';
 
 const AppRoutes = ({ onSelect }: { onSelect: (isComunero: boolean) => void }) => (

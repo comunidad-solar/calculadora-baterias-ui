@@ -49,7 +49,7 @@ interface PropuestaData {
   [key: string]: any;
 }
 
-const PropuestaR = () => {
+const Propuesta = () => {
   const { validacionData, usuario } = useUsuario();
   const { form } = useFormStore();
   const navigate = useNavigate();
@@ -65,6 +65,8 @@ const PropuestaR = () => {
   // Información específica de visita técnica
   const visitaTecnicaCompletada: boolean = location.state?.visitaTecnicaCompletada || false;
   const fsmState: string = location.state?.fromFsmState || '';
+  const reservaPagada: boolean = location.state?.reservaPagada || false;
+  const visitaPagada: boolean = location.state?.visitaPagada || false;
   
   // Debug: mostrar datos recibidos
   console.log('📋 Datos de propuesta recibidos:', propuestaData);
@@ -592,6 +594,30 @@ const PropuestaR = () => {
                 >
                   {groupName}
                 </h1>
+
+                {/* Banner de Reserva Pagada o Visita Pagada */}
+                {(reservaPagada || visitaPagada) && (
+                  <div className="alert alert-success border-0 shadow-sm mb-4" 
+                       style={{
+                         background: 'linear-gradient(90deg, #28a745, #20c997)',
+                         borderRadius: '15px'
+                       }}>
+                    <div className="d-flex align-items-center justify-content-center">
+                      <i className="fas fa-check-circle me-3" style={{ fontSize: '1.5rem', color: 'white' }}></i>
+                      <div className="text-white">
+                        <h4 className="mb-1 fw-bold">
+                          {reservaPagada ? '¡Reserva Pagada!' : '¡Visita Pagada!'}
+                        </h4>
+                        <p className="mb-0">
+                          {reservaPagada 
+                            ? 'Tu reserva ha sido confirmada y el pago procesado exitosamente.'
+                            : 'Tu visita técnica ha sido confirmada y el pago procesado exitosamente.'
+                          }
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 
                 {/* Cards con precio y botón - Dos cards lado a lado */}
                 <div className="row g-3">
@@ -627,7 +653,7 @@ const PropuestaR = () => {
                       </div>
                       
                       {/* Botón para card de pago único */}
-                      {fsmState !== '06_VISITA_TECNICA' && (
+                      {!reservaPagada && !visitaPagada && fsmState !== '06_VISITA_TECNICA' && (
                         (requiereVisitaTecnica && tipoInstalacion === 'trifasica') ? (
                           <button 
                             className="btn btn-lg px-4 py-2 fw-bold text-white border-0 w-100"
@@ -689,7 +715,7 @@ const PropuestaR = () => {
                       </div>
                       
                       {/* Botón para card de financiación */}
-                      {fsmState !== '06_VISITA_TECNICA' && (
+                      {!reservaPagada && !visitaPagada && fsmState !== '06_VISITA_TECNICA' && (
                         (requiereVisitaTecnica && tipoInstalacion === 'trifasica') ? (
                           <button 
                             className="btn btn-lg px-4 py-2 fw-bold text-white border-0 w-100"
@@ -743,8 +769,8 @@ const PropuestaR = () => {
           {/* Botones adicionales */}
           <div className="mt-4 d-flex justify-content-between align-items-center">
             <div className="d-flex align-items-center">
-              {/* Solo mostrar botón de visita técnica si no se ha completado ya */}
-              {!visitaTecnicaCompletada && (
+              {/* Solo mostrar botón de visita técnica si no se ha completado ya y no hay reserva o visita pagada */}
+              {!visitaTecnicaCompletada && !reservaPagada && !visitaPagada && (
                 <button 
                   className="btn px-4 py-2 gradient-border-btn"
                   style={{
@@ -1049,7 +1075,7 @@ const PropuestaR = () => {
                   
                   {/* Botón COMPRAR */}
                   <div className="text-center mt-3">
-                    {fsmState !== '06_VISITA_TECNICA' && (
+                    {!reservaPagada && !visitaPagada && fsmState !== '06_VISITA_TECNICA' && (
                       (requiereVisitaTecnica && tipoInstalacion === 'trifasica') ? (
                         // Botón para instalaciones trifásicas que necesitan evaluación
                         <button 
@@ -1371,7 +1397,7 @@ const PropuestaR = () => {
 
             {/* Botón COMPRAR centrado */}
             <div className="text-center">
-              {(requiereVisitaTecnica && tipoInstalacion === 'trifasica' && fsmState !== '06_VISITA_TECNICA') ? (
+              {!reservaPagada && !visitaPagada && (requiereVisitaTecnica && tipoInstalacion === 'trifasica' && fsmState !== '06_VISITA_TECNICA') ? (
                 // Botón para instalaciones trifásicas que necesitan evaluación (solo antes de solicitar)
                 <button 
                   className="btn btn-lg px-5 py-3 fw-bold text-white border-0"
@@ -1387,7 +1413,7 @@ const PropuestaR = () => {
                 </button>
               ) : (
                 // Solo mostrar RESERVAR si NO estamos en estado 06_VISITA_TECNICA
-                fsmState !== '06_VISITA_TECNICA' && (
+                (!reservaPagada && !visitaPagada && fsmState !== '06_VISITA_TECNICA') && (
                   <button 
                     className="btn btn-lg px-5 py-3 fw-bold text-white border-0 comprar-btn"
                     style={{
@@ -1496,7 +1522,7 @@ const PropuestaR = () => {
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
               {/* Botón RESERVAR alineado a la izquierda */}
               <div>
-                {fsmState !== '06_VISITA_TECNICA' && (
+                {(!reservaPagada && !visitaPagada && fsmState !== '06_VISITA_TECNICA') && (
                   (requiereVisitaTecnica && tipoInstalacion === 'trifasica') ? (
                     // Botón para instalaciones trifásicas que necesitan evaluación
                     <button 
@@ -2064,4 +2090,4 @@ const PropuestaR = () => {
   );
 };
 
-export default PropuestaR;
+export default Propuesta;

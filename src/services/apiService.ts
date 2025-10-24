@@ -1092,6 +1092,134 @@ export const cargarComuneroPorId = async (clienteId: string, useFormStore?: any)
         visitaCompletada: procesado.datosPropuesta.visitaTecnicaCompletada,
         tipoInstalacion: procesado.datosPropuesta.tipoInstalacion
       });
+    } else if (fsmState === '17_RESERVA_PAGADA') {
+      // Para fsmState "17_RESERVA_PAGADA", procesar la propuesta completa que viene del backend
+      const rawData = respuesta.data!.data as any; // Cast para acceder a la nueva estructura
+      
+      // Crear propuestaData usando la estructura que espera el componente Propuesta
+      const propuestaData = {
+        amount: rawData.propuesta.precio,
+        productData: {
+          name: rawData.propuesta.nombre,
+          group_name: rawData.propuesta.grupo,
+          mapped_items: rawData.propuesta.items.map((item: any) => ({
+            name: item.name,
+            quantity: item.quantity,
+            rate: item.rate
+          }))
+        }
+      };
+      
+      datosParaStore = {
+        fsmState: fsmState,
+        propuestaData: propuestaData,
+        comunero: rawData.comunero,
+        token: rawData.token,
+        enZona: rawData.enZona,
+        propuestaId: rawData.propuestaId,
+        reservaPagada: true
+      };
+      
+      rutaNavegacion = 'propuesta-reserva-pagada'; // Ruta especial para renderizar propuesta sin botones
+      
+      // También cargar datos básicos del comunero en el store si se proporciona
+      if (useFormStore && rawData.comunero) {
+        console.log('💾 Cargando datos del comunero con reserva pagada en Zustand store...');
+        const { setField, setValidacionData, setFsmState } = useFormStore;
+        
+        // Datos básicos del formulario
+        setField('nombre', rawData.comunero.nombre);
+        setField('mail', rawData.comunero.email);
+        setField('telefono', rawData.comunero.telefono);
+        setField('direccion', rawData.comunero.direccion);
+        setField('codigoPostal', rawData.comunero.codigoPostal);
+        setField('ciudad', rawData.comunero.ciudad);
+        setField('provincia', rawData.comunero.provincia);
+        
+        // Estado FSM
+        setFsmState(fsmState);
+        
+        // Datos de validación
+        setValidacionData({
+          token: rawData.token || '',
+          comunero: rawData.comunero,
+          enZona: rawData.enZona || 'inZone',
+          propuestaId: rawData.propuestaId
+        });
+      }
+      
+      console.log('✅ Datos de reserva pagada procesados:', {
+        fsmState: fsmState,
+        propuestaId: rawData.propuestaId,
+        comunero: rawData.comunero.nombre,
+        precio: rawData.propuesta.precio,
+        producto: rawData.propuesta.nombre,
+        reservaPagada: true
+      });
+    } else if (fsmState === '07_VISITA_PAGADA') {
+      // Para fsmState "07_VISITA_PAGADA", procesar igual que reserva pagada
+      const rawData = respuesta.data!.data as any;
+      
+      // Crear propuestaData usando la estructura que espera el componente Propuesta
+      const propuestaData = {
+        amount: rawData.propuesta.precio,
+        productData: {
+          name: rawData.propuesta.nombre,
+          group_name: rawData.propuesta.grupo,
+          mapped_items: rawData.propuesta.items.map((item: any) => ({
+            name: item.name,
+            quantity: item.quantity,
+            rate: item.rate
+          }))
+        }
+      };
+      
+      datosParaStore = {
+        fsmState: fsmState,
+        propuestaData: propuestaData,
+        comunero: rawData.comunero,
+        token: rawData.token,
+        enZona: rawData.enZona,
+        propuestaId: rawData.propuestaId,
+        visitaPagada: true // Usamos visitaPagada en lugar de reservaPagada
+      };
+      
+      rutaNavegacion = 'propuesta-visita-pagada'; // Ruta especial para renderizar propuesta sin botones
+      
+      // También cargar datos básicos del comunero en el store si se proporciona
+      if (useFormStore && rawData.comunero) {
+        console.log('💾 Cargando datos del comunero con visita pagada en Zustand store...');
+        const { setField, setValidacionData, setFsmState } = useFormStore;
+        
+        // Datos básicos del formulario
+        setField('nombre', rawData.comunero.nombre);
+        setField('mail', rawData.comunero.email);
+        setField('telefono', rawData.comunero.telefono);
+        setField('direccion', rawData.comunero.direccion);
+        setField('codigoPostal', rawData.comunero.codigoPostal);
+        setField('ciudad', rawData.comunero.ciudad);
+        setField('provincia', rawData.comunero.provincia);
+        
+        // Estado FSM
+        setFsmState(fsmState);
+        
+        // Datos de validación
+        setValidacionData({
+          token: rawData.token || '',
+          comunero: rawData.comunero,
+          enZona: rawData.enZona || 'inZone',
+          propuestaId: rawData.propuestaId
+        });
+      }
+      
+      console.log('✅ Datos de visita pagada procesados:', {
+        fsmState: fsmState,
+        propuestaId: rawData.propuestaId,
+        comunero: rawData.comunero.nombre,
+        precio: rawData.propuesta.precio,
+        producto: rawData.propuesta.nombre,
+        visitaPagada: true
+      });
     } else {
       // Para otros estados FSM, implementar según sea necesario
       console.warn(`⚠️ Estado FSM ${fsmState} no implementado aún`);
