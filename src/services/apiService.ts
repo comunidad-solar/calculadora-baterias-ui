@@ -384,7 +384,16 @@ export const bateriaService = {
     // Tipo de solicitud
     tipoSolicitud: 'visita_tecnica';
     motivo?: string;
-  }): Promise<ApiResponse<{ id: string; solicitud: any }>> {
+  }): Promise<ApiResponse<{ 
+    paymentLink?: string; 
+    databaseId?: string; 
+    fsmState?: string; 
+    fsmPrevious?: string; 
+    lastUpdated?: string; 
+    id?: string; 
+    solicitud?: any; 
+    type?: string;
+  }>> {
     return makeRequest('baterias/comunero/solicitar-visita-tecnica', {
       method: 'POST',
       body: JSON.stringify({
@@ -594,6 +603,46 @@ export const bateriaService = {
     console.log('🔍 Verificando estado de pago para propuesta:', propuestaId);
     return makeRequest(`baterias/reserva/estado-pago/${propuestaId}`, {
       method: 'GET',
+    });
+  },
+
+  // Procesar pago exitoso de visita técnica
+  async procesarVisitaTecnicaPagada(propuestaId: string): Promise<ApiResponse<{
+    success: boolean;
+    message?: string;
+    propuestaId: string;
+  }>> {
+    console.log('✅ Procesando pago de visita técnica para propuesta:', propuestaId);
+    return makeRequest('baterias/comunero/visita-tecnica-pagada/contrata', {
+      method: 'POST',
+      body: JSON.stringify({ propuestaId }),
+    });
+  },
+
+  // Procesar pago exitoso de baterías
+  async procesarBateriasPagadas(propuestaId: string): Promise<ApiResponse<{
+    success: boolean;
+    message?: string;
+    propuestaId: string;
+  }>> {
+    console.log('✅ Procesando pago de baterías para propuesta:', propuestaId);
+    return makeRequest('baterias/comunero/baterias-pagadas/contrata', {
+      method: 'POST',
+      body: JSON.stringify({ propuestaId }),
+    });
+  },
+
+  // Procesar pago exitoso de reserva/visita técnica
+  async procesarFaseReservaPagado(propuestaId: string, type: string): Promise<ApiResponse<{
+    success: boolean;
+    message?: string;
+    propuestaId: string;
+    type: string;
+  }>> {
+    console.log('✅ Procesando fase reserva pagada para propuesta:', propuestaId, 'type:', type);
+    return makeRequest(`baterias/comunero/fase-reserva/pagado/${type}`, {
+      method: 'POST',
+      body: JSON.stringify({ propuestaId }),
     });
   },
 };

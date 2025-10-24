@@ -16,6 +16,8 @@ import ContratoFirmado from '../components/ContratoFirmado';
 import FueraDeZona from '../components/FueraDeZona';
 import PagoPago from '../components/PagoPago';
 import PagoExitoso from '../components/PagoExitoso';
+import PagoExitosoContrataVisita from '../components/PagoExitosoContrataVisita';
+// import PagoExitosoPropuestaContrata from '../components/PagoExitosoPropuestaContrata';
 
 const AppRoutes = ({ onSelect }: { onSelect: (isComunero: boolean) => void }) => (
 	<Routes>
@@ -37,6 +39,9 @@ const AppRoutes = ({ onSelect }: { onSelect: (isComunero: boolean) => void }) =>
 		<Route path="/contrato/:propuestaId/firmado" element={<ContratoFirmado />} />
 		<Route path="/pago" element={<PagoPago />} />
 		<Route path="/pago-exitoso" element={<PagoExitoso />} />
+		<Route path="/pago-exitoso/reserva/:propuestaId/type/:type" element={<PagoExitoso />} />
+		<Route path="/pago-exitoso/contrata/vt/:propuestaId" element={<PagoExitosoContrataVisita />} />
+		{/* <Route path="/pago-exitoso/propuesta/:propuestaId/contrata" element={<PagoExitosoPropuestaContrata />} /> */}
 		<Route path="/nuevo-comunero" element={
 			<div className="w-100" style={{ maxWidth: 700 }}>
 				<ComuneroForm />

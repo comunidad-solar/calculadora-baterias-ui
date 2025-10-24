@@ -1,31 +1,57 @@
 import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useToast } from '../context/ToastContext';
+import { bateriaService } from '../services/apiService';
 import PageTransition from './PageTransition';
 
 const PagoExitoso = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { propuestaId: urlPropuestaId, type } = useParams<{ propuestaId: string; type: string }>();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [apiLoading, setApiLoading] = useState(false);
   
-  // Datos del pago exitoso
-  const { propuestaId, invoiceId } = location.state || {};
+  // Datos del pago exitoso - puede venir de la URL o del state
+  const { propuestaId: statePropuestaId, invoiceId } = location.state || {};
+  const propuestaId = urlPropuestaId || statePropuestaId;
 
   useEffect(() => {
-    // Debug: verificar qué datos llegan del state
+    // Debug: verificar qué datos llegan
     console.log('🔍 Datos recibidos en PagoExitoso:', location.state);
-    console.log('📋 PropuestaId:', propuestaId);
+    console.log('📋 PropuestaId URL:', urlPropuestaId);
+    console.log('📋 Type URL:', type);
+    console.log('📋 PropuestaId final:', propuestaId);
     console.log('📋 InvoiceId:', invoiceId);
 
-    // Solo redirigir si realmente no hay ningún dato útil Y el usuario no llegó desde una URL válida
+    // Solo redirigir si realmente no hay ningún dato útil
     if (!propuestaId && !invoiceId && !location.state) {
       console.warn('⚠️ No hay datos de pago válidos');
       // Comentamos la redirección automática para evitar el problema
       // setTimeout(() => navigate('/'), 2000);
     }
 
-    // Opcional: Confirmar el pago en el backend
+    // Si tenemos parámetros de URL (nueva funcionalidad), hacer la llamada al backend
+    const procesarFaseReserva = async () => {
+      if (urlPropuestaId && type) {
+        setApiLoading(true);
+        try {
+          console.log('🔄 Procesando fase reserva pagada...');
+          const result = await bateriaService.procesarFaseReservaPagado(urlPropuestaId, type);
+          console.log('✅ Fase reserva procesada exitosamente:', result);
+          showToast('Pago procesado exitosamente', 'success');
+        } catch (error) {
+          console.error('❌ Error procesando fase reserva:', error);
+          showToast('Error al procesar el pago', 'error');
+        } finally {
+          setApiLoading(false);
+        }
+      }
+    };
+
+    // Opcional: Confirmar el pago en el backend (funcionalidad antigua)
     const confirmarPago = async () => {
-      if (propuestaId && invoiceId) {
+      if (propuestaId && invoiceId && !urlPropuestaId) {
         setLoading(true);
         try {
           console.log('🔄 Confirmando pago en el backend...');
@@ -40,8 +66,9 @@ const PagoExitoso = () => {
       }
     };
 
+    procesarFaseReserva();
     confirmarPago();
-  }, [propuestaId, invoiceId, navigate, location.state]);
+  }, [propuestaId, invoiceId, urlPropuestaId, type, navigate, location.state, showToast]);
 
   return (
     <PageTransition>
@@ -67,9 +94,24 @@ const PagoExitoso = () => {
                   </h1>
                   
                   <p className="lead text-muted mb-4">
-                    Tu reserva ha sido confirmada exitosamente. 
-                    Hemos recibido tu pago.
+                    {apiLoading ? (
+                      'Procesando tu pago...'
+                    ) : (
+                      'Tu reserva ha sido confirmada exitosamente. Hemos recibido tu pago.'
+                    )}
                   </p>
+
+                  {/* Loading indicator mientras se procesa la API */}
+                  {apiLoading && (
+                    <div className="mb-4">
+                      <div className="spinner-border text-primary" role="status">
+                        <span className="visually-hidden">Procesando...</span>
+                      </div>
+                      <p className="mt-2 text-muted">
+                        Estamos procesando tu pago, por favor espera...
+                      </p>
+                    </div>
+                  )}
 
                   {/* Información del pago */}
                   <div className="bg-light rounded-3 p-4 mb-4">
@@ -84,13 +126,21 @@ const PagoExitoso = () => {
                           <small className="text-muted font-monospace">{propuestaId}</small>
                         </div>
                       )}
+                      {type && (
+                        <div className="col-sm-6 mb-2">
+                          <strong>Tipo:</strong><br />
+                          <small className="text-muted">
+                            {type === 'reserva' ? 'Reserva' : type === 'visitaTecnica' ? 'Visita Técnica' : type}
+                          </small>
+                        </div>
+                      )}
                       {invoiceId && (
                         <div className="col-sm-6 mb-2">
                           <strong>Factura ID:</strong><br />
                           <small className="text-muted font-monospace">{invoiceId}</small>
                         </div>
                       )}
-                      {!propuestaId && !invoiceId && (
+                      {!propuestaId && !invoiceId && !type && (
                         <div className="col-12 mb-2">
                           <small className="text-muted">
                             <i className="fas fa-info-circle me-1"></i>
@@ -144,9 +194,9 @@ const PagoExitoso = () => {
                     <button
                       className="btn btn-primary btn-lg"
                       onClick={() => navigate('/')}
-                      disabled={loading}
+                      disabled={loading || apiLoading}
                     >
-                      {loading ? (
+                      {(loading || apiLoading) ? (
                         <>
                           <div className="spinner-border spinner-border-sm me-2" role="status">
                             <span className="visually-hidden">Cargando...</span>
@@ -164,6 +214,7 @@ const PagoExitoso = () => {
                     <button
                       className="btn btn-outline-secondary"
                       onClick={() => window.print()}
+                      disabled={loading || apiLoading}
                     >
                       <i className="fas fa-print me-2"></i>
                       Imprimir Confirmación

@@ -13,13 +13,13 @@ import imagenFondoPropuesta4 from '../assets/imagenFondoPropuesta4.png';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useFormStore } from '../zustand/formStore';
-import { bateriaService } from '../services/apiService';
+import { bateriaService, comuneroService } from '../services/apiService';
 import iconoBateria from '../assets/SolaXBatteryIcon.svg'
 import iconoDescargaElectricidad from '../assets/BateriaSolaXElectricidadIcon.svg'
 import iconResilence from '../assets/SolaXResilienceIcon.svg'
 import iconAhorro from '../assets/SolaXBatteryIcono.svg'
 import iconSeguridad from '../assets/BateriaSolaxIcono.svg'
-// propuesta para reservar baterías
+// propuesta para contratar baterías
 // Tipos para los datos de la propuesta
 interface ProductItem {
   item_id?: string;
@@ -49,9 +49,9 @@ interface PropuestaData {
   [key: string]: any;
 }
 
-const PropuestaR = () => {
+const Propuesta = () => {
   const { validacionData, usuario } = useUsuario();
-  const { form } = useFormStore();
+  const { form, setField } = useFormStore();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -274,7 +274,7 @@ const PropuestaR = () => {
         // Campos legacy mantenidos para compatibilidad
         campaignSource: form.campaignSource || '',
         utm: form.utm || '',
-        type: "reserva"
+        type: "contrata"
       };
 
       console.log('📋 Datos para enviar:', datosVisitaTecnica);
@@ -334,12 +334,14 @@ const PropuestaR = () => {
     setShowDniModal(true);
   };
 
-  const handleConfirmarCompra = async () => {
+const handleConfirmarCompra = async () => {
     // Validar DNI
     if (!dniInput || dniInput.trim() === '') {
       alert('Por favor, ingresa tu DNI para continuar.');
       return;
     }
+
+    setLoadingReserva(true);
 
     // Validar formato de DNI, NIE o TIE español
     const dniInput_clean = dniInput.trim().toUpperCase();
@@ -355,67 +357,46 @@ const PropuestaR = () => {
     
     if (!dniRegex.test(dniInput_clean) && !nieRegex.test(dniInput_clean) && !tieRegex.test(dniInput_clean)) {
       alert('Por favor, ingresa un documento válido:\n• DNI: 8 números + letra (ej: 12345678A)\n• NIE: X/Y/Z + 7 números + letra (ej: X1234567A)\n• TIE: T + 8 números + letra (ej: T12345678A)');
+      setLoadingReserva(false);
+
       return;
     }
 
-    setLoadingReserva(true);
-    
     try {
       const propuestaIdFromStore = form.propuestaId;
-      console.log('� Iniciando proceso de reserva para propuestaId:', propuestaIdFromStore, 'con DNI:', dniInput);
+      console.log('🛒 Iniciando proceso de compra para propuestaId:', propuestaIdFromStore, 'con DNI:', dniInput);
 
-      // Extraer nombre y apellido del usuario
-      const nombreCompleto = usuarioDisplay.nombre || 'Usuario';
-      const partesNombre = nombreCompleto.trim().split(' ');
-      const name = partesNombre[0] || 'Usuario';
-      const lastname = partesNombre.slice(1).join(' ') || '';
-
-      console.log('👤 Datos del usuario:', { name, lastname, email: usuarioDisplay.email });
-
-      // Generar enlace de pago para la reserva
-      const resultado = await bateriaService.generarEnlacePago({
-        propuestaId: propuestaIdFromStore!,
-        dni: dniInput.trim(),
-        name: name,
-        lastname: lastname,
-        mpkLogId: form.mpkLogId || undefined,
-        email: usuarioDisplay.email || undefined,
-      });
+      // Enviar código de validación usando el propuestaId y el DNI
+      const resultado = await comuneroService.enviarCodigoPorPropuestaId(propuestaIdFromStore!, dniInput.trim());
 
       if (resultado.success) {
-        console.log('✅ Solicitud de enlace de pago enviada exitosamente');
+        console.log('✅ Código enviado exitosamente para compra con DNI:', dniInput);
         
+        // Cerrar modal y limpiar estado
+        setShowDniModal(false);
+        setDniInput('');
         
-        // Verificar si está en modo asesores
-        const isAsesores = form.asesores;
-        
-        if (!isAsesores && resultado.data?.paymentURL) {
-          // No está en dominio de asesores - redirigir a Stripe Checkout
-          
-          
-          // Cerrar modal y mostrar loading brevemente antes de redirigir
-          setShowDniModal(false);
-          setDniInput('');
-          
-          // Pequeño delay para que el usuario vea que se está procesando
-          setTimeout(() => {
-            if (resultado.data?.paymentURL) {
-              window.location.href = resultado.data.paymentURL;
-            }
-          }, 500);
-        } else {
-          // Está en dominio de asesores - mostrar confirmación tradicional
-          setShowDniModal(false);
-          setDniInput('');
-          setShowConfirmacionEnvio(true);
-          console.log('📧 Mostrando confirmación de envío para asesores');
+        // Asegurar que el propuestaId esté guardado en el formStore
+        if (form.propuestaId !== propuestaIdFromStore) {
+          setField('propuestaId', propuestaIdFromStore);
         }
+        
+        // Redirigir a la página de validación de código
+        navigate('/comunero/validar', { 
+          state: { 
+            fromCompra: true,
+            propuestaId: propuestaIdFromStore,
+            email: usuarioDisplay.email,
+            flujo: 'compra'
+          } 
+        });
       } else {
-        console.error('❌ Error al enviar solicitud de enlace de pago:', resultado.error);
-        alert('Error al procesar la reserva. Por favor, inténtalo de nuevo o contacta con soporte.');
+        console.error('❌ Error al enviar código para compra:', resultado.error);
+        alert('Error al procesar la compra. Por favor, inténtalo de nuevo o contacta con soporte.');
       }
     } catch (error) {
-      console.error('❌ Error inesperado en reserva:', error);
+      setLoadingReserva(false);
+      console.error('❌ Error inesperado en compra:', error);
       alert('Error inesperado. Por favor, inténtalo de nuevo más tarde.');
     } finally {
       setLoadingReserva(false);
@@ -638,7 +619,7 @@ const PropuestaR = () => {
                             }}
                             onClick={handleComprar}
                           >
-                            RESERVAR
+                            CONTRATAR
                           </button>
                         ) : (
                           <button 
@@ -650,7 +631,7 @@ const PropuestaR = () => {
                             }}
                             onClick={handleComprar}
                           >
-                            RESERVAR
+                            CONTRATAR
                           </button>
                         )
                       )}
@@ -700,7 +681,7 @@ const PropuestaR = () => {
                             }}
                             onClick={handleComprar}
                           >
-                            RESERVAR
+                            CONTRATAR
                           </button>
                         ) : (
                           <button 
@@ -712,7 +693,7 @@ const PropuestaR = () => {
                             }}
                             onClick={handleComprar}
                           >
-                            RESERVAR
+                            CONTRATAR
                           </button>
                         )
                       )}
@@ -1062,10 +1043,10 @@ const PropuestaR = () => {
                           }}
                           onClick={handleComprar}
                         >
-                          RESERVAR
+                          CONTRATAR
                         </button>
                       ) : (
-                        // Botón RESERVAR normal
+                        // Botón CONTRATAR normal
                         <button 
                           className="btn btn-lg px-4 py-2 fw-bold text-white border-0"
                           style={{
@@ -1076,7 +1057,7 @@ const PropuestaR = () => {
                           }}
                           onClick={handleComprar}
                         >
-                          RESERVAR
+                          CONTRATAR
                         </button>
                       )
                     )}
@@ -1386,7 +1367,7 @@ const PropuestaR = () => {
                   COMPRAR EN GRUPO
                 </button>
               ) : (
-                // Solo mostrar RESERVAR si NO estamos en estado 06_VISITA_TECNICA
+                // Solo mostrar CONTRATAR si NO estamos en estado 06_VISITA_TECNICA
                 fsmState !== '06_VISITA_TECNICA' && (
                   <button 
                     className="btn btn-lg px-5 py-3 fw-bold text-white border-0 comprar-btn"
@@ -1492,9 +1473,9 @@ const PropuestaR = () => {
               </div>
             </div>
 
-            {/* Botones alineados: RESERVAR a la izquierda, contacto a la derecha */}
+            {/* Botones alineados: CONTRATAR a la izquierda, contacto a la derecha */}
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
-              {/* Botón RESERVAR alineado a la izquierda */}
+              {/* Botón CONTRATAR alineado a la izquierda */}
               <div>
                 {fsmState !== '06_VISITA_TECNICA' && (
                   (requiereVisitaTecnica && tipoInstalacion === 'trifasica') ? (
@@ -1509,10 +1490,10 @@ const PropuestaR = () => {
                       }}
                       onClick={handleComprar}
                     >
-                      RESERVAR
+                      CONTRATAR
                     </button>
                   ) : (
-                    // Botón RESERVAR normal
+                    // Botón CONTRATAR normal
                     <button 
                       className="btn btn-lg px-5 py-3 fw-bold text-white border-0"
                       style={{
@@ -1523,7 +1504,7 @@ const PropuestaR = () => {
                       }}
                       onClick={handleComprar}
                     >
-                      RESERVAR
+                      CONTRATAR
                     </button>
                   )
                 )}
@@ -2064,4 +2045,4 @@ const PropuestaR = () => {
   );
 };
 
-export default PropuestaR;
+export default Propuesta;
