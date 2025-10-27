@@ -13,6 +13,7 @@ const PagoExitoso = () => {
   const [apiLoading, setApiLoading] = useState(false);
   const [paymentPending, setPaymentPending] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [paymentSuccess, setPaymentSuccess] = useState<boolean | null>(null); // null = pendiente, true = éxito, false = error
   
   // Datos del pago exitoso - puede venir de la URL o del state
   const { propuestaId: statePropuestaId, invoiceId } = location.state || {};
@@ -26,9 +27,16 @@ const PagoExitoso = () => {
           console.log('🔄 Procesando fase reserva pagada...');
           const result = await bateriaService.procesarFaseReservaPagado(urlPropuestaId, type);
           console.log('✅ Fase reserva procesada exitosamente:', result);
-          setPaymentPending(false);
-          setRetryCount(0);
-          showToast('Pago procesado exitosamente', 'success');
+          
+          if (result.success) {
+            setPaymentSuccess(true);
+            setPaymentPending(false);
+            setRetryCount(0);
+            showToast('Pago procesado exitosamente', 'success');
+          } else {
+            setPaymentSuccess(false);
+            throw new Error(result.message || 'Payment not completed');
+          }
         } catch (error: any) {
           console.error('❌ Error procesando fase reserva:', error);
           
@@ -48,10 +56,12 @@ const PagoExitoso = () => {
                 procesarFaseReserva();
               }, 3000);
             } else {
+              setPaymentSuccess(false);
               setPaymentPending(false);
               showToast('El pago está tomando más tiempo del esperado. Por favor contacta con soporte.', 'error');
             }
           } else {
+            setPaymentSuccess(false);
             showToast('Error al procesar el pago', 'error');
           }
         } finally {
@@ -108,19 +118,25 @@ const PagoExitoso = () => {
             <div className="col-md-8 col-lg-6">
               <div className="card shadow-lg border-0">
                 <div className="card-body p-5 text-center">
-                  {/* Icono de éxito */}
+                  {/* Icono dinámico */}
                   <div className="mb-4">
                     <div 
-                      className="d-inline-flex align-items-center justify-content-center bg-success rounded-circle mx-auto"
+                      className={`d-inline-flex align-items-center justify-content-center rounded-circle mx-auto ${
+                        paymentSuccess === false ? 'bg-warning' : 'bg-success'
+                      }`}
                       style={{ width: '80px', height: '80px' }}
                     >
-                      <i className="fas fa-check text-white" style={{ fontSize: '2.5rem' }}></i>
+                      <i className={`fas ${
+                        paymentSuccess === false ? 'fa-exclamation-triangle' : 'fa-check'
+                      } text-white`} style={{ fontSize: '2.5rem' }}></i>
                     </div>
                   </div>
 
-                  {/* Título y mensaje principal */}
-                  <h1 className="h2 text-success mb-3 fw-bold">
-                    ¡Pago Exitoso!
+                  {/* Título dinámico */}
+                  <h1 className={`h2 mb-3 fw-bold ${
+                    paymentSuccess === false ? 'text-warning' : 'text-success'
+                  }`}>
+                    {paymentSuccess === false ? '¡Pago Pendiente!' : '¡Pago Exitoso!'}
                   </h1>
                   
                   <p className="lead text-muted mb-4">
@@ -128,8 +144,12 @@ const PagoExitoso = () => {
                       paymentPending ? 
                         'Tu pago está siendo verificado por el sistema...' :
                         'Procesando tu pago...'
-                    ) : (
+                    ) : paymentSuccess === false ? (
+                      'Tu pago aún está siendo procesado. Te notificaremos cuando esté completado.'
+                    ) : paymentSuccess === true ? (
                       'Tu reserva ha sido confirmada exitosamente. Hemos recibido tu pago.'
+                    ) : (
+                      'Verificando el estado de tu pago...'
                     )}
                   </p>
 
@@ -199,31 +219,57 @@ const PagoExitoso = () => {
                     </div>
                   </div>
 
-                  {/* Próximos pasos */}
-                  <div className="text-start bg-info bg-opacity-10 rounded-3 p-4 mb-4">
-                    <h5 className="text-info mb-3">
-                      <i className="fas fa-calendar-check me-2"></i>
-                      Próximos Pasos
-                    </h5>
-                    <ul className="list-unstyled mb-0">
-                      <li className="mb-2">
-                        <i className="fas fa-envelope text-primary me-2"></i>
-                        Recibirás un email de confirmación en los próximos minutos
-                      </li>
-                      <li className="mb-2">
-                        <i className="fas fa-phone text-primary me-2"></i>
-                        Nuestro equipo de asesores se pondrá en contacto contigo en las próximas horas
-                      </li>
-                      {/* <li className="mb-2">
-                        <i className="fas fa-calendar text-primary me-2"></i>
-                        Programaremos la instalación según tu disponibilidad
-                      </li>
-                      <li>
-                        <i className="fas fa-tools text-primary me-2"></i>
-                        Instalación profesional en tu hogar
-                      </li> */}
-                    </ul>
-                  </div>
+                  {/* Próximos pasos - solo si el pago fue exitoso */}
+                  {paymentSuccess === true && (
+                    <div className="text-start bg-info bg-opacity-10 rounded-3 p-4 mb-4">
+                      <h5 className="text-info mb-3">
+                        <i className="fas fa-calendar-check me-2"></i>
+                        Próximos Pasos
+                      </h5>
+                      <ul className="list-unstyled mb-0">
+                        <li className="mb-2">
+                          <i className="fas fa-envelope text-primary me-2"></i>
+                          Recibirás un email de confirmación en los próximos minutos
+                        </li>
+                        <li className="mb-2">
+                          <i className="fas fa-phone text-primary me-2"></i>
+                          Nuestro equipo de asesores se pondrá en contacto contigo en las próximas horas
+                        </li>
+                        {/* <li className="mb-2">
+                          <i className="fas fa-calendar text-primary me-2"></i>
+                          Programaremos la instalación según tu disponibilidad
+                        </li>
+                        <li>
+                          <i className="fas fa-tools text-primary me-2"></i>
+                          Instalación profesional en tu hogar
+                        </li> */}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Información adicional para pagos pendientes */}
+                  {paymentSuccess === false && (
+                    <div className="text-start bg-warning bg-opacity-10 rounded-3 p-4 mb-4">
+                      <h5 className="text-warning mb-3">
+                        <i className="fas fa-clock me-2"></i>
+                        Información del Pago
+                      </h5>
+                      <ul className="list-unstyled mb-0">
+                        <li className="mb-2">
+                          <i className="fas fa-info-circle text-warning me-2"></i>
+                          Tu pago está siendo procesado por el sistema bancario
+                        </li>
+                        <li className="mb-2">
+                          <i className="fas fa-bell text-warning me-2"></i>
+                          Te notificaremos por email cuando se complete
+                        </li>
+                        <li className="mb-2">
+                          <i className="fas fa-headset text-warning me-2"></i>
+                          Si tienes dudas, contacta con nuestro soporte
+                        </li>
+                      </ul>
+                    </div>
+                  )}
 
                   {/* Botones de acción */}
                   <div className="d-grid gap-2">
