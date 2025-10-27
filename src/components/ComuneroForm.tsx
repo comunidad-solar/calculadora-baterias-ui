@@ -117,14 +117,14 @@ const ComuneroForm = () => {
           });
         } else {
           // Modo normal: guardar datos del comunero en el store y continuar
-          console.log('📋 Respuesta completa del nuevo comunero:', JSON.stringify(response, null, 2));
+          // console.log('📋 Respuesta completa del nuevo comunero:', JSON.stringify(response, null, 2));
           
           // Para el caso "no soy comunero" (bypass=false), siempre guardar datos del formulario
           // como fallback si el backend no devuelve datos válidos
           let comuneroObject;
           
           if (response.data && Object.keys(response.data).length > 0) {
-            console.log('📋 Data recibida del backend:', JSON.stringify(response.data, null, 2));
+            // console.log('📋 Data recibida del backend:', JSON.stringify(response.data, null, 2));
             
             // Verificar si los datos vienen directamente en response.data o en response.data.comunero
             const comuneroData = response.data.comunero || response.data;
@@ -136,7 +136,7 @@ const ComuneroForm = () => {
                comuneroData.email || comuneroData.mail);
             
             if (tieneDataValidaComunero) {
-              console.log('📋 Usando datos del backend para comunero');
+              // console.log('📋 Usando datos del backend para comunero');
               comuneroObject = {
                 id: comuneroData.id || comuneroData.contactId || response.data.id || 'temp-' + Date.now(),
                 nombre: comuneroData.nombre || comuneroData.name || `${form.nombre} ${form.apellidos}`.trim(),
@@ -148,7 +148,7 @@ const ComuneroForm = () => {
                 provincia: comuneroData.provincia || comuneroData.province || form.provincia
               };
             } else {
-              console.log('⚠️ Backend no devolvió datos válidos del comunero, usando datos del formulario');
+              // console.log('⚠️ Backend no devolvió datos válidos del comunero, usando datos del formulario');
               comuneroObject = {
                 id: response.data.id || 'temp-' + Date.now(),
                 nombre: `${form.nombre} ${form.apellidos}`.trim(),
@@ -161,7 +161,7 @@ const ComuneroForm = () => {
               };
             }
           } else {
-            console.log('⚠️ Backend no devolvió data, usando datos del formulario');
+            // console.log('⚠️ Backend no devolvió data, usando datos del formulario');
             comuneroObject = {
               id: 'temp-' + Date.now(),
               nombre: `${form.nombre} ${form.apellidos}`.trim(),
@@ -174,7 +174,7 @@ const ComuneroForm = () => {
             };
           }
           
-          console.log('📋 Objeto comunero final:', JSON.stringify(comuneroObject, null, 2));
+          // console.log('📋 Objeto comunero final:', JSON.stringify(comuneroObject, null, 2));
           
           setField('comunero', comuneroObject);
           
@@ -182,22 +182,22 @@ const ComuneroForm = () => {
           if (response.data) {
             if ((response.data as any).token) {
               setField('token', (response.data as any).token);
-              console.log('🔑 Token guardado:', (response.data as any).token);
+              // console.log('🔑 Token guardado:', (response.data as any).token);
             }
             if ((response.data as any).propuestaId) {
               setField('propuestaId', (response.data as any).propuestaId);
-              console.log('🆔 PropuestaId guardado:', (response.data as any).propuestaId);
+              // console.log('🆔 PropuestaId guardado:', (response.data as any).propuestaId);
             }
             // Buscar enZona en la estructura correcta: conditions.enZona
             const enZonaValue = (response.data as any).conditions?.enZona || (response.data as any).enZona;
             if (enZonaValue !== undefined) {
               setField('enZona', enZonaValue);
-              console.log('📍 EnZona guardado:', enZonaValue, 'tipo:', typeof enZonaValue);
+              // console.log('📍 EnZona guardado:', enZonaValue, 'tipo:', typeof enZonaValue);
             }
           }
-          
-          console.log('✅ Datos del comunero guardados en el store');
-          
+
+          // console.log('✅ Datos del comunero guardados en el store');
+
           showToast('¡Comunero registrado correctamente! Bienvenido.', 'success');
           // Redirigir a preguntas adicionales
           navigate('/preguntas-adicionales');

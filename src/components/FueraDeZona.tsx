@@ -11,7 +11,7 @@ const FueraDeZona = () => {
   // Verificar que el usuario realmente sea outZone
   useEffect(() => {
     if (!form.comunero || form.enZona !== 'outZone') {
-      console.log('🔄 Usuario no outZone o sin datos, redirigiendo a inicio');
+      // console.log('🔄 Usuario no outZone o sin datos, redirigiendo a inicio');
       navigate('/', { replace: true });
     }
   }, [form.enZona, form.comunero, navigate]);

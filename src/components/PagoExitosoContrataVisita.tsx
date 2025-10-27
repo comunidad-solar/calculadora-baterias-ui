@@ -19,7 +19,7 @@ const PagoExitosoContrataVisita = () => {
       try {
         const result = await bateriaService.procesarVisitaTecnicaPagada(propuestaId);
         
-        console.log('Visita técnica procesada:', result);
+        // console.log('Visita técnica procesada:', result);
         showToast('Visita técnica confirmada exitosamente', 'success');
         
         // Redirigir al dashboard del comunero después de 2 segundos

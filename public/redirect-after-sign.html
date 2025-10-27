@@ -24,17 +24,17 @@
             }
         }
         
-        console.log('🔄 Página de redirección cargada');
-        console.log('📋 PropuestaId extraído:', propuestaId);
-        console.log('🌐 URL completa:', window.location.href);
+        // console.log('🔄 Página de redirección cargada');
+        // console.log('📋 PropuestaId extraído:', propuestaId);
+        // console.log('🌐 URL completa:', window.location.href);
         
         if (propuestaId) {
             const targetUrl = `/contrato/${propuestaId}/firmado`;
-            console.log('🎯 Enviando mensaje para redirigir a:', targetUrl);
+            // console.log('🎯 Enviando mensaje para redirigir a:', targetUrl);
             
             // Si estamos dentro de un iframe, enviar mensaje a la página padre
             if (window.parent && window.parent !== window) {
-                console.log('📱 Detectado iframe, enviando PostMessage a página padre');
+                // console.log('📱 Detectado iframe, enviando PostMessage a página padre');
                 
                 // Enviar mensaje a la página padre para que haga la navegación
                 window.parent.postMessage({
@@ -46,7 +46,7 @@
                 
                 // Mostrar mensaje de éxito por un momento
                 setTimeout(() => {
-                    console.log('🔄 Enviando mensaje de backup...');
+                    // console.log('🔄 Enviando mensaje de backup...');
                     window.parent.postMessage({
                         type: 'CONTRACT_COMPLETED',
                         propuestaId: propuestaId
@@ -55,7 +55,7 @@
                 
             } else {
                 // Si no estamos en iframe, redirección normal (fallback)
-                console.log('🌍 No está en iframe, redirección normal');
+                // console.log('🌍 No está en iframe, redirección normal');
                 window.location.href = targetUrl;
             }
         } else {

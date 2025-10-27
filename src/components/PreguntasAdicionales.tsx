@@ -49,17 +49,17 @@ const PreguntasAdicionales = () => {
   
   // Log para debugging - verificar datos disponibles al cargar el componente
   useEffect(() => {
-    console.log('🔍 Estado del store al cargar PreguntasAdicionales:', {
-      comunero: form.comunero,
-      token: form.token,
-      propuestaId: form.propuestaId,
-      enZona: form.enZona,
-      fsmState: form.fsmState,
-      fromAsesoresDeal: form.fromAsesoresDeal,
-      asesores: form.asesores,
-      dealId: form.dealId,
-      fullForm: form
-    });
+    // console.log('🔍 Estado del store al cargar PreguntasAdicionales:', {
+    //   comunero: form.comunero,
+    //   token: form.token,
+    //   propuestaId: form.propuestaId,
+    //   enZona: form.enZona,
+    //   fsmState: form.fsmState,
+    //   fromAsesoresDeal: form.fromAsesoresDeal,
+    //   asesores: form.asesores,
+    //   dealId: form.dealId,
+    //   fullForm: form
+    // });
 
     // Verificar si venimos de un deal de asesores
     const fromAsesoresDeal = form.fromAsesoresDeal || 
@@ -67,8 +67,8 @@ const PreguntasAdicionales = () => {
                             location.state?.fromAsesoresDeal;
     
     if (fromAsesoresDeal && form.asesores) {
-      console.log('🎯 Cargando desde deal de asesores con datos prellenados');
-      console.log('📊 Respuestas de preguntas desde deal:', form.respuestasPreguntas);
+      // console.log('🎯 Cargando desde deal de asesores con datos prellenados');
+      // console.log('📊 Respuestas de preguntas desde deal:', form.respuestasPreguntas);
       
       // Si hay datos del comunero y no se ha inicializado la info editada, inicializarla
       if (form.comunero && !infoEditada.nombre) {
@@ -87,7 +87,7 @@ const PreguntasAdicionales = () => {
   // Protección para usuarios outZone - redirigir a página específica
   useEffect(() => {
     if (form.enZona === 'outZone') {
-      console.log('🚫 Usuario outZone detectado en PreguntasAdicionales, redirigiendo a página fuera de zona');
+      // console.log('🚫 Usuario outZone detectado en PreguntasAdicionales, redirigiendo a página fuera de zona');
       navigate('/fuera-de-zona', { replace: true });
       return;
     }
@@ -115,11 +115,11 @@ const PreguntasAdicionales = () => {
   const comuneroActual = form.comunero;
   const codigoPostalDisponible = !!(form.codigoPostal || comuneroActual?.codigoPostal);
   
-  console.log('🔍 Estado código postal:', {
-    codigoPostalForm: form.codigoPostal,
-    codigoPostalComunero: comuneroActual?.codigoPostal,
-    codigoPostalDisponible
-  });
+  // console.log('🔍 Estado código postal:', {
+  //   codigoPostalForm: form.codigoPostal,
+  //   codigoPostalComunero: comuneroActual?.codigoPostal,
+  //   codigoPostalDisponible
+  // });
 
   // Efecto para buscar datos actualizados si viene del flujo de validar-codigo
   useEffect(() => {
@@ -132,15 +132,15 @@ const PreguntasAdicionales = () => {
       const yaHizoLlamada = sessionStorage.getItem('datosActualizadosObtenidos') === 'true';
       
       if (!vieneDeValidarCodigo || !form.propuestaId || yaHizoLlamada) {
-        console.log('🚫 Saltando obtenerDatosActualizados:', {
-          vieneDeValidarCodigo,
-          propuestaId: !!form.propuestaId,
-          yaHizoLlamada
-        });
+        // console.log('🚫 Saltando obtenerDatosActualizados:', {
+        //   vieneDeValidarCodigo,
+        //   propuestaId: !!form.propuestaId,
+        //   yaHizoLlamada
+        // });
         return;
       }
 
-      console.log('🔄 Detectado flujo desde validar-codigo, buscando datos actualizados...');
+      // console.log('🔄 Detectado flujo desde validar-codigo, buscando datos actualizados...');
       
       // Iniciar loading inmediatamente
       setLoadingDatosActualizados(true);
@@ -159,7 +159,7 @@ const PreguntasAdicionales = () => {
             return;
           }
           
-          console.log('📡 Llamando al endpoint de datos actualizados para propuesta:', form.propuestaId);
+          // console.log('📡 Llamando al endpoint de datos actualizados para propuesta:', form.propuestaId);
           
           const response = await nuevoComuneroService.obtenerDatosActualizadosPostValidacion(form.propuestaId);
           
@@ -167,7 +167,7 @@ const PreguntasAdicionales = () => {
             const { comuneroActualizado, fuenteDatos } = response.data;
             
             if (fuenteDatos === 'base_datos') {
-              console.log('✅ Datos actualizados encontrados:', response.data);
+              // console.log('✅ Datos actualizados encontrados:', response.data);
               
               let datosActualizados = false;
               
@@ -202,48 +202,48 @@ const PreguntasAdicionales = () => {
                     ...datosLimpiosComunero
                   });
                   datosActualizados = true;
-                  console.log('📋 Datos del comunero actualizados:', datosLimpiosComunero);
+                  // console.log('📋 Datos del comunero actualizados:', datosLimpiosComunero);
                 }
                 
                 // Actualizar zona si viene en comuneroActualizado y es diferente
                 if (comuneroActualizado.enZona && comuneroActualizado.enZona !== form.enZona) {
                   setField('enZona', comuneroActualizado.enZona);
                   datosActualizados = true;
-                  console.log('🗺️ Zona actualizada:', { anterior: form.enZona, nueva: comuneroActualizado.enZona });
+                  // console.log('🗺️ Zona actualizada:', { anterior: form.enZona, nueva: comuneroActualizado.enZona });
                 }
                 
                 // Actualizar campaignSource si viene en comuneroActualizado
                 if (comuneroActualizado.campaignSource && comuneroActualizado.campaignSource.trim() !== '') {
                   setField('campaignSource', comuneroActualizado.campaignSource.trim());
                   datosActualizados = true;
-                  console.log('📢 Campaign source actualizado:', comuneroActualizado.campaignSource);
+                  // console.log('📢 Campaign source actualizado:', comuneroActualizado.campaignSource);
                 }
                 
                 // Actualizar fsmState si viene en comuneroActualizado y es diferente
                 if (comuneroActualizado.fsmState && comuneroActualizado.fsmState !== form.fsmState) {
                   setField('fsmState', comuneroActualizado.fsmState);
                   datosActualizados = true;
-                  console.log('🔄 FSM State actualizado:', { anterior: form.fsmState, nuevo: comuneroActualizado.fsmState });
+                  // console.log('🔄 FSM State actualizado:', { anterior: form.fsmState, nuevo: comuneroActualizado.fsmState });
                 }
               }
               
               // Mostrar toast solo si realmente se actualizó algún dato
               if (datosActualizados) {
                 showToast('Información actualizada desde la base de datos', 'success');
-                console.log('✅ Datos actualizados aplicados en el store');
+                // console.log('✅ Datos actualizados aplicados en el store');
               } else {
-                console.log('ℹ️ No hay datos válidos para actualizar, manteniendo información existente');
+                // console.log('ℹ️ No hay datos válidos para actualizar, manteniendo información existente');
               }
               
             } else {
-              console.log('ℹ️ No se encontraron datos más recientes, manteniendo información del proceso de validar-codigo');
+              // console.log('ℹ️ No se encontraron datos más recientes, manteniendo información del proceso de validar-codigo');
             }
           } else {
-            console.log('ℹ️ Backend no devolvió información, manteniendo datos existentes del proceso de validar-codigo');
+            // console.log('ℹ️ Backend no devolvió información, manteniendo datos existentes del proceso de validar-codigo');
           }
         } catch (error) {
-          console.error('❌ Error al buscar datos actualizados:', error);
-          console.log('ℹ️ Manteniendo información existente del proceso de validar-codigo debido a error en la consulta');
+          // console.error('❌ Error al buscar datos actualizados:', error);
+          // console.log('ℹ️ Manteniendo información existente del proceso de validar-codigo debido a error en la consulta');
         } finally {
           setLoadingDatosActualizados(false);
           
@@ -252,15 +252,15 @@ const PreguntasAdicionales = () => {
             const comuneroActual = form.comunero;
             const codigoPostalActual = form.codigoPostal || comuneroActual?.codigoPostal;
             
-            console.log('🔍 Validando código postal después de datos actualizados:', {
-              codigoPostalForm: form.codigoPostal,
-              codigoPostalComunero: comuneroActual?.codigoPostal,
-              codigoPostalFinal: codigoPostalActual
-            });
+            // console.log('🔍 Validando código postal después de datos actualizados:', {
+            //   codigoPostalForm: form.codigoPostal,
+            //   codigoPostalComunero: comuneroActual?.codigoPostal,
+            //   codigoPostalFinal: codigoPostalActual
+            // });
             
             // Si no tenemos código postal, activar modo edición automáticamente
             if (!codigoPostalActual || codigoPostalActual.trim() === '') {
-              console.log('⚠️ No se encontró código postal, activando modo edición para que el usuario complete la información');
+              // console.log('⚠️ No se encontró código postal, activando modo edición para que el usuario complete la información');
               
               // Usar iniciarEdicion() para prellenar datos correctamente
               if (form.comunero) {
@@ -277,7 +277,7 @@ const PreguntasAdicionales = () => {
               
               showToast('Por favor, completa tu dirección con código postal para continuar', 'warning');
             } else {
-              console.log('✅ Código postal disponible, continuando con el flujo normal');
+              // console.log('✅ Código postal disponible, continuando con el flujo normal');
             }
           }, 500); // Pequeño delay para asegurar que los datos estén actualizados
         }
@@ -334,7 +334,7 @@ const PreguntasAdicionales = () => {
           fsmState: form.fsmState || 'INITIAL'
         };
 
-        console.log('📞 Contactando asesor para usuario con instalación FV:', datosCompletos);
+        // console.log('📞 Contactando asesor para usuario con instalación FV:', datosCompletos);
         const response = await bateriaService.contactarAsesorDesconoceUnidad(datosCompletos);
         
         if (response.success) {
@@ -344,7 +344,7 @@ const PreguntasAdicionales = () => {
           throw new Error('Error en la respuesta del servidor');
         }
       } catch (error) {
-        console.error('❌ Error contactando asesor:', error);
+        // console.error('❌ Error contactando asesor:', error);
         showToast('Hubo un error al procesar tu solicitud. Por favor, inténtalo de nuevo.', 'error');
       }
       setLoading(false);
@@ -439,7 +439,7 @@ const PreguntasAdicionales = () => {
           enZona: form.enZona || 'outZone'
         };
 
-        console.log('📤 Tipo de baterías "OTRA" requiere asesor - Enviando solicitud de contacto:', datosCompletos);
+        // console.log('📤 Tipo de baterías "OTRA" requiere asesor - Enviando solicitud de contacto:', datosCompletos);
 
         const response = await bateriaService.contactarAsesorDesconoceUnidad(datosCompletos);
         
@@ -496,7 +496,7 @@ const PreguntasAdicionales = () => {
           enZona: form.enZona || 'outZone'
         };
 
-        console.log('📤 Metros extra requiere asesor - Enviando solicitud de contacto:', datosCompletos);
+        // console.log('📤 Metros extra requiere asesor - Enviando solicitud de contacto:', datosCompletos);
 
         const response = await bateriaService.contactarAsesorDesconoceUnidad(datosCompletos);
         
@@ -560,7 +560,7 @@ const PreguntasAdicionales = () => {
               fsmState: '03_DESCONOCE_TENSION'
             };
 
-            console.log('📤 IA no identificó el tipo - Enviando solicitud de contacto manual:', datosCompletos);
+            // console.log('📤 IA no identificó el tipo - Enviando solicitud de contacto manual:', datosCompletos);
 
             const response = await bateriaService.contactarAsesorDesconoceUnidad(datosCompletos);
             
@@ -589,7 +589,7 @@ const PreguntasAdicionales = () => {
           
         } else {
           // IA identificó el tipo (monofásico o trifásico) - continuar con flujo normal
-          console.log('✅ IA identificó el tipo:', tipoDetectado);
+          // console.log('✅ IA identificó el tipo:', tipoDetectado);
           
           // Actualizar el tipo de instalación según lo detectado por IA
           const tipoInstalacionDetectado = tipoDetectado === 'monofasico' ? 'monofasica' : 'trifasica';
@@ -637,7 +637,7 @@ const PreguntasAdicionales = () => {
             fsmState: '03_DESCONOCE_TENSION'
           };
 
-          console.log('📤 Sin foto - Enviando solicitud de contacto manual:', datosCompletos);
+          // console.log('📤 Sin foto - Enviando solicitud de contacto manual:', datosCompletos);
 
           const response = await bateriaService.contactarAsesorDesconoceUnidad(datosCompletos);
           
@@ -700,15 +700,15 @@ const PreguntasAdicionales = () => {
           enZona: form.enZona || 'inZone'
         };
         
-        console.log('📤 Enviando solicitud para instalación dentro de 10m (inZone):', {
-          datos: datosCompletos
-        });
+        // console.log('📤 Enviando solicitud para instalación dentro de 10m (inZone):', {
+        //   datos: datosCompletos
+        // });
 
         // Llamada al endpoint específico
         const response = await bateriaService.solicitudInZoneDentro10m(datosCompletos);
         
         if (response.success) {
-          console.log('✅ Solicitud dentro de 10m procesada:', response.data);
+          // console.log('✅ Solicitud dentro de 10m procesada:', response.data);
           
           // Actualizar el estado FSM en el store
           setFsmState('04_DATOS_RECOGIDOS');
@@ -790,12 +790,12 @@ const PreguntasAdicionales = () => {
       const response = await bateriaService.crearSolicitud(datosCompletos);
       
       if (response.success) {
-        console.log('Datos adicionales enviados:', response.data);
+        // console.log('Datos adicionales enviados:', response.data);
         showToast('¡Información guardada correctamente!', 'success');
         
         // Actualizar propuestaId en el store si el backend devuelve una nueva/actualizada
         if (response.data?.propuestaId && response.data.propuestaId !== form.propuestaId) {
-          console.log('💾 Actualizando propuestaId en store:', response.data.propuestaId);
+          // console.log('💾 Actualizando propuestaId en store:', response.data.propuestaId);
           setField('propuestaId', response.data.propuestaId);
         }
         
@@ -1017,7 +1017,7 @@ const PreguntasAdicionales = () => {
         mpkLogId: form.mpkLogId || ''
       };
 
-      console.log('📤 Enviando datos actualizados al backend:', datosEdicion);
+      // console.log('📤 Enviando datos actualizados al backend:', datosEdicion);
       
       // Enviar datos al backend
       const response = await comuneroService.editarInfoComunero(datosEdicion);
@@ -1041,14 +1041,14 @@ const PreguntasAdicionales = () => {
         // Si el backend devuelve nueva información de zona, actualizarla también
         if (response.data && response.data.updatedInfo && response.data.updatedInfo.enZona) {
           setField('enZona', response.data.updatedInfo.enZona);
-          console.log('🎯 Zona actualizada:', response.data.updatedInfo.enZona);
+          // console.log('🎯 Zona actualizada:', response.data.updatedInfo.enZona);
         }
         
         setEditandoInfo(false);
         showToast('Información actualizada correctamente', 'success');
         
-        console.log('✅ Información del comunero actualizada:', comuneroActualizado);
-        console.log('📍 Respuesta completa del backend:', response.data);
+        // console.log('✅ Información del comunero actualizada:', comuneroActualizado);
+        // console.log('📍 Respuesta completa del backend:', response.data);
       } else {
         throw new Error(response.error || 'Error al actualizar la información');
       }
@@ -1113,11 +1113,11 @@ const PreguntasAdicionales = () => {
             propuestaId: form.propuestaId || ''
           };
           
-          console.log('🤖 Enviando foto para análisis de IA:', {
-            archivo: file.name,
-            tamano: file.size,
-            tipo: file.type
-          });
+          // console.log('🤖 Enviando foto para análisis de IA:', {
+          //   archivo: file.name,
+          //   tamano: file.size,
+          //   tipo: file.type
+          // });
           
           // Llamar al servicio de análisis de IA
           const response = await bateriaService.analizarFotoDisyuntor(analisisData);
@@ -1137,11 +1137,11 @@ const PreguntasAdicionales = () => {
               procesando: false
             });
             
-            console.log('✅ Análisis de IA completado:', {
-              tipoDetectado,
-              confianza,
-              descripcion
-            });
+            // console.log('✅ Análisis de IA completado:', {
+            //   tipoDetectado,
+            //   confianza,
+            //   descripcion
+            // });
             
             // Mostrar resultado según el tipo detectado
             if (tipoDetectado === 'desconocido') {

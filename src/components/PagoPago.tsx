@@ -88,7 +88,7 @@ const PagoPago = () => {
           }}
           title="Pasarela de Pago Segura"
           onLoad={() => {
-            console.log('✅ Iframe de pago cargado correctamente');
+            // console.log('✅ Iframe de pago cargado correctamente');
             // Enviar mensaje al iframe para establecer comunicación
             const iframe = document.querySelector('iframe');
             if (iframe && iframe.contentWindow) {

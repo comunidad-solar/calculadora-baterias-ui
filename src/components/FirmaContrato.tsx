@@ -30,27 +30,27 @@ const FirmaContrato = () => {
       }
 
       try {
-        console.log('📄 Preparando contrato para propuestaId:', propuestaId);
-        console.log('⏱️ Esperando 10 segundos antes de generar el contrato...');
+        // console.log('📄 Preparando contrato para propuestaId:', propuestaId);
+        // console.log('⏱️ Esperando 10 segundos antes de generar el contrato...');
         
         // Esperar 10 segundos antes de hacer la llamada
         setTimeout(async () => {
           try {
             setPreparingContract(false); // Termina la fase de preparación
-            console.log('📄 Generando URL de firma para propuestaId:', propuestaId);
+            // console.log('📄 Generando URL de firma para propuestaId:', propuestaId);
             
             const response = await comuneroService.obtenerUrlFirmaContrato(propuestaId);
             
             if (response.success && response.data?.signUrl) {
-              console.log('✅ URL de firma obtenida:', response.data.signUrl);
+              // console.log('✅ URL de firma obtenida:', response.data.signUrl);
               setSignUrl(response.data.signUrl);
             } else {
-              console.error('❌ Error al obtener URL de firma:', response.error);
+              // console.error('❌ Error al obtener URL de firma:', response.error);
               setError(response.error || 'No se pudo cargar el documento de firma');
               showToast('Error al cargar el documento de firma', 'error');
             }
           } catch (err) {
-            console.error('❌ Error inesperado:', err);
+            // console.error('❌ Error inesperado:', err);
             setError('Error al conectar con el servidor');
             showToast('Error al conectar con el servidor', 'error');
           } finally {
@@ -59,7 +59,7 @@ const FirmaContrato = () => {
         }, 10000); // 10 segundos delay
         
       } catch (err) {
-        console.error('❌ Error inesperado en preparación:', err);
+        // console.error('❌ Error inesperado en preparación:', err);
         setError('Error al conectar con el servidor');
         showToast('Error al conectar con el servidor', 'error');
         setLoading(false);
@@ -73,19 +73,19 @@ const FirmaContrato = () => {
   // Escuchar mensajes de la página de redirección
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      console.log('📨 Mensaje recibido desde iframe:', event.data);
+      // console.log('📨 Mensaje recibido desde iframe:', event.data);
       
       // Verificar que el mensaje es de nuestro sistema
       if (event.data.type === 'ZOHO_CONTRACT_SIGNED' || event.data.type === 'CONTRACT_COMPLETED') {
         const { propuestaId: messagePropuestaId, targetUrl } = event.data;
         
-        console.log('✅ Contrato firmado detectado!');
-        console.log('📋 PropuestaId del mensaje:', messagePropuestaId);
-        console.log('🎯 URL objetivo:', targetUrl);
+        // console.log('✅ Contrato firmado detectado!');
+        // console.log('📋 PropuestaId del mensaje:', messagePropuestaId);
+        // console.log('🎯 URL objetivo:', targetUrl);
         
         // Verificar que coincida con nuestro propuestaId
         if (messagePropuestaId && messagePropuestaId === propuestaId) {
-          console.log('🚀 Navegando a página de confirmación...');
+          // console.log('🚀 Navegando a página de confirmación...');
           
           // Guardar solo los datos mínimos necesarios para la página de confirmación
           const nombreComunero = form.comunero?.nombre || form.nombre || 'Usuario';
@@ -98,7 +98,7 @@ const FirmaContrato = () => {
             propuestaId
           }));
           
-          console.log('💾 Datos de confirmación guardados para:', nombreComunero);
+          // console.log('💾 Datos de confirmación guardados para:', nombreComunero);
           showToast('¡Contrato firmado exitosamente!', 'success');
           
           // Usar navigate en lugar de window.location para mantener el estado

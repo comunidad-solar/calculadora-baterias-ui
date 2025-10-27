@@ -32,7 +32,7 @@ const PagoExitosoPropuestaContrata = () => {
           try {
             const result = await bateriaService.procesarBateriasPagadas(propuestaId);
             
-            console.log('Propuesta procesada:', result);
+            // console.log('Propuesta procesada:', result);
             
             // Redirigir al dashboard del comunero
             navigate(`/comunero/${propuestaId}`);

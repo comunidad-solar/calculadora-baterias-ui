@@ -47,26 +47,26 @@ const ContratoFirmado = () => {
   }
 
   // Debug: mostrar fuente de datos
-  console.log('📋 Datos en ContratoFirmado:', {
-    propuestaId,
-    contractData,
-    nombreComunero,
-    emailComunero,
-    fuente: contractData ? 'sessionStorage' : 'store'
-  });
+  // console.log('📋 Datos en ContratoFirmado:', {
+  //   propuestaId,
+  //   contractData,
+  //   nombreComunero,
+  //   emailComunero,
+  //   fuente: contractData ? 'sessionStorage' : 'store'
+  // });
 
   // Debug: detectar múltiples renderizados
-  console.log('� RENDER ContratoFirmado:', {
-    propuestaId,
-    contractData,
-    nombreComunero,
-    emailComunero,
-    fuente: contractData ? 'sessionStorage' : 'store',
-    timestamp: new Date().toISOString()
-  });
+  // console.log('� RENDER ContratoFirmado:', {
+  //   propuestaId,
+  //   contractData,
+  //   nombreComunero,
+  //   emailComunero,
+  //   fuente: contractData ? 'sessionStorage' : 'store',
+  //   timestamp: new Date().toISOString()
+  // });
 
   // Debug: verificar si Header/Footer se están renderizando múltiples veces
-  console.log('📱 Header y Footer deberían aparecer solo una vez cada uno');
+  // console.log('📱 Header y Footer deberían aparecer solo una vez cada uno');
 
   return (
     <PageTransition>

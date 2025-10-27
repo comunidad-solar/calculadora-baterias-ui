@@ -21,11 +21,11 @@ const makeRequest = async <T = any>(
   // Limpiar endpoint (remover / inicial si existe)
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint.slice(1) : endpoint;
   
-  console.log('🌐 Haciendo request a:', cleanEndpoint);
+  // console.log('🌐 Haciendo request a:', cleanEndpoint);
   
   try {
     const url = `${API_BASE_URL}/${cleanEndpoint}`;
-    console.log('📡 Request URL:', url);
+    // console.log('📡 Request URL:', url);
     
     const defaultHeaders = {
       'Content-Type': 'application/json',
@@ -490,12 +490,12 @@ export const bateriaService = {
     const url = `${API_BASE_URL}/${cleanEndpoint}`;
     
     try {
-      console.log('📤 Enviando foto para análisis de IA:', {
-        endpoint: cleanEndpoint,
-        propuestaId: fotoData.propuestaId,
-        archivo: fotoData.fotoDisyuntor.name,
-        tamano: fotoData.fotoDisyuntor.size
-      });
+      // console.log('📤 Enviando foto para análisis de IA:', {
+      //   endpoint: cleanEndpoint,
+      //   propuestaId: fotoData.propuestaId,
+      //   archivo: fotoData.fotoDisyuntor.name,
+      //   tamano: fotoData.fotoDisyuntor.size
+      // });
       
       const response = await fetch(url, {
         method: 'POST',
@@ -568,7 +568,7 @@ export const bateriaService = {
 
   // Obtener información del deal por ID
   async obtenerDealPorId(dealId: string): Promise<ApiResponse<any>> {
-    console.log('📋 Obteniendo información del deal:', dealId);
+    // console.log('📋 Obteniendo información del deal:', dealId);
     return makeRequest(`baterias/deal/${dealId}`, {
       method: 'GET',
     });
@@ -587,7 +587,7 @@ export const bateriaService = {
     propuestaId: string;
     invoiceId: string;
   }>> {
-    console.log('💳 Generando enlace de pago para reserva:', datos);
+    // console.log('💳 Generando enlace de pago para reserva:', datos);
     return makeRequest('baterias/reserva/enlace-de-pago', {
       method: 'POST',
       body: JSON.stringify(datos),
@@ -600,7 +600,7 @@ export const bateriaService = {
     invoiceId?: string;
     paymentDetails?: any;
   }>> {
-    console.log('🔍 Verificando estado de pago para propuesta:', propuestaId);
+    // console.log('🔍 Verificando estado de pago para propuesta:', propuestaId);
     return makeRequest(`baterias/reserva/estado-pago/${propuestaId}`, {
       method: 'GET',
     });
@@ -612,7 +612,7 @@ export const bateriaService = {
     message?: string;
     propuestaId: string;
   }>> {
-    console.log('✅ Procesando pago de visita técnica para propuesta:', propuestaId);
+    // console.log('✅ Procesando pago de visita técnica para propuesta:', propuestaId);
     return makeRequest('baterias/comunero/visita-tecnica-pagada/contrata', {
       method: 'POST',
       body: JSON.stringify({ propuestaId }),
@@ -625,7 +625,7 @@ export const bateriaService = {
     message?: string;
     propuestaId: string;
   }>> {
-    console.log('✅ Procesando pago de baterías para propuesta:', propuestaId);
+    // console.log('✅ Procesando pago de baterías para propuesta:', propuestaId);
     return makeRequest('baterias/comunero/baterias-pagadas/contrata', {
       method: 'POST',
       body: JSON.stringify({ propuestaId }),
@@ -639,7 +639,7 @@ export const bateriaService = {
     propuestaId: string;
     type: string;
   }>> {
-    console.log('✅ Procesando fase reserva pagada para propuesta:', propuestaId, 'type:', type);
+    // console.log('✅ Procesando fase reserva pagada para propuesta:', propuestaId, 'type:', type);
     return makeRequest(`baterias/comunero/fase-reserva/pagado/${type}`, {
       method: 'POST',
       body: JSON.stringify({ propuestaId }),
@@ -668,7 +668,7 @@ export const createCargarComuneroHook = () => {
     const resultado = await cargarComuneroPorId(clienteId, formStore);
     
     if (resultado.success && resultado.datosGuardados) {
-      console.log(`🧭 Navegando automáticamente a: ${resultado.rutaNavegacion}`);
+      // console.log(`🧭 Navegando automáticamente a: ${resultado.rutaNavegacion}`);
       navigate(resultado.rutaNavegacion);
       return { 
         success: true, 
@@ -744,7 +744,7 @@ export const procesarRespuestaComunero = (respuesta: any) => {
     respuestasPreguntas: comuneroData.respuestasPreguntas || {},
   };
 
-  console.log('📋 Datos procesados para el store:', datosParaStore);
+  // console.log('📋 Datos procesados para el store:', datosParaStore);
   
   return {
     datosParaStore,
@@ -785,7 +785,7 @@ export const procesarRespuestaContratada = (respuesta: any) => {
     }
   };
 
-  console.log('📋 Datos procesados para propuesta contratada:', datosContratada);
+  // console.log('📋 Datos procesados para propuesta contratada:', datosContratada);
   
   return {
     datosContratada,
@@ -796,7 +796,7 @@ export const procesarRespuestaContratada = (respuesta: any) => {
 
 // Helper function para procesar respuesta de visita técnica (fsmState: "06_VISITA_TECNICA")
 export const procesarRespuestaVisitaTecnica = (respuesta: any) => {
-  console.log('🔧 Procesando respuesta de visita técnica:', respuesta);
+  // console.log('🔧 Procesando respuesta de visita técnica:', respuesta);
   
   const data = respuesta.data;
   
@@ -906,7 +906,7 @@ export const procesarRespuestaPropuestaGenerada = (respuesta: any) => {
     propuestaId: propuestaData.propuestaId
   };
 
-  console.log('📋 Datos procesados para propuesta generada:', datosPropuesta);
+  // console.log('📋 Datos procesados para propuesta generada:', datosPropuesta);
   
   return {
     datosPropuesta,
@@ -940,7 +940,7 @@ export const obtenerRutaPorFsmState = (fsmState: string): string => {
     return '/home';
   }
 
-  console.log(`🧭 Navegando a: ${ruta} para fsmState: ${fsmState}`);
+  // console.log(`🧭 Navegando a: ${ruta} para fsmState: ${fsmState}`);
   return ruta;
 };
 
@@ -948,7 +948,7 @@ export const obtenerRutaPorFsmState = (fsmState: string): string => {
 // IMPORTANTE: Esta función debe ser llamada desde un componente React para acceder al store
 export const cargarComuneroPorId = async (clienteId: string, useFormStore?: any) => {
   try {
-    console.log(`🔍 Cargando comunero con ID: ${clienteId}`);
+    // console.log(`🔍 Cargando comunero con ID: ${clienteId}`);
     
     // Obtener datos del comunero
     const respuesta = await nuevoComuneroService.obtenerPorId(clienteId);
@@ -971,7 +971,7 @@ export const cargarComuneroPorId = async (clienteId: string, useFormStore?: any)
       
       // Si se proporciona el store, cargar los datos automáticamente
       if (useFormStore) {
-        console.log('💾 Cargando datos en Zustand store...');
+        // console.log('💾 Cargando datos en Zustand store...');
         
         // Cargar datos básicos
         const { setField, setValidacionData, setRespuestasPreguntas, setFsmState } = useFormStore;
@@ -1002,11 +1002,11 @@ export const cargarComuneroPorId = async (clienteId: string, useFormStore?: any)
         // Respuestas a preguntas previas
         setRespuestasPreguntas(datosParaStore.respuestasPreguntas);
         
-        console.log('✅ Datos cargados en Zustand:', {
-          fsmState: fsmStateNormalizado,
-          comunero: datosParaStore.comunero.nombre,
-          respuestas: Object.keys(datosParaStore.respuestasPreguntas)
-        });
+        // console.log('✅ Datos cargados en Zustand:', {
+        //   fsmState: fsmStateNormalizado,
+        //   comunero: datosParaStore.comunero.nombre,
+        //   respuestas: Object.keys(datosParaStore.respuestasPreguntas)
+        // });
       }
     } else if (fsmState === '04_DATOS_RECOGIDOS') {
       const procesado = procesarRespuestaPropuestaGenerada(respuesta);
@@ -1015,7 +1015,7 @@ export const cargarComuneroPorId = async (clienteId: string, useFormStore?: any)
       
       // También cargar datos básicos del comunero en el store si se proporciona
       if (useFormStore && procesado.datosPropuesta.comunero) {
-        console.log('💾 Cargando datos del comunero en Zustand store...');
+        // console.log('💾 Cargando datos del comunero en Zustand store...');
         const { setField, setValidacionData, setFsmState } = useFormStore;
         
         // Datos básicos del formulario
@@ -1039,22 +1039,22 @@ export const cargarComuneroPorId = async (clienteId: string, useFormStore?: any)
         });
       }
       
-      console.log('✅ Datos de propuesta generada procesados:', {
-        fsmState: procesado.fsmState,
-        propuestaId: procesado.datosPropuesta.propuestaId,
-        precio: procesado.datosPropuesta.propuestaData.amount,
-        producto: procesado.datosPropuesta.propuestaData.productData.name
-      });
+      // console.log('✅ Datos de propuesta generada procesados:', {
+      //   fsmState: procesado.fsmState,
+      //   propuestaId: procesado.datosPropuesta.propuestaId,
+      //   precio: procesado.datosPropuesta.propuestaData.amount,
+      //   producto: procesado.datosPropuesta.propuestaData.productData.name
+      // });
     } else if (fsmState === '12_CONTRATA') {
       const procesado = procesarRespuestaContratada(respuesta);
       datosParaStore = procesado.datosContratada;
       rutaNavegacion = 'propuesta-contratada'; // Ruta especial para renderizar en el mismo componente
       
-      console.log('✅ Datos de propuesta contratada procesados:', {
-        fsmState: procesado.fsmState,
-        propuesta: procesado.datosContratada.propuesta.id,
-        producto: procesado.datosContratada.propuesta.producto.nombre
-      });
+      // console.log('✅ Datos de propuesta contratada procesados:', {
+      //   fsmState: procesado.fsmState,
+      //   propuesta: procesado.datosContratada.propuesta.id,
+      //   producto: procesado.datosContratada.propuesta.producto.nombre
+      // });
     } else if (fsmState === '06_VISITA_TECNICA') {
       const procesado = procesarRespuestaVisitaTecnica(respuesta);
       datosParaStore = procesado.datosPropuesta;
@@ -1062,7 +1062,7 @@ export const cargarComuneroPorId = async (clienteId: string, useFormStore?: any)
       
       // También cargar datos básicos del comunero en el store si se proporciona
       if (useFormStore && procesado.datosPropuesta.comunero) {
-        console.log('💾 Cargando datos del comunero post-visita técnica en Zustand store...');
+        // console.log('💾 Cargando datos del comunero post-visita técnica en Zustand store...');
         const { setField, setValidacionData, setFsmState } = useFormStore;
         
         // Datos básicos del formulario
@@ -1086,12 +1086,12 @@ export const cargarComuneroPorId = async (clienteId: string, useFormStore?: any)
         });
       }
       
-      console.log('✅ Datos de visita técnica procesados:', {
-        fsmState: procesado.fsmState,
-        propuestaId: procesado.datosPropuesta.propuestaId,
-        visitaCompletada: procesado.datosPropuesta.visitaTecnicaCompletada,
-        tipoInstalacion: procesado.datosPropuesta.tipoInstalacion
-      });
+      // console.log('✅ Datos de visita técnica procesados:', {
+      //   fsmState: procesado.fsmState,
+      //   propuestaId: procesado.datosPropuesta.propuestaId,
+      //   visitaCompletada: procesado.datosPropuesta.visitaTecnicaCompletada,
+      //   tipoInstalacion: procesado.datosPropuesta.tipoInstalacion
+      // });
     } else if (fsmState === '17_RESERVA_PAGADA') {
       // Para fsmState "17_RESERVA_PAGADA", procesar la propuesta completa que viene del backend
       const rawData = respuesta.data!.data as any; // Cast para acceder a la nueva estructura
@@ -1124,7 +1124,7 @@ export const cargarComuneroPorId = async (clienteId: string, useFormStore?: any)
       
       // También cargar datos básicos del comunero en el store si se proporciona
       if (useFormStore && rawData.comunero) {
-        console.log('💾 Cargando datos del comunero con reserva pagada en Zustand store...');
+        // console.log('💾 Cargando datos del comunero con reserva pagada en Zustand store...');
         const { setField, setValidacionData, setFsmState } = useFormStore;
         
         // Datos básicos del formulario
@@ -1148,14 +1148,14 @@ export const cargarComuneroPorId = async (clienteId: string, useFormStore?: any)
         });
       }
       
-      console.log('✅ Datos de reserva pagada procesados:', {
-        fsmState: fsmState,
-        propuestaId: rawData.propuestaId,
-        comunero: rawData.comunero.nombre,
-        precio: rawData.propuesta.precio,
-        producto: rawData.propuesta.nombre,
-        reservaPagada: true
-      });
+      // console.log('✅ Datos de reserva pagada procesados:', {
+      //   fsmState: fsmState,
+      //   propuestaId: rawData.propuestaId,
+      //   comunero: rawData.comunero.nombre,
+      //   precio: rawData.propuesta.precio,
+      //   producto: rawData.propuesta.nombre,
+      //   reservaPagada: true
+      // });
     } else if (fsmState === '07_VISITA_PAGADA') {
       // Para fsmState "07_VISITA_PAGADA", procesar igual que reserva pagada
       const rawData = respuesta.data!.data as any;
@@ -1188,7 +1188,7 @@ export const cargarComuneroPorId = async (clienteId: string, useFormStore?: any)
       
       // También cargar datos básicos del comunero en el store si se proporciona
       if (useFormStore && rawData.comunero) {
-        console.log('💾 Cargando datos del comunero con visita pagada en Zustand store...');
+        // console.log('💾 Cargando datos del comunero con visita pagada en Zustand store...');
         const { setField, setValidacionData, setFsmState } = useFormStore;
         
         // Datos básicos del formulario
@@ -1212,14 +1212,14 @@ export const cargarComuneroPorId = async (clienteId: string, useFormStore?: any)
         });
       }
       
-      console.log('✅ Datos de visita pagada procesados:', {
-        fsmState: fsmState,
-        propuestaId: rawData.propuestaId,
-        comunero: rawData.comunero.nombre,
-        precio: rawData.propuesta.precio,
-        producto: rawData.propuesta.nombre,
-        visitaPagada: true
-      });
+      // console.log('✅ Datos de visita pagada procesados:', {
+      //   fsmState: fsmState,
+      //   propuestaId: rawData.propuestaId,
+      //   comunero: rawData.comunero.nombre,
+      //   precio: rawData.propuesta.precio,
+      //   producto: rawData.propuesta.nombre,
+      //   visitaPagada: true
+      // });
     } else {
       // Para otros estados FSM, implementar según sea necesario
       console.warn(`⚠️ Estado FSM ${fsmState} no implementado aún`);

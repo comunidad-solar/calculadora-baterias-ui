@@ -67,24 +67,24 @@ const Propuesta = () => {
   const fsmState: string = location.state?.fromFsmState || '';
   
   // Debug: mostrar datos recibidos
-  console.log('📋 Datos de propuesta recibidos:', propuestaData);
-  console.log('📋 Estructura completa de propuestaData:', JSON.stringify(propuestaData, null, 2));
-  console.log('📋 Datos del UsuarioContext:', { validacionData, usuario });
-  console.log('📋 Datos del FormStore:', { comunero: form.comunero, enZona: form.enZona });
+  // console.log('📋 Datos de propuesta recibidos:', propuestaData);
+  // console.log('📋 Estructura completa de propuestaData:', JSON.stringify(propuestaData, null, 2));
+  // console.log('📋 Datos del UsuarioContext:', { validacionData, usuario });
+  // console.log('📋 Datos del FormStore:', { comunero: form.comunero, enZona: form.enZona });
   
-  // Debug: mostrar información del tipo de instalación
-  console.log('⚡ Tipo de instalación detectado:', tipoInstalacion);
-  console.log('🔧 ¿Requiere visita técnica?:', requiereVisitaTecnica);
-  console.log('📍 Location state completo:', location.state);
+  // // Debug: mostrar información del tipo de instalación
+  // console.log('⚡ Tipo de instalación detectado:', tipoInstalacion);
+  // console.log('🔧 ¿Requiere visita técnica?:', requiereVisitaTecnica);
+  // console.log('📍 Location state completo:', location.state);
   
   // Debug: información de visita técnica si aplica
   if (visitaTecnicaCompletada) {
-    console.log('✅ Visita técnica completada - Botón de solicitar visita deshabilitado');
+    // console.log('✅ Visita técnica completada - Botón de solicitar visita deshabilitado');
   }
   
   // Debug para servidor: verificar si estamos en modo debug
   const isDebugMode = new URLSearchParams(window.location.search).get('debug') === 'true';
-  console.log('🔧 Modo debug:', isDebugMode);
+  // console.log('🔧 Modo debug:', isDebugMode);
   
   // Datos por defecto si no hay propuestaData
   const defaultAmount = 4699;
@@ -111,8 +111,8 @@ const Propuesta = () => {
   const tieneInstalacionFV = form.respuestasPreguntas?.tieneInstalacionFV;
   
   // Debug: verificar el valor de tieneInstalacionFV
-  console.log('🔍 Debug tieneInstalacionFV:', tieneInstalacionFV, 'tipo:', typeof tieneInstalacionFV);
-  console.log('🔍 Debug respuestasPreguntas completo:', form.respuestasPreguntas);
+  // console.log('🔍 Debug tieneInstalacionFV:', tieneInstalacionFV, 'tipo:', typeof tieneInstalacionFV);
+  // console.log('🔍 Debug respuestasPreguntas completo:', form.respuestasPreguntas);
   
   // Items adicionales condicionados
   const conditionalItems: string[] = [];
@@ -120,9 +120,9 @@ const Propuesta = () => {
   // Solo agregar legalización si tiene instalación fotovoltaica
   if (tieneInstalacionFV === true) {
     conditionalItems.push("Legalización (*Solo si se tiene instalación fotovoltaica)");
-    console.log('✅ Agregando item de legalización porque tiene instalación FV');
+    // console.log('✅ Agregando item de legalización porque tiene instalación FV');
   } else {
-    console.log('❌ NO agregando item de legalización. Valor:', tieneInstalacionFV);
+    // console.log('❌ NO agregando item de legalización. Valor:', tieneInstalacionFV);
   }
   
   // Combinar todos los items adicionales
@@ -167,41 +167,41 @@ const Propuesta = () => {
   const [loadingReserva, setLoadingReserva] = useState(false);
   const [showConfirmacionEnvio, setShowConfirmacionEnvio] = useState(false);
   
-  console.log('💰 Precio a mostrar:', amount);
-  console.log('📦 Items a mostrar:', items);
-  console.log('🏷️ Nombre del grupo:', groupName);
-  console.log('🔍 PropuestaData completa:', propuestaData);
+  // console.log('💰 Precio a mostrar:', amount);
+  // console.log('📦 Items a mostrar:', items);
+  // console.log('🏷️ Nombre del grupo:', groupName);
+  // console.log('🔍 PropuestaData completa:', propuestaData);
 
-  // Debug adicional para identificar problemas en servidor
-  console.log('🔍 Debug validaciones:');
-  console.log('  - validacionData (original):', validacionData);
-  console.log('  - fallbackValidacionData:', fallbackValidacionData);
-  console.log('  - usuario_propuesta:', usuario_propuesta);
-  console.log('  - fallbackValidacionData.enZona:', fallbackValidacionData?.enZona);
-  console.log('  - propuestaData?.conditions?.enZona:', propuestaData?.conditions?.enZona);
-  console.log('  - ¿fallbackValidacionData existe?', !!fallbackValidacionData);
-  console.log('  - ¿usuario_propuesta existe?', !!usuario_propuesta);
+  // // Debug adicional para identificar problemas en servidor
+  // console.log('🔍 Debug validaciones:');
+  // console.log('  - validacionData (original):', validacionData);
+  // console.log('  - fallbackValidacionData:', fallbackValidacionData);
+  // console.log('  - usuario_propuesta:', usuario_propuesta);
+  // console.log('  - fallbackValidacionData.enZona:', fallbackValidacionData?.enZona);
+  // console.log('  - propuestaData?.conditions?.enZona:', propuestaData?.conditions?.enZona);
+  // console.log('  - ¿fallbackValidacionData existe?', !!fallbackValidacionData);
+  // console.log('  - ¿usuario_propuesta existe?', !!usuario_propuesta);
   
   // Obtener enZona desde múltiples fuentes posibles (solo strings válidos)
   const enZonaFromPropuesta = propuestaData?.conditions?.enZona;
   const enZonaFromFallback = fallbackValidacionData?.enZona;
   const enZonaFromNestedData = propuestaData?.data?.conditions?.enZona;
   
-  console.log('  - enZonaFromPropuesta:', enZonaFromPropuesta, typeof enZonaFromPropuesta);
-  console.log('  - enZonaFromFallback:', enZonaFromFallback, typeof enZonaFromFallback);
-  console.log('  - enZonaFromNestedData:', enZonaFromNestedData, typeof enZonaFromNestedData);
+  // console.log('  - enZonaFromPropuesta:', enZonaFromPropuesta, typeof enZonaFromPropuesta);
+  // console.log('  - enZonaFromFallback:', enZonaFromFallback, typeof enZonaFromFallback);
+  // console.log('  - enZonaFromNestedData:', enZonaFromNestedData, typeof enZonaFromNestedData);
   
   // Validar enZona - solo acepta los 3 valores válidos como strings
   const valoresValidosEnZona = ["inZone", "inZoneWithCost", "outZone"];
   const enZonaParaValidar = enZonaFromPropuesta || enZonaFromFallback || enZonaFromNestedData;
   
-  console.log('  - enZonaParaValidar:', enZonaParaValidar, typeof enZonaParaValidar);
+  // console.log('  - enZonaParaValidar:', enZonaParaValidar, typeof enZonaParaValidar);
   
   const enZonaValida = !enZonaParaValidar || 
                       (typeof enZonaParaValidar === 'string' && 
                        (enZonaParaValidar === "inZone" || enZonaParaValidar === "inZoneWithCost"));
   
-  console.log('  - ¿enZona es válida?', enZonaValida);
+  // console.log('  - ¿enZona es válida?', enZonaValida);
   
   // Debug adicional: si enZona no es válida, mostrar por qué
   if (!enZonaValida) {
@@ -231,7 +231,7 @@ const Propuesta = () => {
         return;
       }
 
-      console.log('📞 Solicitando visita técnica para propuestaId:', propuestaIdFromStore);
+      // console.log('📞 Solicitando visita técnica para propuestaId:', propuestaIdFromStore);
 
       // Extraer datos de direccion si es un objeto
       let direccionTexto = '';
@@ -277,21 +277,21 @@ const Propuesta = () => {
         type: "contrata"
       };
 
-      console.log('📋 Datos para enviar:', datosVisitaTecnica);
+      // console.log('📋 Datos para enviar:', datosVisitaTecnica);
 
       // Llamar al servicio
       const resultado = await bateriaService.solicitarVisitaTecnica(datosVisitaTecnica);
 
       if (resultado.success) {
-        console.log('✅ Visita técnica solicitada exitosamente:', resultado);
-        console.log('💳 Verificando URL de pago:', resultado.data?.paymentLink);
+        // console.log('✅ Visita técnica solicitada exitosamente:', resultado);
+        // console.log('💳 Verificando URL de pago:', resultado.data?.paymentLink);
         
         // Verificar si está en modo asesores
         const isAsesores = form.asesores;
         
         if (!isAsesores && resultado.data?.paymentLink) {
           // No está en dominio de asesores - redirigir a Stripe Checkout
-          console.log('🔗 Redirigiendo a Stripe Checkout para visita técnica (usuario externo)');
+          // console.log('🔗 Redirigiendo a Stripe Checkout para visita técnica (usuario externo)');
           
           // Pequeño delay para feedback visual
           setTimeout(() => {
@@ -302,14 +302,14 @@ const Propuesta = () => {
         } else {
           // Está en dominio de asesores o no hay URL de pago - mostrar modal tradicional
           setShowVisitaTecnicaModal(true);
-          console.log('📧 Mostrando confirmación tradicional para visita técnica');
+          // console.log('📧 Mostrando confirmación tradicional para visita técnica');
         }
       } else {
-        console.error('❌ Error al solicitar visita técnica:', resultado.error);
+        // console.error('❌ Error al solicitar visita técnica:', resultado.error);
         alert('Error al procesar tu solicitud. Por favor, inténtalo de nuevo o contacta con soporte.');
       }
     } catch (error) {
-      console.error('❌ Error inesperado:', error);
+      // console.error('❌ Error inesperado:', error);
       alert('Error inesperado. Por favor, inténtalo de nuevo más tarde.');
     } finally {
       // Solo resetear el botón si no hay redirección
@@ -364,13 +364,13 @@ const handleConfirmarCompra = async () => {
 
     try {
       const propuestaIdFromStore = form.propuestaId;
-      console.log('🛒 Iniciando proceso de compra para propuestaId:', propuestaIdFromStore, 'con DNI:', dniInput);
+      // console.log('🛒 Iniciando proceso de compra para propuestaId:', propuestaIdFromStore, 'con DNI:', dniInput);
 
       // Enviar código de validación usando el propuestaId y el DNI
       const resultado = await comuneroService.enviarCodigoPorPropuestaId(propuestaIdFromStore!, dniInput.trim());
 
       if (resultado.success) {
-        console.log('✅ Código enviado exitosamente para compra con DNI:', dniInput);
+        // console.log('✅ Código enviado exitosamente para compra con DNI:', dniInput);
         
         // Cerrar modal y limpiar estado
         setShowDniModal(false);
@@ -424,16 +424,13 @@ const handleConfirmarCompra = async () => {
   }
   
   if (isDebugMode) {
-    console.log('🔧 Modo debug activo - saltando validaciones');
+    // console.log('🔧 Modo debug activo - saltando validaciones');
   }
   
-  console.log('✅ Todas las validaciones pasaron, renderizando propuesta');
+  // console.log('✅ Todas las validaciones pasaron, renderizando propuesta');
 
-  // La propuestaId ya está gestionada centralmente en Zustand
-  // No necesitamos extraerla de otras fuentes para evitar conflictos
-  console.log('💾 PropuestaId actual en store:', form.propuestaId);
+  // console.log('💾 PropuestaId actual en store:', form.propuestaId);
 
-  // Crear usuario de display con datos de fallback para el render
   const usuarioDisplay = usuario_propuesta || {
     nombre: 'Usuario',
     email: 'usuario@ejemplo.com',

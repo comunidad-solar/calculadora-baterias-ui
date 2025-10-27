@@ -217,7 +217,7 @@ const GoogleAddressInput: React.FC<GoogleAddressInputProps> = ({
 
   const handleSelectSuggestion = async (prediction: PlacePrediction) => {
     if (isSelecting) {
-      console.log('⏳ Ya hay una selección en proceso, ignorando...');
+      // console.log('⏳ Ya hay una selección en proceso, ignorando...');
       return;
     }
     

@@ -25,7 +25,7 @@ const ClienteViewer = () => {
 
       // Evitar múltiples cargas para el mismo ID
       if (hasLoadedRef.current) {
-        console.log(`⚠️  Ya se cargaron los datos para cliente: ${id}`);
+        // console.log(`⚠️  Ya se cargaron los datos para cliente: ${id}`);
         return;
       }
 
@@ -34,19 +34,19 @@ const ClienteViewer = () => {
       setError(null);
       
       try {
-        console.log(`🔍 Cargando datos para cliente: ${id}`);
+        // console.log(`🔍 Cargando datos para cliente: ${id}`);
         
         // Usar la nueva función que carga automáticamente en Zustand
         const resultado = await cargarComuneroPorId(id, formStore);
         
         if (resultado.success && resultado.fsmState === '12_CONTRATA') {
-          console.log('✅ Propuesta contratada detectada, renderizando vista específica');
+          // console.log('✅ Propuesta contratada detectada, renderizando vista específica');
           
           // Para fsmState "12_CONTRATA", mostrar vista específica en lugar de navegar
           setPropuestaContratadaData(resultado.datosParaStore);
           
         } else if (resultado.success && resultado.fsmState === '04_DATOS_RECOGIDOS') {
-          console.log('✅ Propuesta generada detectada, navegando a vista de propuesta');
+          // console.log('✅ Propuesta generada detectada, navegando a vista de propuesta');
           
           // Para fsmState "04_DATOS_RECOGIDOS", navegar a propuesta con datos
           if (resultado.datosParaStore && 'propuestaData' in resultado.datosParaStore) {
@@ -68,7 +68,7 @@ const ClienteViewer = () => {
           }
         
         } else if (resultado.success && resultado.fsmState === '17_RESERVA_PAGADA') {
-          console.log('✅ Reserva pagada detectada, navegando a vista de propuesta sin botones de reservar');
+          // console.log('✅ Reserva pagada detectada, navegando a vista de propuesta sin botones de reservar');
           
           // Para fsmState "17_RESERVA_PAGADA", usar los datos reales de la propuesta que vienen del backend
           if (resultado.datosParaStore && 'propuestaData' in resultado.datosParaStore) {
@@ -96,7 +96,7 @@ const ClienteViewer = () => {
           }
         
         } else if (resultado.success && resultado.fsmState === '07_VISITA_PAGADA') {
-          console.log('✅ Visita pagada detectada, navegando a vista de propuesta sin botones de reservar');
+          // console.log('✅ Visita pagada detectada, navegando a vista de propuesta sin botones de reservar');
           
           // Para fsmState "07_VISITA_PAGADA", usar los datos reales de la propuesta que vienen del backend
           if (resultado.datosParaStore && 'propuestaData' in resultado.datosParaStore) {
@@ -124,7 +124,7 @@ const ClienteViewer = () => {
           }
         
         } else if (resultado.fsmState === '06_VISITA_TECNICA') {
-          console.log('🔧 Procesando fsmState: 06_VISITA_TECNICA');
+          // console.log('🔧 Procesando fsmState: 06_VISITA_TECNICA');
           
           // Para fsmState "06_VISITA_TECNICA", navegar a propuesta con datos de visita técnica
           if (resultado.datosParaStore && 'propuestaData' in resultado.datosParaStore) {
@@ -146,8 +146,8 @@ const ClienteViewer = () => {
           }
           
         } else if (resultado.success && resultado.datosGuardados) {
-          console.log('✅ Datos cargados automáticamente en Zustand');
-          console.log(`🧭 Navegando a: ${resultado.rutaNavegacion} para fsmState: ${resultado.fsmState}`);
+          // console.log('✅ Datos cargados automáticamente en Zustand');
+          // console.log(`🧭 Navegando a: ${resultado.rutaNavegacion} para fsmState: ${resultado.fsmState}`);
           
           // Navegar a la vista correcta según el fsmState
           navigate(resultado.rutaNavegacion);

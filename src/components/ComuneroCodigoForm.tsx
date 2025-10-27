@@ -62,12 +62,12 @@ const ComuneroCodigoForm = () => {
       
       if (fromCompra && propuestaId) {
         // Flujo de compra/contratación: usar endpoint de contratación
-        console.log('🛒 Validando código para contratación con propuestaId:', propuestaId);
+        // console.log('🛒 Validando código para contratación con propuestaId:', propuestaId);
         response = await comuneroService.validarCodigoContratacion(codigo, propuestaId);
         
         // Para flujo de contratación, esperamos solo {codigoValido: true}
         if (response.success && response.data?.codigoValido === true) {
-          console.log('✅ Código válido para contratación, redirigiendo a firma de contrato');
+          // console.log('✅ Código válido para contratación, redirigiendo a firma de contrato');
           showToast('¡Código validado correctamente!', 'success');
           
           // Redirigir directamente a firma de contrato
@@ -83,31 +83,31 @@ const ComuneroCodigoForm = () => {
         }
       } else {
         // Flujo normal de comunero: usar endpoint estándar
-        console.log('🔍 Validando código estándar con email:', email);
+        // console.log('🔍 Validando código estándar con email:', email);
         response = await comuneroService.validarCodigo(codigo, email);
         // Verificar si es el caso específico de contacto no encontrado
         if (!response.success && (response as any).data?.contactoEncontrado === false) {
-          console.log('🚫 Contacto no encontrado en el sistema, mostrando modal de opciones');
+          // console.log('🚫 Contacto no encontrado en el sistema, mostrando modal de opciones');
           setShowNoContactModal(true);
           return;
         }
         if (response.success && (response as any).data?.contactoEncontrado === false) {
-          console.log('🚫 Contacto no encontrado en el sistema, mostrando modal de opciones');
+          // console.log('🚫 Contacto no encontrado en el sistema, mostrando modal de opciones');
           setShowNoContactModal(true);
           return;
         }
         
         // Para flujo normal, esperamos estructura completa
         if (response.success && response.data) {
-          console.log('✅ Código validado para flujo normal');
+          // console.log('✅ Código validado para flujo normal');
           showToast('¡Código validado correctamente!', 'success');
           
           // Log específico para analisisTratos
           if (response.data?.analisisTratos) {
-            console.log('📊 Análisis de tratos:', response.data.analisisTratos);
+            // console.log('📊 Análisis de tratos:', response.data.analisisTratos);
           }
           
-          console.log('🔍 Estado de enZona:', response.data?.enZona);
+          // console.log('🔍 Estado de enZona:', response.data?.enZona);
           
           // Guardar datos de validación en el contexto
           const validacionData = {
@@ -119,7 +119,7 @@ const ComuneroCodigoForm = () => {
             analisisTratos: response.data.analisisTratos
           };
           
-          console.log('💾 Guardando validacionData:', validacionData);
+          // console.log('💾 Guardando validacionData:', validacionData);
           setValidacionData(validacionData);
           
           // Redirigir según el estado de la zona

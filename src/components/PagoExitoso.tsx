@@ -22,9 +22,9 @@ const PagoExitoso = () => {
       if (urlPropuestaId && type) {
         setApiLoading(true);
         try {
-          console.log('🔄 Procesando fase reserva pagada...');
+          // console.log('🔄 Procesando fase reserva pagada...');
           const result = await bateriaService.procesarFaseReservaPagado(urlPropuestaId, type);
-          console.log('✅ Respuesta del backend:', result);
+          // console.log('✅ Respuesta del backend:', result);
           
           if (result.success) {
             setPaymentSuccess(true);
@@ -64,10 +64,10 @@ const PagoExitoso = () => {
       if (propuestaId && invoiceId && !urlPropuestaId) {
         setLoading(true);
         try {
-          console.log('🔄 Confirmando pago en el backend...');
+          // console.log('🔄 Confirmando pago en el backend...');
           // Aquí podrías hacer una llamada al backend para confirmar el pago
           // await bateriaService.confirmarPago({ propuestaId, invoiceId });
-          console.log('✅ Pago confirmado en el backend');
+          // console.log('✅ Pago confirmado en el backend');
         } catch (error) {
           console.error('❌ Error confirmando pago:', error);
         } finally {
@@ -223,11 +223,11 @@ const PagoExitoso = () => {
                       <ul className="list-unstyled mb-0">
                         <li className="mb-2">
                           <i className="fas fa-info-circle text-warning me-2"></i>
-                          Tu pago está siendo procesado por el sistema bancario
+                          Tu pago está siendo procesado por el sistema bancario o ha ocurrido un error al momento de procesarlo
                         </li>
                         <li className="mb-2">
                           <i className="fas fa-bell text-warning me-2"></i>
-                          Te notificaremos por email cuando se complete
+                          Te notificaremos por email cuando se complete o cuando tengas que tomar alguna acción
                         </li>
                         <li className="mb-2">
                           <i className="fas fa-headset text-warning me-2"></i>

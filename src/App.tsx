@@ -32,7 +32,7 @@ function App() {
     Object.entries(utmParams).forEach(([key, value]) => {
       if (value) {
         setField(key as keyof typeof utmParams, value);
-        console.log(`📊 UTM capturado: ${key}=${value}`);
+        // console.log(`📊 UTM capturado: ${key}=${value}`);
       }
     });
 
@@ -54,7 +54,7 @@ function App() {
     setField('asesores', context.isAsesores);
     (window as any).asesores = context.isAsesores;
     
-    console.log(context.isAsesores ? '🎯 Modo asesores' : '🌐 Modo normal');
+    // console.log(context.isAsesores ? '🎯 Modo asesores' : '🌐 Modo normal');
 
     // DESHABILITADO: El dealId ahora se procesa desde HomeSelector input
     // if (context.shouldProcessDeal && context.dealId && !dealProcessed) {

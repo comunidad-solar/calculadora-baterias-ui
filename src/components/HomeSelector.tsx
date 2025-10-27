@@ -45,7 +45,7 @@ const HomeSelector: React.FC<HomeSelectorProps> = ({ onSelect }) => {
 
     setIsProcessing(true);
     try {
-      console.log('📡 Iniciando búsqueda de deal:', dealId.trim());
+      // console.log('📡 Iniciando búsqueda de deal:', dealId.trim());
       
       // Guardar el dealId en el store
       setField('dealId', dealId.trim());
@@ -54,7 +54,7 @@ const HomeSelector: React.FC<HomeSelectorProps> = ({ onSelect }) => {
       const response = await bateriaService.obtenerDealPorId(dealId.trim());
       
       if (response.success && response.data?.data) {
-        console.log('✅ Deal procesado exitosamente:', response.data.data);
+        // console.log('✅ Deal procesado exitosamente:', response.data.data);
         
         // Actualizar el store con todos los datos del deal
         setValidacionData({
