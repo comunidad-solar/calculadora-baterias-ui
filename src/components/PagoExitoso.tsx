@@ -11,7 +11,7 @@ const PagoExitoso = () => {
   const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [apiLoading, setApiLoading] = useState(false);
-  const [paymentSuccess, setPaymentSuccess] = useState<boolean | null>(null); // null = pendiente, true = éxito, false = error
+  const [paymentSuccess, setPaymentSuccess] = useState<boolean | null>(false); // null = pendiente, true = éxito, false = error
   
   // Datos del pago exitoso - puede venir de la URL o del state
   const { propuestaId: statePropuestaId, invoiceId } = location.state || {};
@@ -115,7 +115,7 @@ const PagoExitoso = () => {
                     {apiLoading ? (
                       'Verificando el estado de tu pago...'
                     ) : paymentSuccess === false ? (
-                      'Tu pago aún está siendo procesado. Te notificaremos cuando esté completado.'
+                      'Tu pago aún no se ha completado. Por favor realiza el pago para continuar.'
                     ) : paymentSuccess === true ? (
                       'Tu reserva ha sido confirmada exitosamente. Hemos recibido tu pago.'
                     ) : (
