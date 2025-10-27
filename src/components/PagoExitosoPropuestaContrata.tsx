@@ -30,7 +30,7 @@ const PagoExitosoPropuestaContrata = () => {
                 // Después de mostrar el éxito, procesamos la propuesta
         setTimeout(async () => {
           try {
-            const result = await bateriaService.procesarBateriasPagadas(propuestaId);
+ await bateriaService.procesarBateriasPagadas(propuestaId);
             
             // console.log('Propuesta procesada:', result);
             

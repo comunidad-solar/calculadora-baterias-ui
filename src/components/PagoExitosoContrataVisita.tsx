@@ -17,7 +17,7 @@ const PagoExitosoContrataVisita = () => {
       
       setLoading(true);
       try {
-        const result = await bateriaService.procesarVisitaTecnicaPagada(propuestaId);
+        await bateriaService.procesarVisitaTecnicaPagada(propuestaId);
         
         // console.log('Visita técnica procesada:', result);
         showToast('Visita técnica confirmada exitosamente', 'success');

@@ -77,7 +77,7 @@ const FirmaContrato = () => {
       
       // Verificar que el mensaje es de nuestro sistema
       if (event.data.type === 'ZOHO_CONTRACT_SIGNED' || event.data.type === 'CONTRACT_COMPLETED') {
-        const { propuestaId: messagePropuestaId, targetUrl } = event.data;
+        const { propuestaId: messagePropuestaId } = event.data;
         
         // console.log('✅ Contrato firmado detectado!');
         // console.log('📋 PropuestaId del mensaje:', messagePropuestaId);
