@@ -11,8 +11,6 @@ const PagoExitoso = () => {
   const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [apiLoading, setApiLoading] = useState(false);
-  const [paymentPending, setPaymentPending] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
   const [paymentSuccess, setPaymentSuccess] = useState<boolean | null>(null); // null = pendiente, true = éxito, false = error
   
   // Datos del pago exitoso - puede venir de la URL o del state
@@ -26,44 +24,23 @@ const PagoExitoso = () => {
         try {
           console.log('🔄 Procesando fase reserva pagada...');
           const result = await bateriaService.procesarFaseReservaPagado(urlPropuestaId, type);
-          console.log('✅ Fase reserva procesada exitosamente:', result);
+          console.log('✅ Respuesta del backend:', result);
           
           if (result.success) {
             setPaymentSuccess(true);
-            setPaymentPending(false);
-            setRetryCount(0);
             showToast('Pago procesado exitosamente', 'success');
+            // Redirigir a la propuesta después de 2 segundos
+            setTimeout(() => {
+              navigate(`/propuesta/${urlPropuestaId}`);
+            }, 2000);
           } else {
             setPaymentSuccess(false);
-            throw new Error(result.message || 'Payment not completed');
+            showToast(result.message || 'El pago aún está siendo procesado', 'warning');
           }
         } catch (error: any) {
           console.error('❌ Error procesando fase reserva:', error);
-          
-          // Manejar específicamente el caso de pago no completado
-          if (error?.message?.includes('Payment not completed') || 
-              error?.response?.data?.message?.includes('Payment not completed')) {
-            console.warn('⏳ Pago aún no completado, esperando...');
-            setPaymentPending(true);
-            
-            // Solo 1 reintento automático
-            if (retryCount < 1) {
-              setRetryCount(prev => prev + 1);
-              showToast('El pago está siendo procesado, reintentando...', 'warning');
-              
-              // Reintentar después de 3 segundos
-              setTimeout(() => {
-                procesarFaseReserva();
-              }, 3000);
-            } else {
-              setPaymentSuccess(false);
-              setPaymentPending(false);
-              showToast('El pago está tomando más tiempo del esperado. Por favor contacta con soporte.', 'error');
-            }
-          } else {
-            setPaymentSuccess(false);
-            showToast('Error al procesar el pago', 'error');
-          }
+          setPaymentSuccess(false);
+          showToast('Error al procesar el pago. Por favor contacta con soporte.', 'error');
         } finally {
           setApiLoading(false);
         }
@@ -74,11 +51,6 @@ const PagoExitoso = () => {
 
   useEffect(() => {
     // Debug: verificar qué datos llegan
-    console.log('🔍 Datos recibidos en PagoExitoso:', location.state);
-    console.log('📋 PropuestaId URL:', urlPropuestaId);
-    console.log('📋 Type URL:', type);
-    console.log('📋 PropuestaId final:', propuestaId);
-    console.log('📋 InvoiceId:', invoiceId);
 
     // Solo redirigir si realmente no hay ningún dato útil
     if (!propuestaId && !invoiceId && !location.state) {
@@ -106,7 +78,7 @@ const PagoExitoso = () => {
 
     procesarFaseReserva();
     confirmarPago();
-  }, [propuestaId, invoiceId, urlPropuestaId, type, navigate, location.state, showToast]);
+  }, []); // Solo ejecutar una vez al montar el componente
 
 
 
@@ -141,9 +113,7 @@ const PagoExitoso = () => {
                   
                   <p className="lead text-muted mb-4">
                     {apiLoading ? (
-                      paymentPending ? 
-                        'Tu pago está siendo verificado por el sistema...' :
-                        'Procesando tu pago...'
+                      'Verificando el estado de tu pago...'
                     ) : paymentSuccess === false ? (
                       'Tu pago aún está siendo procesado. Te notificaremos cuando esté completado.'
                     ) : paymentSuccess === true ? (
@@ -160,11 +130,7 @@ const PagoExitoso = () => {
                         <span className="visually-hidden">Procesando...</span>
                       </div>
                       <p className="mt-2 text-muted">
-                        {paymentPending ? (
-                          'Estamos verificando tu pago con el sistema bancario...'
-                        ) : (
-                          'Estamos procesando tu pago, por favor espera...'
-                        )}
+                        Verificando el estado de tu pago, por favor espera...
                       </p>
                     </div>
                   )}
