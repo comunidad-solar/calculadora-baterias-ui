@@ -7,12 +7,13 @@ import { ToastProvider } from "./context/ToastContext";
 import { UsuarioProvider } from "./context/UsuarioContext";
 import { useFormStore } from "./zustand/formStore";
 import { validateAsesoresDealContext, logDomainInfo } from "./utils/domainUtils";
+import useTracking from "./hooks/useTracking";
 
 function App() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { setField } = useFormStore();
-
+  useTracking();
 
   useEffect(() => {
     // Log información del dominio

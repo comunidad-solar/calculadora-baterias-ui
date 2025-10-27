@@ -1,5 +1,5 @@
 // Configuración base para las llamadas a la API
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://calculadora-baterias-api-20084454554.development.catalystserverless.eu/server/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://calculadora-baterias-api-20084454554.catalystserverless.eu/server/api';
 
 // Importar estado FSM por defecto
 import { DEFAULT_FSM_STATE } from '../types/fsmTypes';
