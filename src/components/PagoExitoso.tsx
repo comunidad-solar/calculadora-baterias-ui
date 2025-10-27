@@ -60,22 +60,7 @@ const PagoExitoso = () => {
       }
     };
 
-    // Opcional: Confirmar el pago en el backend (funcionalidad antigua)
-    const confirmarPago = async () => {
-      if (propuestaId && invoiceId && !urlPropuestaId) {
-        setLoading(true);
-        try {
-          console.log('🔄 Confirmando pago en el backend...');
-          // Aquí podrías hacer una llamada al backend para confirmar el pago
-          // await bateriaService.confirmarPago({ propuestaId, invoiceId });
-          console.log('✅ Pago confirmado en el backend');
-        } catch (error) {
-          console.error('❌ Error confirmando pago:', error);
-        } finally {
-          setLoading(false);
-        }
-      }
-    };
+ 
 
   useEffect(() => {
     // Debug: verificar qué datos llegan
