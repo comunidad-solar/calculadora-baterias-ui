@@ -11,38 +11,49 @@ const PagoExitoso = () => {
   const { showToast } = useToast();
   const [loading, setLoading] = useState(false);
   const [apiLoading, setApiLoading] = useState(false);
+  const [paymentPending, setPaymentPending] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   
   // Datos del pago exitoso - puede venir de la URL o del state
   const { propuestaId: statePropuestaId, invoiceId } = location.state || {};
   const propuestaId = urlPropuestaId || statePropuestaId;
 
-  useEffect(() => {
-    // Debug: verificar qué datos llegan
-    console.log('🔍 Datos recibidos en PagoExitoso:', location.state);
-    console.log('📋 PropuestaId URL:', urlPropuestaId);
-    console.log('📋 Type URL:', type);
-    console.log('📋 PropuestaId final:', propuestaId);
-    console.log('📋 InvoiceId:', invoiceId);
-
-    // Solo redirigir si realmente no hay ningún dato útil
-    if (!propuestaId && !invoiceId && !location.state) {
-      console.warn('⚠️ No hay datos de pago válidos');
-      // Comentamos la redirección automática para evitar el problema
-      // setTimeout(() => navigate('/'), 2000);
-    }
-
-    // Si tenemos parámetros de URL (nueva funcionalidad), hacer la llamada al backend
-    const procesarFaseReserva = async () => {
+  // Si tenemos parámetros de URL (nueva funcionalidad), hacer la llamada al backend
+  const procesarFaseReserva = async () => {
       if (urlPropuestaId && type) {
         setApiLoading(true);
         try {
           console.log('🔄 Procesando fase reserva pagada...');
           const result = await bateriaService.procesarFaseReservaPagado(urlPropuestaId, type);
           console.log('✅ Fase reserva procesada exitosamente:', result);
+          setPaymentPending(false);
+          setRetryCount(0);
           showToast('Pago procesado exitosamente', 'success');
-        } catch (error) {
+        } catch (error: any) {
           console.error('❌ Error procesando fase reserva:', error);
-          showToast('Error al procesar el pago', 'error');
+          
+          // Manejar específicamente el caso de pago no completado
+          if (error?.message?.includes('Payment not completed') || 
+              error?.response?.data?.message?.includes('Payment not completed')) {
+            console.warn('⏳ Pago aún no completado, esperando...');
+            setPaymentPending(true);
+            
+            // Solo 1 reintento automático
+            if (retryCount < 1) {
+              setRetryCount(prev => prev + 1);
+              showToast('El pago está siendo procesado, reintentando...', 'warning');
+              
+              // Reintentar después de 3 segundos
+              setTimeout(() => {
+                procesarFaseReserva();
+              }, 3000);
+            } else {
+              setPaymentPending(false);
+              showToast('El pago está tomando más tiempo del esperado. Por favor contacta con soporte.', 'error');
+            }
+          } else {
+            showToast('Error al procesar el pago', 'error');
+          }
         } finally {
           setApiLoading(false);
         }
@@ -66,9 +77,43 @@ const PagoExitoso = () => {
       }
     };
 
+  useEffect(() => {
+    // Debug: verificar qué datos llegan
+    console.log('🔍 Datos recibidos en PagoExitoso:', location.state);
+    console.log('📋 PropuestaId URL:', urlPropuestaId);
+    console.log('📋 Type URL:', type);
+    console.log('📋 PropuestaId final:', propuestaId);
+    console.log('📋 InvoiceId:', invoiceId);
+
+    // Solo redirigir si realmente no hay ningún dato útil
+    if (!propuestaId && !invoiceId && !location.state) {
+      console.warn('⚠️ No hay datos de pago válidos');
+      // Comentamos la redirección automática para evitar el problema
+      // setTimeout(() => navigate('/'), 2000);
+    }
+
+    // Opcional: Confirmar el pago en el backend (funcionalidad antigua)
+    const confirmarPago = async () => {
+      if (propuestaId && invoiceId && !urlPropuestaId) {
+        setLoading(true);
+        try {
+          console.log('🔄 Confirmando pago en el backend...');
+          // Aquí podrías hacer una llamada al backend para confirmar el pago
+          // await bateriaService.confirmarPago({ propuestaId, invoiceId });
+          console.log('✅ Pago confirmado en el backend');
+        } catch (error) {
+          console.error('❌ Error confirmando pago:', error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
     procesarFaseReserva();
     confirmarPago();
   }, [propuestaId, invoiceId, urlPropuestaId, type, navigate, location.state, showToast]);
+
+
 
   return (
     <PageTransition>
@@ -95,7 +140,9 @@ const PagoExitoso = () => {
                   
                   <p className="lead text-muted mb-4">
                     {apiLoading ? (
-                      'Procesando tu pago...'
+                      paymentPending ? 
+                        'Tu pago está siendo verificado por el sistema...' :
+                        'Procesando tu pago...'
                     ) : (
                       'Tu reserva ha sido confirmada exitosamente. Hemos recibido tu pago.'
                     )}
@@ -108,7 +155,11 @@ const PagoExitoso = () => {
                         <span className="visually-hidden">Procesando...</span>
                       </div>
                       <p className="mt-2 text-muted">
-                        Estamos procesando tu pago, por favor espera...
+                        {paymentPending ? (
+                          'Estamos verificando tu pago con el sistema bancario...'
+                        ) : (
+                          'Estamos procesando tu pago, por favor espera...'
+                        )}
                       </p>
                     </div>
                   )}
