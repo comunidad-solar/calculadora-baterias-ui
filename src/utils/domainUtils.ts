@@ -39,7 +39,7 @@ export const getDomainInfo = () => {
  */
 export const logDomainInfo = () => {
   const info = getDomainInfo();
-  console.log('🌐 Información del dominio:', info);
+  // console.log('🌐 Información del dominio:', info);
   return info;
 };
 

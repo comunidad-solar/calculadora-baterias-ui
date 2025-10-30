@@ -7,14 +7,7 @@ import { getDealIdIfAsesores, isAsesoresDomain, validateAsesoresDealContext } fr
 
 // ✅ CORRECTO: Usar getDealIdIfAsesores()
 export const ejemploCorrectoValidacion = () => {
-  const dealId = getDealIdIfAsesores(); // Solo retorna dealId si estamos en asesores
-  
-  if (dealId) {
-    console.log('✅ DealId válido en modo asesores:', dealId);
-    // Procesar dealId...
-  } else {
-    console.log('ℹ️ No hay dealId válido o no estamos en modo asesores');
-  }
+  getDealIdIfAsesores(); 
 };
 
 // ✅ CORRECTO: Usar validateAsesoresDealContext()
@@ -40,13 +33,12 @@ export const ejemploValidacionCompleta = () => {
 // ✅ CORRECTO: Validación manual completa
 export const ejemploValidacionManual = () => {
   if (!isAsesoresDomain()) {
-    console.log('ℹ️ No estamos en dominio asesores, ignorando cualquier dealId');
     return;
   }
   
   const dealId = getDealIdIfAsesores();
   if (dealId) {
-    console.log('✅ Procesando dealId en modo asesores:', dealId);
+    console.log('✅ Procesando dealId en modo asesores:');
     // Procesar dealId...
   }
 };

@@ -26,7 +26,6 @@ const ResultadoValidacion = () => {
   useEffect(() => {
     // Si no hay datos en el contexto pero sí en location.state, cargarlos
     if ((!validacionData || !usuario) && location.state?.validacionData) {
-      console.log('🔄 Cargando datos desde location.state:', location.state.validacionData);
       setValidacionData(location.state.validacionData);
     }
   }, [validacionData, usuario, location.state, setValidacionData]);
@@ -54,8 +53,6 @@ const ResultadoValidacion = () => {
   }, [validacionData, usuario]);
 
   if (!validacionData || !usuario) {
-    console.log("validacionDData", validacionData);
-    console.log("usuario", usuario);
      navigate('/');
     return null;
   }
