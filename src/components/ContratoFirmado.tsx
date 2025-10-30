@@ -106,7 +106,7 @@ const ContratoFirmado = () => {
                       <div className="col-md-6">
                         <label className="form-label fw-semibold text-muted"></label>
                         <p className="mb-0 font-monospace text-break">
-                            <a href={`https://main.dbig9vzf5g2rs.amplifyapp.com/comunero/${propuestaId}`} target="_blank" rel="noopener noreferrer">
+                            <a href={`https://prueba-contrata.dbig9vzf5g2rs.amplifyapp.com/comunero/${propuestaId}`} target="_blank" rel="noopener noreferrer">
                                 VER PROPUESTA
                             </a>
                         </p>
