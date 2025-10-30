@@ -13,13 +13,13 @@ import imagenFondoPropuesta4 from '../assets/imagenFondoPropuesta4.png';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useFormStore } from '../zustand/formStore';
-import { bateriaService, comuneroService } from '../services/apiService';
+import { bateriaService } from '../services/apiService';
 import iconoBateria from '../assets/SolaXBatteryIcon.svg'
 import iconoDescargaElectricidad from '../assets/BateriaSolaXElectricidadIcon.svg'
 import iconResilence from '../assets/SolaXResilienceIcon.svg'
 import iconAhorro from '../assets/SolaXBatteryIcono.svg'
 import iconSeguridad from '../assets/BateriaSolaxIcono.svg'
-// propuesta para contratar baterías
+// propuesta para reservar baterías
 // Tipos para los datos de la propuesta
 interface ProductItem {
   item_id?: string;
@@ -49,9 +49,9 @@ interface PropuestaData {
   [key: string]: any;
 }
 
-const Propuesta = () => {
+const PropuestaMain = () => {
   const { validacionData, usuario } = useUsuario();
-  const { form, setField } = useFormStore();
+  const { form } = useFormStore();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -65,6 +65,8 @@ const Propuesta = () => {
   // Información específica de visita técnica
   const visitaTecnicaCompletada: boolean = location.state?.visitaTecnicaCompletada || false;
   const fsmState: string = location.state?.fromFsmState || '';
+  const reservaPagada: boolean = location.state?.reservaPagada || false;
+  const visitaPagada: boolean = location.state?.visitaPagada || false;
   
   // Debug: mostrar datos recibidos
   // console.log('📋 Datos de propuesta recibidos:', propuestaData);
@@ -72,7 +74,7 @@ const Propuesta = () => {
   // console.log('📋 Datos del UsuarioContext:', { validacionData, usuario });
   // console.log('📋 Datos del FormStore:', { comunero: form.comunero, enZona: form.enZona });
   
-  // // Debug: mostrar información del tipo de instalación
+  // Debug: mostrar información del tipo de instalación
   // console.log('⚡ Tipo de instalación detectado:', tipoInstalacion);
   // console.log('🔧 ¿Requiere visita técnica?:', requiereVisitaTecnica);
   // console.log('📍 Location state completo:', location.state);
@@ -167,51 +169,22 @@ const Propuesta = () => {
   const [loadingReserva, setLoadingReserva] = useState(false);
   const [showConfirmacionEnvio, setShowConfirmacionEnvio] = useState(false);
   
-  // console.log('💰 Precio a mostrar:', amount);
-  // console.log('📦 Items a mostrar:', items);
-  // console.log('🏷️ Nombre del grupo:', groupName);
-  // console.log('🔍 PropuestaData completa:', propuestaData);
-
-  // // Debug adicional para identificar problemas en servidor
-  // console.log('🔍 Debug validaciones:');
-  // console.log('  - validacionData (original):', validacionData);
-  // console.log('  - fallbackValidacionData:', fallbackValidacionData);
-  // console.log('  - usuario_propuesta:', usuario_propuesta);
-  // console.log('  - fallbackValidacionData.enZona:', fallbackValidacionData?.enZona);
-  // console.log('  - propuestaData?.conditions?.enZona:', propuestaData?.conditions?.enZona);
-  // console.log('  - ¿fallbackValidacionData existe?', !!fallbackValidacionData);
-  // console.log('  - ¿usuario_propuesta existe?', !!usuario_propuesta);
-  
   // Obtener enZona desde múltiples fuentes posibles (solo strings válidos)
   const enZonaFromPropuesta = propuestaData?.conditions?.enZona;
   const enZonaFromFallback = fallbackValidacionData?.enZona;
   const enZonaFromNestedData = propuestaData?.data?.conditions?.enZona;
   
-  // console.log('  - enZonaFromPropuesta:', enZonaFromPropuesta, typeof enZonaFromPropuesta);
-  // console.log('  - enZonaFromFallback:', enZonaFromFallback, typeof enZonaFromFallback);
-  // console.log('  - enZonaFromNestedData:', enZonaFromNestedData, typeof enZonaFromNestedData);
-  
   // Validar enZona - solo acepta los 3 valores válidos como strings
-  const valoresValidosEnZona = ["inZone", "inZoneWithCost", "outZone"];
+  // const valoresValidosEnZona = ["inZone", "inZoneWithCost", "outZone"];
   const enZonaParaValidar = enZonaFromPropuesta || enZonaFromFallback || enZonaFromNestedData;
-  
-  // console.log('  - enZonaParaValidar:', enZonaParaValidar, typeof enZonaParaValidar);
   
   const enZonaValida = !enZonaParaValidar || 
                       (typeof enZonaParaValidar === 'string' && 
                        (enZonaParaValidar === "inZone" || enZonaParaValidar === "inZoneWithCost"));
   
-  // console.log('  - ¿enZona es válida?', enZonaValida);
-  
   // Debug adicional: si enZona no es válida, mostrar por qué
   if (!enZonaValida) {
     console.error('🚫 enZona INVÁLIDA - Análisis detallado:');
-    console.error('   - Valor recibido:', enZonaParaValidar);
-    console.error('   - Tipo:', typeof enZonaParaValidar);
-    console.error('   - ¿Es string?', typeof enZonaParaValidar === 'string');
-    console.error('   - ¿Es inZone?', enZonaParaValidar === "inZone");
-    console.error('   - ¿Es inZoneWithCost?', enZonaParaValidar === "inZoneWithCost");
-    console.error('   - Valores válidos esperados:', valoresValidosEnZona);
   }
 
   // Funciones para manejar botones
@@ -231,7 +204,7 @@ const Propuesta = () => {
         return;
       }
 
-      // console.log('📞 Solicitando visita técnica para propuestaId:', propuestaIdFromStore);
+      
 
       // Extraer datos de direccion si es un objeto
       let direccionTexto = '';
@@ -274,24 +247,21 @@ const Propuesta = () => {
         // Campos legacy mantenidos para compatibilidad
         campaignSource: form.campaignSource || '',
         utm: form.utm || '',
-        type: "contrata"
+        type: "reserva"
       };
 
-      // console.log('📋 Datos para enviar:', datosVisitaTecnica);
+      
 
       // Llamar al servicio
       const resultado = await bateriaService.solicitarVisitaTecnica(datosVisitaTecnica);
 
       if (resultado.success) {
-        // console.log('✅ Visita técnica solicitada exitosamente:', resultado);
-        // console.log('💳 Verificando URL de pago:', resultado.data?.paymentLink);
         
         // Verificar si está en modo asesores
         const isAsesores = form.asesores;
         
         if (!isAsesores && resultado.data?.paymentLink) {
-          // No está en dominio de asesores - redirigir a Stripe Checkout
-          // console.log('🔗 Redirigiendo a Stripe Checkout para visita técnica (usuario externo)');
+
           
           // Pequeño delay para feedback visual
           setTimeout(() => {
@@ -302,10 +272,9 @@ const Propuesta = () => {
         } else {
           // Está en dominio de asesores o no hay URL de pago - mostrar modal tradicional
           setShowVisitaTecnicaModal(true);
-          // console.log('📧 Mostrando confirmación tradicional para visita técnica');
         }
       } else {
-        // console.error('❌ Error al solicitar visita técnica:', resultado.error);
+        console.error('❌ Error al solicitar visita técnica:', resultado.error);
         alert('Error al procesar tu solicitud. Por favor, inténtalo de nuevo o contacta con soporte.');
       }
     } catch (error) {
@@ -334,14 +303,12 @@ const Propuesta = () => {
     setShowDniModal(true);
   };
 
-const handleConfirmarCompra = async () => {
+  const handleConfirmarCompra = async () => {
     // Validar DNI
     if (!dniInput || dniInput.trim() === '') {
       alert('Por favor, ingresa tu DNI para continuar.');
       return;
     }
-
-    setLoadingReserva(true);
 
     // Validar formato de DNI, NIE o TIE español
     const dniInput_clean = dniInput.trim().toUpperCase();
@@ -357,46 +324,61 @@ const handleConfirmarCompra = async () => {
     
     if (!dniRegex.test(dniInput_clean) && !nieRegex.test(dniInput_clean) && !tieRegex.test(dniInput_clean)) {
       alert('Por favor, ingresa un documento válido:\n• DNI: 8 números + letra (ej: 12345678A)\n• NIE: X/Y/Z + 7 números + letra (ej: X1234567A)\n• TIE: T + 8 números + letra (ej: T12345678A)');
-      setLoadingReserva(false);
-
       return;
     }
 
+    setLoadingReserva(true);
+    
     try {
       const propuestaIdFromStore = form.propuestaId;
-      // console.log('🛒 Iniciando proceso de compra para propuestaId:', propuestaIdFromStore, 'con DNI:', dniInput);
 
-      // Enviar código de validación usando el propuestaId y el DNI
-      const resultado = await comuneroService.enviarCodigoPorPropuestaId(propuestaIdFromStore!, dniInput.trim());
+      // Extraer nombre y apellido del usuario
+      const nombreCompleto = usuarioDisplay.nombre || 'Usuario';
+      const partesNombre = nombreCompleto.trim().split(' ');
+      const name = partesNombre[0] || 'Usuario';
+      const lastname = partesNombre.slice(1).join(' ') || '';
+
+      // Generar enlace de pago para la reserva
+      const resultado = await bateriaService.generarEnlacePago({
+        propuestaId: propuestaIdFromStore!,
+        dni: dniInput.trim(),
+        name: name,
+        lastname: lastname,
+        mpkLogId: form.mpkLogId || undefined,
+        email: usuarioDisplay.email || undefined,
+      });
 
       if (resultado.success) {
-        // console.log('✅ Código enviado exitosamente para compra con DNI:', dniInput);
         
-        // Cerrar modal y limpiar estado
-        setShowDniModal(false);
-        setDniInput('');
         
-        // Asegurar que el propuestaId esté guardado en el formStore
-        if (form.propuestaId !== propuestaIdFromStore) {
-          setField('propuestaId', propuestaIdFromStore);
+        // Verificar si está en modo asesores
+        const isAsesores = form.asesores;
+        
+        if (!isAsesores && resultado.data?.paymentURL) {
+          // No está en dominio de asesores - redirigir a Stripe Checkout
+          
+          
+          // Cerrar modal y mostrar loading brevemente antes de redirigir
+          setShowDniModal(false);
+          setDniInput('');
+          
+          // Pequeño delay para que el usuario vea que se está procesando
+          setTimeout(() => {
+            if (resultado.data?.paymentURL) {
+              window.location.href = resultado.data.paymentURL;
+            }
+          }, 500);
+        } else {
+          // Está en dominio de asesores - mostrar confirmación tradicional
+          setShowDniModal(false);
+          setDniInput('');
+          setShowConfirmacionEnvio(true);
         }
-        
-        // Redirigir a la página de validación de código
-        navigate('/comunero/validar', { 
-          state: { 
-            fromCompra: true,
-            propuestaId: propuestaIdFromStore,
-            email: usuarioDisplay.email,
-            flujo: 'compra'
-          } 
-        });
       } else {
-        console.error('❌ Error al enviar código para compra:', resultado.error);
-        alert('Error al procesar la compra. Por favor, inténtalo de nuevo o contacta con soporte.');
+        alert('Error al procesar la reserva. Por favor, inténtalo de nuevo o contacta con soporte.');
       }
     } catch (error) {
-      setLoadingReserva(false);
-      console.error('❌ Error inesperado en compra:', error);
+      console.error('❌ Error inesperado en reserva:', error);
       alert('Error inesperado. Por favor, inténtalo de nuevo más tarde.');
     } finally {
       setLoadingReserva(false);
@@ -422,15 +404,8 @@ const handleConfirmarCompra = async () => {
     navigate('/');
     return null;
   }
-  
-  if (isDebugMode) {
-    // console.log('🔧 Modo debug activo - saltando validaciones');
-  }
-  
-  // console.log('✅ Todas las validaciones pasaron, renderizando propuesta');
 
-  // console.log('💾 PropuestaId actual en store:', form.propuestaId);
-
+  // Crear usuario de display con datos de fallback para el render
   const usuarioDisplay = usuario_propuesta || {
     nombre: 'Usuario',
     email: 'usuario@ejemplo.com',
@@ -570,6 +545,30 @@ const handleConfirmarCompra = async () => {
                 >
                   {groupName}
                 </h1>
+
+                {/* Banner de Reserva Pagada o Visita Pagada */}
+                {(reservaPagada || visitaPagada) && (
+                  <div className="alert alert-success border-0 shadow-sm mb-4" 
+                       style={{
+                         background: 'linear-gradient(90deg, #28a745, #20c997)',
+                         borderRadius: '15px'
+                       }}>
+                    <div className="d-flex align-items-center justify-content-center">
+                      <i className="fas fa-check-circle me-3" style={{ fontSize: '1.5rem', color: 'white' }}></i>
+                      <div className="text-white">
+                        <h4 className="mb-1 fw-bold">
+                          {reservaPagada ? '¡Reserva Pagada!' : '¡Visita Pagada!'}
+                        </h4>
+                        <p className="mb-0">
+                          {reservaPagada 
+                            ? 'Tu reserva ha sido confirmada y el pago procesado exitosamente.'
+                            : 'Tu visita técnica ha sido confirmada y el pago procesado exitosamente.'
+                          }
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 
                 {/* Cards con precio y botón - Dos cards lado a lado */}
                 <div className="row g-3">
@@ -605,7 +604,7 @@ const handleConfirmarCompra = async () => {
                       </div>
                       
                       {/* Botón para card de pago único */}
-                      {fsmState !== '06_VISITA_TECNICA' && (
+                      {!reservaPagada && !visitaPagada && fsmState !== '06_VISITA_TECNICA' && (
                         (requiereVisitaTecnica && tipoInstalacion === 'trifasica') ? (
                           <button 
                             className="btn btn-lg px-4 py-2 fw-bold text-white border-0 w-100"
@@ -616,7 +615,7 @@ const handleConfirmarCompra = async () => {
                             }}
                             onClick={handleComprar}
                           >
-                            CONTRATAR
+                            RESERVAR
                           </button>
                         ) : (
                           <button 
@@ -628,7 +627,7 @@ const handleConfirmarCompra = async () => {
                             }}
                             onClick={handleComprar}
                           >
-                            CONTRATAR
+                            RESERVAR
                           </button>
                         )
                       )}
@@ -667,7 +666,7 @@ const handleConfirmarCompra = async () => {
                       </div>
                       
                       {/* Botón para card de financiación */}
-                      {fsmState !== '06_VISITA_TECNICA' && (
+                      {!reservaPagada && !visitaPagada && fsmState !== '06_VISITA_TECNICA' && (
                         (requiereVisitaTecnica && tipoInstalacion === 'trifasica') ? (
                           <button 
                             className="btn btn-lg px-4 py-2 fw-bold text-white border-0 w-100"
@@ -678,7 +677,7 @@ const handleConfirmarCompra = async () => {
                             }}
                             onClick={handleComprar}
                           >
-                            CONTRATAR
+                            RESERVAR
                           </button>
                         ) : (
                           <button 
@@ -690,7 +689,7 @@ const handleConfirmarCompra = async () => {
                             }}
                             onClick={handleComprar}
                           >
-                            CONTRATAR
+                            RESERVAR
                           </button>
                         )
                       )}
@@ -721,8 +720,8 @@ const handleConfirmarCompra = async () => {
           {/* Botones adicionales */}
           <div className="mt-4 d-flex justify-content-between align-items-center">
             <div className="d-flex align-items-center">
-              {/* Solo mostrar botón de visita técnica si no se ha completado ya */}
-              {!visitaTecnicaCompletada && (
+              {/* Solo mostrar botón de visita técnica si no se ha completado ya y no hay reserva o visita pagada */}
+              {!visitaTecnicaCompletada && !reservaPagada && !visitaPagada && (
                 <button 
                   className="btn px-4 py-2 gradient-border-btn"
                   style={{
@@ -1027,7 +1026,7 @@ const handleConfirmarCompra = async () => {
                   
                   {/* Botón COMPRAR */}
                   <div className="text-center mt-3">
-                    {fsmState !== '06_VISITA_TECNICA' && (
+                    {!reservaPagada && !visitaPagada && fsmState !== '06_VISITA_TECNICA' && (
                       (requiereVisitaTecnica && tipoInstalacion === 'trifasica') ? (
                         // Botón para instalaciones trifásicas que necesitan evaluación
                         <button 
@@ -1040,10 +1039,10 @@ const handleConfirmarCompra = async () => {
                           }}
                           onClick={handleComprar}
                         >
-                          CONTRATAR
+                          RESERVAR
                         </button>
                       ) : (
-                        // Botón CONTRATAR normal
+                        // Botón RESERVAR normal
                         <button 
                           className="btn btn-lg px-4 py-2 fw-bold text-white border-0"
                           style={{
@@ -1054,7 +1053,7 @@ const handleConfirmarCompra = async () => {
                           }}
                           onClick={handleComprar}
                         >
-                          CONTRATAR
+                          RESERVAR
                         </button>
                       )
                     )}
@@ -1349,7 +1348,7 @@ const handleConfirmarCompra = async () => {
 
             {/* Botón COMPRAR centrado */}
             <div className="text-center">
-              {(requiereVisitaTecnica && tipoInstalacion === 'trifasica' && fsmState !== '06_VISITA_TECNICA') ? (
+              {!reservaPagada && !visitaPagada && (requiereVisitaTecnica && tipoInstalacion === 'trifasica' && fsmState !== '06_VISITA_TECNICA') ? (
                 // Botón para instalaciones trifásicas que necesitan evaluación (solo antes de solicitar)
                 <button 
                   className="btn btn-lg px-5 py-3 fw-bold text-white border-0"
@@ -1364,8 +1363,8 @@ const handleConfirmarCompra = async () => {
                   COMPRAR EN GRUPO
                 </button>
               ) : (
-                // Solo mostrar CONTRATAR si NO estamos en estado 06_VISITA_TECNICA
-                fsmState !== '06_VISITA_TECNICA' && (
+                // Solo mostrar RESERVAR si NO estamos en estado 06_VISITA_TECNICA
+                (!reservaPagada && !visitaPagada && fsmState !== '06_VISITA_TECNICA') && (
                   <button 
                     className="btn btn-lg px-5 py-3 fw-bold text-white border-0 comprar-btn"
                     style={{
@@ -1470,11 +1469,11 @@ const handleConfirmarCompra = async () => {
               </div>
             </div>
 
-            {/* Botones alineados: CONTRATAR a la izquierda, contacto a la derecha */}
+            {/* Botones alineados: RESERVAR a la izquierda, contacto a la derecha */}
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
-              {/* Botón CONTRATAR alineado a la izquierda */}
+              {/* Botón RESERVAR alineado a la izquierda */}
               <div>
-                {fsmState !== '06_VISITA_TECNICA' && (
+                {(!reservaPagada && !visitaPagada && fsmState !== '06_VISITA_TECNICA') && (
                   (requiereVisitaTecnica && tipoInstalacion === 'trifasica') ? (
                     // Botón para instalaciones trifásicas que necesitan evaluación
                     <button 
@@ -1487,10 +1486,10 @@ const handleConfirmarCompra = async () => {
                       }}
                       onClick={handleComprar}
                     >
-                      CONTRATAR
+                      RESERVAR
                     </button>
                   ) : (
-                    // Botón CONTRATAR normal
+                    // Botón RESERVAR normal
                     <button 
                       className="btn btn-lg px-5 py-3 fw-bold text-white border-0"
                       style={{
@@ -1501,7 +1500,7 @@ const handleConfirmarCompra = async () => {
                       }}
                       onClick={handleComprar}
                     >
-                      CONTRATAR
+                      RESERVAR
                     </button>
                   )
                 )}
@@ -2042,4 +2041,4 @@ const handleConfirmarCompra = async () => {
   );
 };
 
-export default Propuesta;
+export default PropuestaMain;
