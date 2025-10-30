@@ -73,19 +73,19 @@ const FirmaContrato = () => {
   // Escuchar mensajes de la página de redirección
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      // console.log('📨 Mensaje recibido desde iframe:', event.data);
+      console.log('📨 Mensaje recibido desde iframe:', event.data);
       
       // Verificar que el mensaje es de nuestro sistema
       if (event.data.type === 'ZOHO_CONTRACT_SIGNED' || event.data.type === 'CONTRACT_COMPLETED') {
         const { propuestaId: messagePropuestaId } = event.data;
         
-        // console.log('✅ Contrato firmado detectado!');
-        // console.log('📋 PropuestaId del mensaje:', messagePropuestaId);
-        // console.log('🎯 URL objetivo:', targetUrl);
+        console.log('✅ Contrato firmado detectado!');
+        console.log('📋 PropuestaId del mensaje:', messagePropuestaId);
+        console.log('📋 PropuestaId actual:', propuestaId);
         
         // Verificar que coincida con nuestro propuestaId
         if (messagePropuestaId && messagePropuestaId === propuestaId) {
-          // console.log('🚀 Navegando a página de confirmación...');
+          console.log('🚀 Navegando a página de confirmación...');
           
           // Guardar solo los datos mínimos necesarios para la página de confirmación
           const nombreComunero = form.comunero?.nombre || form.nombre || 'Usuario';
@@ -98,11 +98,13 @@ const FirmaContrato = () => {
             propuestaId
           }));
           
-          // console.log('💾 Datos de confirmación guardados para:', nombreComunero);
+          console.log('💾 Datos de confirmación guardados para:', nombreComunero);
           showToast('¡Contrato firmado exitosamente!', 'success');
           
           // Usar navigate en lugar de window.location para mantener el estado
           navigate(`/contrato/${propuestaId}/firmado`);
+        } else {
+          console.warn('⚠️ PropuestaId no coincide - Mensaje:', messagePropuestaId, 'Actual:', propuestaId);
         }
       } else if (event.data.type === 'ZOHO_CONTRACT_ERROR') {
         console.error('❌ Error en firma de contrato:', event.data.error);
@@ -110,12 +112,14 @@ const FirmaContrato = () => {
       }
     };
 
+    console.log('🎧 Registrando listener para mensajes postMessage');
     window.addEventListener('message', handleMessage);
 
     return () => {
+      console.log('🎧 Removiendo listener para mensajes postMessage');
       window.removeEventListener('message', handleMessage);
     };
-  }, [navigate, propuestaId, showToast]);
+  }, [navigate, propuestaId, showToast, form]);
 
   const handleVolver = () => {
     navigate('/propuesta', { 

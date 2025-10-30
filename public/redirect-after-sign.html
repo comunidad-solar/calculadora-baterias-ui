@@ -6,35 +6,62 @@
 </head>
 <body>
     <script>
+        // Activar logs para debugging
+        console.log('🔄 Página de redirección cargada');
+        console.log('🌐 URL completa:', window.location.href);
+        console.log('📍 Pathname:', window.location.pathname);
+        console.log('🔍 Search params:', window.location.search);
         
         const urlParams = new URLSearchParams(window.location.search);
         const pathParts = window.location.pathname.split('/');
         
+        console.log('📋 Path parts:', pathParts);
         
         let propuestaId = urlParams.get('propuestaId') || 
                          urlParams.get('proposal_id') ||
                          urlParams.get('id');
         
-        
+        // Si no está en query params, buscar en la ruta
         if (!propuestaId) {
-        
             const contratoIndex = pathParts.indexOf('contrato');
             if (contratoIndex >= 0 && pathParts[contratoIndex + 1]) {
                 propuestaId = pathParts[contratoIndex + 1];
             }
         }
         
-        // console.log('🔄 Página de redirección cargada');
-        // console.log('📋 PropuestaId extraído:', propuestaId);
-        // console.log('🌐 URL completa:', window.location.href);
+        console.log('📋 PropuestaId extraído:', propuestaId);
+        
+        // Actualizar información de debug en pantalla
+        const propuestaIdElement = document.getElementById('propuesta-id');
+        if (propuestaIdElement) {
+            propuestaIdElement.textContent = propuestaId || 'No encontrado';
+        }
+        
+        // Función para actualizar el mensaje en pantalla
+        function updateMessage(message) {
+            const messageElement = document.querySelector('p');
+            if (messageElement) {
+                messageElement.textContent = message;
+            }
+        }
+        
+        // Función para actualizar la URL destino en debug
+        function updateTargetUrl(url) {
+            const targetElement = document.getElementById('target-url');
+            if (targetElement) {
+                targetElement.textContent = url;
+            }
+        }
         
         if (propuestaId) {
             const targetUrl = `/contrato/${propuestaId}/firmado`;
-            // console.log('🎯 Enviando mensaje para redirigir a:', targetUrl);
+            console.log('🎯 Target URL calculada:', targetUrl);
+            updateTargetUrl(targetUrl);
             
             // Si estamos dentro de un iframe, enviar mensaje a la página padre
             if (window.parent && window.parent !== window) {
-                // console.log('📱 Detectado iframe, enviando PostMessage a página padre');
+                console.log('📱 Detectado iframe, enviando PostMessage a página padre');
+                updateMessage('Enviando datos al sistema padre...');
                 
                 // Enviar mensaje a la página padre para que haga la navegación
                 window.parent.postMessage({
@@ -44,30 +71,52 @@
                     timestamp: Date.now()
                 }, '*');
                 
-                // Mostrar mensaje de éxito por un momento
+                // Mensaje de backup después de 1 segundo
                 setTimeout(() => {
-                    // console.log('🔄 Enviando mensaje de backup...');
+                    console.log('🔄 Enviando mensaje de backup...');
+                    updateMessage('Finalizando proceso...');
                     window.parent.postMessage({
                         type: 'CONTRACT_COMPLETED',
                         propuestaId: propuestaId
                     }, '*');
                 }, 1000);
                 
+                // Timeout de seguridad - forzar redirección después de 5 segundos
+                setTimeout(() => {
+                    console.warn('⚠️ Timeout alcanzado, forzando redirección directa');
+                    updateMessage('Redirigiendo directamente...');
+                    window.location.href = targetUrl;
+                }, 5000);
+                
             } else {
                 // Si no estamos en iframe, redirección normal (fallback)
-                // console.log('🌍 No está en iframe, redirección normal');
-                window.location.href = targetUrl;
+                console.log('🌍 No está en iframe, redirección normal');
+                updateMessage('Redirigiendo...');
+                setTimeout(() => {
+                    window.location.href = targetUrl;
+                }, 1500);
             }
         } else {
             console.error('❌ No se pudo extraer propuestaId de la URL');
+            updateMessage('Error: No se encontró ID de propuesta');
+            updateTargetUrl('Error - No se pudo calcular');
+            
             // Enviar mensaje de error
             if (window.parent && window.parent !== window) {
                 window.parent.postMessage({
                     type: 'ZOHO_CONTRACT_ERROR',
                     error: 'No se pudo extraer propuestaId'
                 }, '*');
+                
+                // Timeout para ir al home si no hay respuesta
+                setTimeout(() => {
+                    console.log('🏠 Redirigiendo al home por falta de propuestaId');
+                    window.location.href = '/';
+                }, 3000);
             } else {
-                window.location.href = '/';
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 2000);
             }
         }
     </script>
@@ -81,8 +130,24 @@
             <div style="margin-top: 20px;">
                 <div style="display: inline-block; width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #5CA00E; border-radius: 50%; animation: spin 1s linear infinite;"></div>
             </div>
+            <!-- Información de debug -->
+            <div style="margin-top: 30px; padding: 10px; background-color: #f0f0f0; border-radius: 5px; font-size: 12px; color: #666;">
+                <div id="debug-info">
+                    <div>🔍 Modo: <span id="iframe-mode">Detectando...</span></div>
+                    <div>📋 ID: <span id="propuesta-id">Extrayendo...</span></div>
+                    <div>🎯 Destino: <span id="target-url">Calculando...</span></div>
+                </div>
+            </div>
         </div>
     </div>
+    
+    <script>
+        // Actualizar información de debug en tiempo real
+        setTimeout(() => {
+            const isIframe = window.parent && window.parent !== window;
+            document.getElementById('iframe-mode').textContent = isIframe ? 'iframe (PostMessage)' : 'Ventana normal';
+        }, 100);
+    </script>
     
     <style>
         @keyframes spin {
