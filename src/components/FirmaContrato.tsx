@@ -56,7 +56,7 @@ const FirmaContrato = () => {
           } finally {
             setLoading(false);
           }
-        }, 10000); // 10 segundos delay
+        }, 15000); // 15 segundos delay
         
       } catch (err) {
         // console.error('❌ Error inesperado en preparación:', err);
