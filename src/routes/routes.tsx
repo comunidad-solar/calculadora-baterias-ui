@@ -18,6 +18,7 @@ import PagoPago from '../components/PagoPago';
 import PagoExitoso from '../components/PagoExitoso';
 import PagoExitosoContrataVisita from '../components/PagoExitosoContrataVisita';
 import Propuesta from '../components/Propuesta';
+
 // import PagoExitosoPropuestaContrata from '../components/PagoExitosoPropuestaContrata';
 
 const AppRoutes = ({ onSelect }: { onSelect: (isComunero: boolean) => void }) => (

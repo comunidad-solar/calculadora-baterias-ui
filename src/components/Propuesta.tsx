@@ -1933,7 +1933,7 @@ const Propuesta = () => {
                   ) : (
                     <>
                       <span className="me-2">✓</span>
-                      Continuar con la reserva
+                      Continuar con la contratación
                     </>
                   )}
                 </button>
