@@ -1929,12 +1929,12 @@ const handleConfirmarCompra = async () => {
                       <div className="spinner-border spinner-border-sm me-2" role="status">
                         <span className="visually-hidden">Cargando...</span>
                       </div>
-                      Procesando reserva...
+                      Procesando contratación...
                     </>
                   ) : (
                     <>
                       <span className="me-2">✓</span>
-                      Continuar con la reserva
+                      Continuar con la contratación
                     </>
                   )}
                 </button>
