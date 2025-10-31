@@ -94,7 +94,7 @@ const ContratoFirmadoViewer: React.FC<ContratoFirmadoViewerProps> = ({ data }) =
             <div className="text-center mb-4">
               <div className="d-inline-flex align-items-center bg-success bg-opacity-15 rounded-pill px-4 py-2 mb-3">
                 <span className="text-success me-2" style={{fontSize: '1.2rem'}}>✅</span>
-                <span className="text-success fw-semibold">Contrato Firmado</span>
+                <span className="text-success fw-semibold" style={{color:'white'}}>Contrato Firmado</span>
               </div>
               <h1 className="h3 fw-bold text-dark mb-2">¡Felicidades, {comunero.nombre}!</h1>
               <p className="text-muted">Tu contrato ha sido firmado exitosamente</p>
@@ -123,7 +123,7 @@ const ContratoFirmadoViewer: React.FC<ContratoFirmadoViewerProps> = ({ data }) =
                     
                     {/* Estado y número de contrato */}
                     <div className="d-flex flex-wrap gap-3 align-items-center">
-                      <span className="badge bg-success bg-opacity-20 text-success px-3 py-2 rounded-pill">
+                      <span className="badge bg-success bg-opacity-20 text-success px-3 py-2 rounded-pill" style={{color:'white'}}>
                         ✅ Contrato Firmado
                       </span>
                       {propuesta.numeroContrato && (

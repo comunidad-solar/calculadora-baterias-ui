@@ -156,8 +156,9 @@ const ContratoFirmado = () => {
                       </div>
                       <h6 className="fw-bold mb-2">¡Tu contrato ha sido firmado exitosamente!</h6>
                       <p className="text-muted mb-0">
-                        En los próximos minutos recibirás una copia firmada del contrato en tu dirección de email: 
-                        <strong className="text-primary">{emailComunero || 'tu email registrado'}</strong>
+                        En los próximos minutos recibirás una copia firmada del contrato a tu bandeja de correo electrónico. 
+                        <small>Asegúrate de revisar también la carpeta de spam o promociones por si acaso.</small>
+                        {/* <strong className="text-primary">{emailComunero || 'tu email registrado'}</strong> */}
                       </p>
                     </div>
                   </div>
