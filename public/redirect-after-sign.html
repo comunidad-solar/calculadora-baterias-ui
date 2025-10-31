@@ -61,7 +61,7 @@
             // Si estamos dentro de un iframe, enviar mensaje a la página padre
             if (window.parent && window.parent !== window) {
                 console.log('📱 Detectado iframe, enviando PostMessage a página padre');
-                updateMessage('Enviando datos al sistema padre...');
+                updateMessage('Comunicando con la aplicación principal...');
                 
                 // Enviar mensaje a la página padre para que haga la navegación
                 window.parent.postMessage({
@@ -74,18 +74,19 @@
                 // Mensaje de backup después de 1 segundo
                 setTimeout(() => {
                     console.log('🔄 Enviando mensaje de backup...');
-                    updateMessage('Finalizando proceso...');
+                    updateMessage('Confirmando con la aplicación...');
                     window.parent.postMessage({
                         type: 'CONTRACT_COMPLETED',
                         propuestaId: propuestaId
                     }, '*');
                 }, 1000);
                 
-                // Timeout de seguridad - forzar redirección después de 5 segundos
+                // Timeout de seguridad - forzar redirección en la ventana padre después de 5 segundos
                 setTimeout(() => {
-                    console.warn('⚠️ Timeout alcanzado, forzando redirección directa');
-                    updateMessage('Redirigiendo directamente...');
-                    window.location.href = targetUrl;
+                    console.warn('⚠️ Timeout alcanzado, forzando redirección en ventana padre');
+                    updateMessage('Redirigiendo la aplicación principal...');
+                    // Redirigir la ventana padre, no el iframe
+                    window.parent.location.href = targetUrl;
                 }, 5000);
                 
             } else {
@@ -108,10 +109,10 @@
                     error: 'No se pudo extraer propuestaId'
                 }, '*');
                 
-                // Timeout para ir al home si no hay respuesta
+                // Timeout para ir al home si no hay respuesta (redirigir ventana padre)
                 setTimeout(() => {
-                    console.log('🏠 Redirigiendo al home por falta de propuestaId');
-                    window.location.href = '/';
+                    console.log('🏠 Redirigiendo ventana padre al home por falta de propuestaId');
+                    window.parent.location.href = '/';
                 }, 3000);
             } else {
                 setTimeout(() => {
@@ -145,7 +146,7 @@
         // Actualizar información de debug en tiempo real
         setTimeout(() => {
             const isIframe = window.parent && window.parent !== window;
-            document.getElementById('iframe-mode').textContent = isIframe ? 'iframe (PostMessage)' : 'Ventana normal';
+            document.getElementById('iframe-mode').textContent = isIframe ? 'iframe → Ventana Padre' : 'Ventana normal';
         }, 100);
     </script>
     
