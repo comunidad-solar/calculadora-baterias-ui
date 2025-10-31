@@ -5,6 +5,7 @@ import { cargarComuneroPorId } from '../services/apiService';
 import { useFormStore } from '../zustand/formStore';
 import PageTransition from './PageTransition';
 import PropuestaContratada from './PropuestaContratada';
+import ContratoFirmadoViewer from './ContratoFirmadoViewer';
 
 const ClienteViewer = () => {
   const { id } = useParams<{ id: string }>();
@@ -14,6 +15,7 @@ const ClienteViewer = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [propuestaContratadaData, setPropuestaContratadaData] = useState<any>(null);
+  const [contratoFirmadoData, setContratoFirmadoData] = useState<any>(null);
   const hasLoadedRef = useRef(false);
 
   useEffect(() => {
@@ -44,6 +46,12 @@ const ClienteViewer = () => {
           
           // Para fsmState "12_CONTRATA", mostrar vista específica en lugar de navegar
           setPropuestaContratadaData(resultado.datosParaStore);
+          
+        } else if (resultado.success && resultado.fsmState === '13_FIRMA') {
+          // console.log('✅ Contrato firmado detectado, renderizando vista específica');
+          
+          // Para fsmState "13_FIRMA", mostrar vista específica de contrato firmado
+          setContratoFirmadoData(resultado.datosParaStore);
           
         } else if (resultado.success && resultado.fsmState === '04_DATOS_RECOGIDOS') {
           // console.log('✅ Propuesta generada detectada, navegando a vista de propuesta');
@@ -371,6 +379,10 @@ const ClienteViewer = () => {
   // Si tenemos datos de propuesta contratada, renderizar vista específica
   if (propuestaContratadaData) {
     return <PropuestaContratada data={propuestaContratadaData} />;
+  }
+
+  if (contratoFirmadoData) {
+    return <ContratoFirmadoViewer data={contratoFirmadoData} />;
   }
 
   if (error) {
