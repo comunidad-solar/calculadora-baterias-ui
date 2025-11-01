@@ -948,12 +948,26 @@ const PreguntasAdicionales = () => {
       return true;
     }
     
-    // Caso 3: Si tiene baterías y seleccionó "OTRA O LO DESCONOZCO"
+    // Caso 3: Si tiene baterías instaladas (cualquier tipo y capacidad completados)
     if (!tieneInstalacionFV && 
         (tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') && 
         tieneBaterias === true && 
-        tipoBaterias === 'otra') {
-      return true;
+        tipoBaterias) {
+      
+      // Si seleccionó CANADIAN y completó la capacidad
+      if (tipoBaterias === 'canadian' && capacidadCanadian) {
+        return true;
+      }
+      
+      // Si seleccionó HUAWEI y completó la capacidad  
+      if (tipoBaterias === 'huawei' && capacidadHuawei) {
+        return true;
+      }
+      
+      // Si seleccionó OTRA O LO DESCONOZCO (no necesita capacidad)
+      if (tipoBaterias === 'otra') {
+        return true;
+      }
     }
     
     return false;
