@@ -1478,8 +1478,8 @@ const PreguntasAdicionales = () => {
                     id="instalacionSi"
                     checked={tieneInstalacionFV === true}
                     onChange={() => handleInstalacionChange(true)}
-                    // disabled={!codigoPostalDisponible}
-                    disabled={true}
+                    disabled={!codigoPostalDisponible}
+                    // disabled={true}
                   />
                   <label className={`form-check-label fw-semibold ${!codigoPostalDisponible ? 'text-muted' : ''}`} htmlFor="instalacionSi">
                     Sí
@@ -1705,7 +1705,7 @@ const PreguntasAdicionales = () => {
                       id="bateriasSi"
                       checked={tieneBaterias === true}
                       onChange={() => handleTieneBateriasChange(true)}
-                      disabled={true}
+                      disabled={false}
                     />
                     <label className="form-check-label fw-semibold" htmlFor="bateriasSi">
                       Sí

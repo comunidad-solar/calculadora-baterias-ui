@@ -60,7 +60,7 @@ const GraciasContacto = () => {
               <div className="d-flex align-items-start">
                 <span className="me-3 mt-1" style={{fontSize: '1.5rem'}}>💡</span>
                 <div>
-                  <p className="mb-0 text-dark" style={{fontSize: '1.1rem', lineHeight: '1.6'}}>
+                  <p className="mb-0 text-white" style={{fontSize: '1.1rem', lineHeight: '1.6'}}>
                     {mensaje}
                   </p>
                 </div>
