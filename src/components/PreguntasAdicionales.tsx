@@ -409,6 +409,66 @@ const PreguntasAdicionales = () => {
       return;
     }
 
+    // Si requiere contacto con asesor por tener baterías instaladas (CANADIAN o HUAWEI con capacidad)
+    if (!tieneInstalacionFV && (tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') && 
+        tieneBaterias === true && 
+        ((tipoBaterias === 'canadian' && capacidadCanadian) || 
+         (tipoBaterias === 'huawei' && capacidadHuawei))) {
+      try {
+        const datosCompletos = {
+          propuestaId: form.propuestaId || '',
+          contactId: form.comunero?.id || '',
+          email: form.comunero?.email || '',
+          
+          tieneInstalacionFV: false,
+          tipoInstalacion: tipoInstalacion,
+          tieneBaterias: true,
+          tipoBaterias: tipoBaterias,
+          ...(tipoBaterias === 'canadian' ? { capacidadCanadian } : {}),
+          ...(tipoBaterias === 'huawei' ? { capacidadHuawei } : {}),
+          requiereContactoManual: true,
+          
+          // Parámetros UTM
+          ...getUTMParams(),
+          
+          nombre: form.comunero?.nombre || '',
+          telefono: form.comunero?.telefono || '',
+          direccion: form.comunero?.direccion || '',
+          ciudad: form.comunero?.ciudad || '',
+          provincia: form.comunero?.provincia || '',
+          codigoPostal: form.comunero?.codigoPostal || '',
+          
+          token: form.token || '',
+          dealId: form.dealId || '',
+          enZona: form.enZona || 'outZone'
+        };
+
+        // console.log('📤 Baterías instaladas requieren asesor - Enviando solicitud de contacto:', datosCompletos);
+
+        const response = await bateriaService.contactarAsesorDesconoceUnidad(datosCompletos);
+        
+        if (response.success) {
+          showToast('¡Gracias por tu solicitud! Un especialista evaluará tu instalación actual de baterías y se contactará contigo para ofrecerte la mejor propuesta de ampliación.', 'success');
+          
+          navigate('/gracias-contacto', { 
+            state: { 
+              motivo: 'baterias-instaladas',
+              tipoBaterias: tipoBaterias,
+              capacidad: tipoBaterias === 'canadian' ? capacidadCanadian : capacidadHuawei
+            }
+          });
+        } else {
+          throw new Error(response.error || 'Error al enviar la solicitud');
+        }
+      } catch (error) {
+        console.error('Error al contactar asesor por baterías instaladas:', error);
+        showToast('Error al enviar la solicitud', 'error');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
     // Si requiere contacto con asesor por tipo de baterías "OTRA O LO DESCONOZCO"
     if (!tieneInstalacionFV && (tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') && 
         tieneBaterias === true && tipoBaterias === 'otra') {

@@ -61,7 +61,7 @@ const GraciasContacto = () => {
                 <span className="me-3 mt-1" style={{fontSize: '1.5rem'}}>💡</span>
                 <div>
                   <p className="mb-0 text-white" style={{fontSize: '1.1rem', lineHeight: '1.6'}}>
-                    {mensaje}
+                    {mensaje || 'Hemos recibido tu solicitud correctamente. Un especialista se pondrá en contacto contigo muy pronto.'}
                   </p>
                 </div>
               </div>
