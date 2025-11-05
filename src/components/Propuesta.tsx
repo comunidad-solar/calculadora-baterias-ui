@@ -19,6 +19,18 @@ import iconoDescargaElectricidad from '../assets/BateriaSolaXElectricidadIcon.sv
 import iconResilence from '../assets/SolaXResilienceIcon.svg'
 import iconAhorro from '../assets/SolaXBatteryIcono.svg'
 import iconSeguridad from '../assets/BateriaSolaxIcono.svg'
+import vector from '../assets/Vector.png'
+import vector1 from '../assets/Vector1.png'
+import vector2 from '../assets/vector2.png'
+import vector3 from '../assets/vector3.png'
+import vector4 from '../assets/vector4.png'
+import vector5 from '../assets/vector5.png'
+import vector6 from '../assets/vector6.png'
+import vector7 from '../assets/vector7.png'
+import vector8 from '../assets/vector8.png'
+
+
+
 // propuesta para contratar baterías
 // Tipos para los datos de la propuesta
 interface ProductItem {
@@ -587,7 +599,10 @@ const handleConfirmarCompra = async () => {
                             fontSize: '2.5rem',
                             lineHeight: '1'
                           }}>
-                            {amount.toLocaleString('es-ES')}€
+                            {amount.toLocaleString('es-ES', { 
+                              minimumFractionDigits: 0, 
+                              maximumFractionDigits: 2 
+                            })}€
                           </span>
                         </div>
                         <p className="mb-0" style={{ 
@@ -934,7 +949,7 @@ const handleConfirmarCompra = async () => {
           <div className="mt-5">
             <div className="row g-0">
               {/* Imagen de la batería EcoFlow */}
-              <div className="col-lg-7" >
+              <div className="col-lg-6" >
                 <div className="position-relative d-flex flex-column align-items-center">
                   {/* Fondo verde decorativo - más pequeño */}
                   <div 
@@ -980,12 +995,13 @@ const handleConfirmarCompra = async () => {
               </div>
               
               {/* Card de características */}
-              <div className="col-lg-5" style={{padding: '0 35px 0 0'}}>
+              <div className="col-lg-6" style={{padding: '0 35px 0 0'}}>
                 <div 
-                  className="bg-white rounded-4 shadow-lg p-4 h-100"
+                  className="bg-white rounded-4 shadow-lg p-4"
                   style={{ 
                     // border: '3px solid #A0D034',
-                    position: 'relative'
+                    position: 'relative',
+                    height: '90%'
                   }}
                 >
                                     {/* Título */}
@@ -1003,30 +1019,41 @@ const handleConfirmarCompra = async () => {
                   
                   {/* Lista de características */}
                   <div className="mt-3">
-                    {[
-                      { icon: '🛡️', text: 'Sistema de extinción de incendios integrado.' },
-                      { icon: '🔋', text: 'BMS inteligente que protege contra sobrecargas.' },
-                      { icon: '☔', text: 'Certificación IP65: protege de la lluvia y el polvo.' },
-                      { icon: '🌡️', text: 'Módulo de calentamiento automático.' },
-                      { icon: '🔌', text: 'Instalación plug&play, rápida sin complicación.' },
-                      { icon: '📱', text: 'Control total desde tu móvil con la App.' },
-                      { icon: '⚡', text: '6 kW de potencia para evitar cortes de luz.' },
-                      { icon: '🔇', text: 'Sistema antiincendios, seguro y silencioso.' },
-                      { icon: '📜', text: '15 años de garantía real, por escrito.' },
-                      { icon: '👁️', text: 'Un diseño que no querrás esconder.' },
-                      { icon: '💰', text: 'Precio exclusivo para comuneros' }
-                    ].map((item, index) => (
-                      <div key={index} className="d-flex align-items-start gap-2 mb-1">
-                        <span style={{ fontSize: '1rem', minWidth: '20px' }}>{item.icon}</span>
-                        <span style={{ color: '#2A2A2A', fontSize: '0.85rem', lineHeight: '1.3' }}>
-                          {item.text}
-                        </span>
-                      </div>
-                    ))}
+                    {(() => {
+                      const vectores = [vector, vector1, vector2, vector3, vector4, vector5, vector6, vector7, vector8];
+                      const caracteristicas = [
+                        'Inversor híbrido y Sistema de Gestión de Batería (BMS)',
+                        'Sin necesidad de Instalación fotovoltaica',
+                        'Baja tensión de inicio',
+                        '7x24 Tarifa por Horario (ToU)',
+                        'Programación Inteligente',
+                        'Compatible con generadores y cargadores de vehículos eléctricos',
+                        'Gestión inteligente de cargas',
+                        'Diseño atractivo',
+                        '+6.000 Ciclos de vida'
+                      ];
+                      
+                      return caracteristicas.map((text, index) => (
+                        <div key={index} className="d-flex align-items-start gap-2 mb-2">
+                          <img 
+                            src={vectores[index] || vector} 
+                            alt="Característica" 
+                            style={{ 
+                              width: '16px', 
+                              height: '16px', 
+                              minWidth: '16px'
+                            }} 
+                          />
+                          <span style={{ color: '#2A2A2A', fontSize: '0.85rem', lineHeight: '1.3' }}>
+                            {text}
+                          </span>
+                        </div>
+                      ));
+                    })()}
                   </div>
                   
                   {/* Botón COMPRAR */}
-                  <div className="text-center mt-3">
+                  <div className="text-center mt-5">
                     {fsmState !== '06_VISITA_TECNICA' && (
                       (requiereVisitaTecnica && tipoInstalacion === 'trifasica') ? (
                         // Botón para instalaciones trifásicas que necesitan evaluación
