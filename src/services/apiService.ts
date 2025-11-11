@@ -794,6 +794,47 @@ export const procesarRespuestaContratada = (respuesta: any) => {
   };
 };
 
+// Helper function para procesar respuesta de contrato firmado (fsmState: "13_FIRMA")
+export const procesarRespuestaContratoFirmado = (respuesta: any) => {
+  if (!respuesta.success || !respuesta.data) {
+    throw new Error('Respuesta inválida del servidor');
+  }
+
+  const { data } = respuesta;
+  const { fsmState, data: propuestaData } = data;
+
+  // Estructura esperada para contrato firmado (similar a contratada pero con estado diferente)
+  const datosContratoFirmado = {
+    fsmState: fsmState,
+    propuesta: {
+      id: propuestaData.propuesta?.id || propuestaData.propuestaId,
+      estado: propuestaData.propuesta?.estado || 'Contratado',
+      producto: {
+        nombre: propuestaData.propuesta?.producto?.nombre || propuestaData.producto?.nombre || 'Batería Solar',
+        modelo: propuestaData.propuesta?.producto?.modelo || propuestaData.producto?.modelo || '',
+        capacidad: propuestaData.propuesta?.producto?.capacidad || propuestaData.producto?.capacidad || '',
+        precio: propuestaData.propuesta?.producto?.precio || propuestaData.producto?.precio || 0,
+        moneda: propuestaData.propuesta?.producto?.moneda || propuestaData.producto?.moneda || 'EUR'
+      },
+      fechaContratacion: propuestaData.propuesta?.fechaContratacion || propuestaData.fechaContratacion || new Date().toISOString(),
+      numeroContrato: propuestaData.propuesta?.numeroContrato || propuestaData.numeroContrato
+    },
+    comunero: {
+      nombre: propuestaData.comunero?.nombre || '',
+      email: propuestaData.comunero?.email || '',
+      telefono: propuestaData.comunero?.telefono || ''
+    }
+  };
+
+  // console.log('📋 Datos procesados para contrato firmado:', datosContratoFirmado);
+  
+  return {
+    datosContratoFirmado,
+    fsmState,
+    rawResponse: data
+  };
+};
+
 // Helper function para procesar respuesta de visita técnica (fsmState: "06_VISITA_TECNICA")
 export const procesarRespuestaVisitaTecnica = (respuesta: any) => {
   // console.log('🔧 Procesando respuesta de visita técnica:', respuesta);
@@ -930,6 +971,7 @@ export const obtenerRutaPorFsmState = (fsmState: string): string => {
     '06_VISITA_TECNICA': '/propuesta', // Propuesta post-visita técnica
     '07_TRI_DESCONOCE_M': '/preguntas-adicionales',
     '12_CONTRATA': '/propuesta-contratada', // Nueva vista para propuestas contratadas
+    '13_FIRMA': '/contrato-firmado', // Nueva vista para contratos firmados
     // Agregar más estados según se definan
   };
 
@@ -1054,6 +1096,16 @@ export const cargarComuneroPorId = async (clienteId: string, useFormStore?: any)
       //   fsmState: procesado.fsmState,
       //   propuesta: procesado.datosContratada.propuesta.id,
       //   producto: procesado.datosContratada.propuesta.producto.nombre
+      // });
+    } else if (fsmState === '13_FIRMA') {
+      const procesado = procesarRespuestaContratoFirmado(respuesta);
+      datosParaStore = procesado.datosContratoFirmado;
+      rutaNavegacion = 'contrato-firmado'; // Ruta especial para renderizar en el mismo componente
+      
+      // console.log('✅ Datos de contrato firmado procesados:', {
+      //   fsmState: procesado.fsmState,
+      //   propuesta: procesado.datosContratoFirmado.propuesta.id,
+      //   producto: procesado.datosContratoFirmado.propuesta.producto.nombre
       // });
     } else if (fsmState === '06_VISITA_TECNICA') {
       const procesado = procesarRespuestaVisitaTecnica(respuesta);

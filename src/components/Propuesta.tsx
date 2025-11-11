@@ -13,13 +13,25 @@ import imagenFondoPropuesta4 from '../assets/imagenFondoPropuesta4.png';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useFormStore } from '../zustand/formStore';
-import { bateriaService } from '../services/apiService';
+import { bateriaService, comuneroService } from '../services/apiService';
 import iconoBateria from '../assets/SolaXBatteryIcon.svg'
 import iconoDescargaElectricidad from '../assets/BateriaSolaXElectricidadIcon.svg'
 import iconResilence from '../assets/SolaXResilienceIcon.svg'
 import iconAhorro from '../assets/SolaXBatteryIcono.svg'
 import iconSeguridad from '../assets/BateriaSolaxIcono.svg'
-// propuesta para reservar baterías
+import vector from '../assets/Vector.png'
+import vector1 from '../assets/Vector1.png'
+import vector2 from '../assets/vector2.png'
+import vector3 from '../assets/vector3.png'
+import vector4 from '../assets/vector4.png'
+import vector5 from '../assets/vector5.png'
+import vector6 from '../assets/vector6.png'
+import vector7 from '../assets/vector7.png'
+import vector8 from '../assets/vector8.png'
+
+
+
+// propuesta para contratar baterías
 // Tipos para los datos de la propuesta
 interface ProductItem {
   item_id?: string;
@@ -51,7 +63,7 @@ interface PropuestaData {
 
 const Propuesta = () => {
   const { validacionData, usuario } = useUsuario();
-  const { form } = useFormStore();
+  const { form, setField } = useFormStore();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -65,8 +77,6 @@ const Propuesta = () => {
   // Información específica de visita técnica
   const visitaTecnicaCompletada: boolean = location.state?.visitaTecnicaCompletada || false;
   const fsmState: string = location.state?.fromFsmState || '';
-  const reservaPagada: boolean = location.state?.reservaPagada || false;
-  const visitaPagada: boolean = location.state?.visitaPagada || false;
   
   // Debug: mostrar datos recibidos
   // console.log('📋 Datos de propuesta recibidos:', propuestaData);
@@ -74,7 +84,7 @@ const Propuesta = () => {
   // console.log('📋 Datos del UsuarioContext:', { validacionData, usuario });
   // console.log('📋 Datos del FormStore:', { comunero: form.comunero, enZona: form.enZona });
   
-  // Debug: mostrar información del tipo de instalación
+  // // Debug: mostrar información del tipo de instalación
   // console.log('⚡ Tipo de instalación detectado:', tipoInstalacion);
   // console.log('🔧 ¿Requiere visita técnica?:', requiereVisitaTecnica);
   // console.log('📍 Location state completo:', location.state);
@@ -169,22 +179,51 @@ const Propuesta = () => {
   const [loadingReserva, setLoadingReserva] = useState(false);
   const [showConfirmacionEnvio, setShowConfirmacionEnvio] = useState(false);
   
+  // console.log('💰 Precio a mostrar:', amount);
+  // console.log('📦 Items a mostrar:', items);
+  // console.log('🏷️ Nombre del grupo:', groupName);
+  // console.log('🔍 PropuestaData completa:', propuestaData);
+
+  // // Debug adicional para identificar problemas en servidor
+  // console.log('🔍 Debug validaciones:');
+  // console.log('  - validacionData (original):', validacionData);
+  // console.log('  - fallbackValidacionData:', fallbackValidacionData);
+  // console.log('  - usuario_propuesta:', usuario_propuesta);
+  // console.log('  - fallbackValidacionData.enZona:', fallbackValidacionData?.enZona);
+  // console.log('  - propuestaData?.conditions?.enZona:', propuestaData?.conditions?.enZona);
+  // console.log('  - ¿fallbackValidacionData existe?', !!fallbackValidacionData);
+  // console.log('  - ¿usuario_propuesta existe?', !!usuario_propuesta);
+  
   // Obtener enZona desde múltiples fuentes posibles (solo strings válidos)
   const enZonaFromPropuesta = propuestaData?.conditions?.enZona;
   const enZonaFromFallback = fallbackValidacionData?.enZona;
   const enZonaFromNestedData = propuestaData?.data?.conditions?.enZona;
   
+  // console.log('  - enZonaFromPropuesta:', enZonaFromPropuesta, typeof enZonaFromPropuesta);
+  // console.log('  - enZonaFromFallback:', enZonaFromFallback, typeof enZonaFromFallback);
+  // console.log('  - enZonaFromNestedData:', enZonaFromNestedData, typeof enZonaFromNestedData);
+  
   // Validar enZona - solo acepta los 3 valores válidos como strings
-  // const valoresValidosEnZona = ["inZone", "inZoneWithCost", "outZone"];
+  const valoresValidosEnZona = ["inZone", "inZoneWithCost", "outZone"];
   const enZonaParaValidar = enZonaFromPropuesta || enZonaFromFallback || enZonaFromNestedData;
+  
+  // console.log('  - enZonaParaValidar:', enZonaParaValidar, typeof enZonaParaValidar);
   
   const enZonaValida = !enZonaParaValidar || 
                       (typeof enZonaParaValidar === 'string' && 
                        (enZonaParaValidar === "inZone" || enZonaParaValidar === "inZoneWithCost"));
   
+  // console.log('  - ¿enZona es válida?', enZonaValida);
+  
   // Debug adicional: si enZona no es válida, mostrar por qué
   if (!enZonaValida) {
     console.error('🚫 enZona INVÁLIDA - Análisis detallado:');
+    console.error('   - Valor recibido:', enZonaParaValidar);
+    console.error('   - Tipo:', typeof enZonaParaValidar);
+    console.error('   - ¿Es string?', typeof enZonaParaValidar === 'string');
+    console.error('   - ¿Es inZone?', enZonaParaValidar === "inZone");
+    console.error('   - ¿Es inZoneWithCost?', enZonaParaValidar === "inZoneWithCost");
+    console.error('   - Valores válidos esperados:', valoresValidosEnZona);
   }
 
   // Funciones para manejar botones
@@ -204,7 +243,7 @@ const Propuesta = () => {
         return;
       }
 
-      
+      // console.log('📞 Solicitando visita técnica para propuestaId:', propuestaIdFromStore);
 
       // Extraer datos de direccion si es un objeto
       let direccionTexto = '';
@@ -247,21 +286,24 @@ const Propuesta = () => {
         // Campos legacy mantenidos para compatibilidad
         campaignSource: form.campaignSource || '',
         utm: form.utm || '',
-        type: "reserva"
+        type: "contrata"
       };
 
-      
+      // console.log('📋 Datos para enviar:', datosVisitaTecnica);
 
       // Llamar al servicio
       const resultado = await bateriaService.solicitarVisitaTecnica(datosVisitaTecnica);
 
       if (resultado.success) {
+        // console.log('✅ Visita técnica solicitada exitosamente:', resultado);
+        // console.log('💳 Verificando URL de pago:', resultado.data?.paymentLink);
         
         // Verificar si está en modo asesores
         const isAsesores = form.asesores;
         
         if (!isAsesores && resultado.data?.paymentLink) {
-
+          // No está en dominio de asesores - redirigir a Stripe Checkout
+          // console.log('🔗 Redirigiendo a Stripe Checkout para visita técnica (usuario externo)');
           
           // Pequeño delay para feedback visual
           setTimeout(() => {
@@ -272,9 +314,10 @@ const Propuesta = () => {
         } else {
           // Está en dominio de asesores o no hay URL de pago - mostrar modal tradicional
           setShowVisitaTecnicaModal(true);
+          // console.log('📧 Mostrando confirmación tradicional para visita técnica');
         }
       } else {
-        console.error('❌ Error al solicitar visita técnica:', resultado.error);
+        // console.error('❌ Error al solicitar visita técnica:', resultado.error);
         alert('Error al procesar tu solicitud. Por favor, inténtalo de nuevo o contacta con soporte.');
       }
     } catch (error) {
@@ -303,12 +346,14 @@ const Propuesta = () => {
     setShowDniModal(true);
   };
 
-  const handleConfirmarCompra = async () => {
+const handleConfirmarCompra = async () => {
     // Validar DNI
     if (!dniInput || dniInput.trim() === '') {
       alert('Por favor, ingresa tu DNI para continuar.');
       return;
     }
+
+    setLoadingReserva(true);
 
     // Validar formato de DNI, NIE o TIE español
     const dniInput_clean = dniInput.trim().toUpperCase();
@@ -324,61 +369,46 @@ const Propuesta = () => {
     
     if (!dniRegex.test(dniInput_clean) && !nieRegex.test(dniInput_clean) && !tieRegex.test(dniInput_clean)) {
       alert('Por favor, ingresa un documento válido:\n• DNI: 8 números + letra (ej: 12345678A)\n• NIE: X/Y/Z + 7 números + letra (ej: X1234567A)\n• TIE: T + 8 números + letra (ej: T12345678A)');
+      setLoadingReserva(false);
+
       return;
     }
 
-    setLoadingReserva(true);
-    
     try {
       const propuestaIdFromStore = form.propuestaId;
+      // console.log('🛒 Iniciando proceso de compra para propuestaId:', propuestaIdFromStore, 'con DNI:', dniInput);
 
-      // Extraer nombre y apellido del usuario
-      const nombreCompleto = usuarioDisplay.nombre || 'Usuario';
-      const partesNombre = nombreCompleto.trim().split(' ');
-      const name = partesNombre[0] || 'Usuario';
-      const lastname = partesNombre.slice(1).join(' ') || '';
-
-      // Generar enlace de pago para la reserva
-      const resultado = await bateriaService.generarEnlacePago({
-        propuestaId: propuestaIdFromStore!,
-        dni: dniInput.trim(),
-        name: name,
-        lastname: lastname,
-        mpkLogId: form.mpkLogId || undefined,
-        email: usuarioDisplay.email || undefined,
-      });
+      // Enviar código de validación usando el propuestaId y el DNI
+      const resultado = await comuneroService.enviarCodigoPorPropuestaId(propuestaIdFromStore!, dniInput.trim());
 
       if (resultado.success) {
+        // console.log('✅ Código enviado exitosamente para compra con DNI:', dniInput);
         
+        // Cerrar modal y limpiar estado
+        setShowDniModal(false);
+        setDniInput('');
         
-        // Verificar si está en modo asesores
-        const isAsesores = form.asesores;
-        
-        if (!isAsesores && resultado.data?.paymentURL) {
-          // No está en dominio de asesores - redirigir a Stripe Checkout
-          
-          
-          // Cerrar modal y mostrar loading brevemente antes de redirigir
-          setShowDniModal(false);
-          setDniInput('');
-          
-          // Pequeño delay para que el usuario vea que se está procesando
-          setTimeout(() => {
-            if (resultado.data?.paymentURL) {
-              window.location.href = resultado.data.paymentURL;
-            }
-          }, 500);
-        } else {
-          // Está en dominio de asesores - mostrar confirmación tradicional
-          setShowDniModal(false);
-          setDniInput('');
-          setShowConfirmacionEnvio(true);
+        // Asegurar que el propuestaId esté guardado en el formStore
+        if (form.propuestaId !== propuestaIdFromStore) {
+          setField('propuestaId', propuestaIdFromStore);
         }
+        
+        // Redirigir a la página de validación de código
+        navigate('/comunero/validar', { 
+          state: { 
+            fromCompra: true,
+            propuestaId: propuestaIdFromStore,
+            email: usuarioDisplay.email,
+            flujo: 'compra'
+          } 
+        });
       } else {
-        alert('Error al procesar la reserva. Por favor, inténtalo de nuevo o contacta con soporte.');
+        console.error('❌ Error al enviar código para compra:', resultado.error);
+        alert('Error al procesar la compra. Por favor, inténtalo de nuevo o contacta con soporte.');
       }
     } catch (error) {
-      console.error('❌ Error inesperado en reserva:', error);
+      setLoadingReserva(false);
+      console.error('❌ Error inesperado en compra:', error);
       alert('Error inesperado. Por favor, inténtalo de nuevo más tarde.');
     } finally {
       setLoadingReserva(false);
@@ -404,8 +434,15 @@ const Propuesta = () => {
     navigate('/');
     return null;
   }
+  
+  if (isDebugMode) {
+    // console.log('🔧 Modo debug activo - saltando validaciones');
+  }
+  
+  // console.log('✅ Todas las validaciones pasaron, renderizando propuesta');
 
-  // Crear usuario de display con datos de fallback para el render
+  // console.log('💾 PropuestaId actual en store:', form.propuestaId);
+
   const usuarioDisplay = usuario_propuesta || {
     nombre: 'Usuario',
     email: 'usuario@ejemplo.com',
@@ -545,30 +582,6 @@ const Propuesta = () => {
                 >
                   {groupName}
                 </h1>
-
-                {/* Banner de Reserva Pagada o Visita Pagada */}
-                {(reservaPagada || visitaPagada) && (
-                  <div className="alert alert-success border-0 shadow-sm mb-4" 
-                       style={{
-                         background: 'linear-gradient(90deg, #28a745, #20c997)',
-                         borderRadius: '15px'
-                       }}>
-                    <div className="d-flex align-items-center justify-content-center">
-                      <i className="fas fa-check-circle me-3" style={{ fontSize: '1.5rem', color: 'white' }}></i>
-                      <div className="text-white">
-                        <h4 className="mb-1 fw-bold">
-                          {reservaPagada ? '¡Reserva Pagada!' : '¡Visita Pagada!'}
-                        </h4>
-                        <p className="mb-0">
-                          {reservaPagada 
-                            ? 'Tu reserva ha sido confirmada y el pago procesado exitosamente.'
-                            : 'Tu visita técnica ha sido confirmada y el pago procesado exitosamente.'
-                          }
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
                 
                 {/* Cards con precio y botón - Dos cards lado a lado */}
                 <div className="row g-3">
@@ -586,7 +599,10 @@ const Propuesta = () => {
                             fontSize: '2.5rem',
                             lineHeight: '1'
                           }}>
-                            {amount.toLocaleString('es-ES')}€
+                            {amount.toLocaleString('es-ES', { 
+                              minimumFractionDigits: 0, 
+                              maximumFractionDigits: 2 
+                            })}€
                           </span>
                         </div>
                         <p className="mb-0" style={{ 
@@ -604,7 +620,7 @@ const Propuesta = () => {
                       </div>
                       
                       {/* Botón para card de pago único */}
-                      {!reservaPagada && !visitaPagada && fsmState !== '06_VISITA_TECNICA' && (
+                      {fsmState !== '06_VISITA_TECNICA' && (
                         (requiereVisitaTecnica && tipoInstalacion === 'trifasica') ? (
                           <button 
                             className="btn btn-lg px-4 py-2 fw-bold text-white border-0 w-100"
@@ -615,7 +631,7 @@ const Propuesta = () => {
                             }}
                             onClick={handleComprar}
                           >
-                            RESERVAR
+                            CONTRATAR
                           </button>
                         ) : (
                           <button 
@@ -627,7 +643,7 @@ const Propuesta = () => {
                             }}
                             onClick={handleComprar}
                           >
-                            RESERVAR
+                            CONTRATAR
                           </button>
                         )
                       )}
@@ -666,7 +682,7 @@ const Propuesta = () => {
                       </div>
                       
                       {/* Botón para card de financiación */}
-                      {!reservaPagada && !visitaPagada && fsmState !== '06_VISITA_TECNICA' && (
+                      {fsmState !== '06_VISITA_TECNICA' && (
                         (requiereVisitaTecnica && tipoInstalacion === 'trifasica') ? (
                           <button 
                             className="btn btn-lg px-4 py-2 fw-bold text-white border-0 w-100"
@@ -677,7 +693,7 @@ const Propuesta = () => {
                             }}
                             onClick={handleComprar}
                           >
-                            RESERVAR
+                            CONTRATAR
                           </button>
                         ) : (
                           <button 
@@ -689,7 +705,7 @@ const Propuesta = () => {
                             }}
                             onClick={handleComprar}
                           >
-                            RESERVAR
+                            CONTRATAR
                           </button>
                         )
                       )}
@@ -720,8 +736,8 @@ const Propuesta = () => {
           {/* Botones adicionales */}
           <div className="mt-4 d-flex justify-content-between align-items-center">
             <div className="d-flex align-items-center">
-              {/* Solo mostrar botón de visita técnica si no se ha completado ya y no hay reserva o visita pagada */}
-              {!visitaTecnicaCompletada && !reservaPagada && !visitaPagada && (
+              {/* Solo mostrar botón de visita técnica si no se ha completado ya */}
+              {!visitaTecnicaCompletada && (
                 <button 
                   className="btn px-4 py-2 gradient-border-btn"
                   style={{
@@ -933,7 +949,7 @@ const Propuesta = () => {
           <div className="mt-5">
             <div className="row g-0">
               {/* Imagen de la batería EcoFlow */}
-              <div className="col-lg-7" >
+              <div className="col-lg-6" >
                 <div className="position-relative d-flex flex-column align-items-center">
                   {/* Fondo verde decorativo - más pequeño */}
                   <div 
@@ -979,12 +995,13 @@ const Propuesta = () => {
               </div>
               
               {/* Card de características */}
-              <div className="col-lg-5" style={{padding: '0 35px 0 0'}}>
+              <div className="col-lg-6" style={{padding: '0 35px 0 0'}}>
                 <div 
-                  className="bg-white rounded-4 shadow-lg p-4 h-100"
+                  className="bg-white rounded-4 shadow-lg p-4"
                   style={{ 
                     // border: '3px solid #A0D034',
-                    position: 'relative'
+                    position: 'relative',
+                    height: '90%'
                   }}
                 >
                                     {/* Título */}
@@ -1002,31 +1019,42 @@ const Propuesta = () => {
                   
                   {/* Lista de características */}
                   <div className="mt-3">
-                    {[
-                      { icon: '🛡️', text: 'Sistema de extinción de incendios integrado.' },
-                      { icon: '🔋', text: 'BMS inteligente que protege contra sobrecargas.' },
-                      { icon: '☔', text: 'Certificación IP65: protege de la lluvia y el polvo.' },
-                      { icon: '🌡️', text: 'Módulo de calentamiento automático.' },
-                      { icon: '🔌', text: 'Instalación plug&play, rápida sin complicación.' },
-                      { icon: '📱', text: 'Control total desde tu móvil con la App.' },
-                      { icon: '⚡', text: '6 kW de potencia para evitar cortes de luz.' },
-                      { icon: '🔇', text: 'Sistema antiincendios, seguro y silencioso.' },
-                      { icon: '📜', text: '15 años de garantía real, por escrito.' },
-                      { icon: '👁️', text: 'Un diseño que no querrás esconder.' },
-                      { icon: '💰', text: 'Precio exclusivo para comuneros' }
-                    ].map((item, index) => (
-                      <div key={index} className="d-flex align-items-start gap-2 mb-1">
-                        <span style={{ fontSize: '1rem', minWidth: '20px' }}>{item.icon}</span>
-                        <span style={{ color: '#2A2A2A', fontSize: '0.85rem', lineHeight: '1.3' }}>
-                          {item.text}
-                        </span>
-                      </div>
-                    ))}
+                    {(() => {
+                      const vectores = [vector, vector1, vector2, vector3, vector4, vector5, vector6, vector7, vector8];
+                      const caracteristicas = [
+                        'Inversor híbrido y Sistema de Gestión de Batería (BMS)',
+                        'Sin necesidad de Instalación fotovoltaica',
+                        'Baja tensión de inicio',
+                        '7x24 Tarifa por Horario (ToU)',
+                        'Programación Inteligente',
+                        'Compatible con generadores y cargadores de vehículos eléctricos',
+                        'Gestión inteligente de cargas',
+                        'Diseño atractivo',
+                        '+6.000 Ciclos de vida'
+                      ];
+                      
+                      return caracteristicas.map((text, index) => (
+                        <div key={index} className="d-flex align-items-start gap-2 mb-2">
+                          <img 
+                            src={vectores[index] || vector} 
+                            alt="Característica" 
+                            style={{ 
+                              width: '16px', 
+                              height: '16px', 
+                              minWidth: '16px'
+                            }} 
+                          />
+                          <span style={{ color: '#2A2A2A', fontSize: '0.85rem', lineHeight: '1.3' }}>
+                            {text}
+                          </span>
+                        </div>
+                      ));
+                    })()}
                   </div>
                   
                   {/* Botón COMPRAR */}
-                  <div className="text-center mt-3">
-                    {!reservaPagada && !visitaPagada && fsmState !== '06_VISITA_TECNICA' && (
+                  <div className="text-center mt-5">
+                    {fsmState !== '06_VISITA_TECNICA' && (
                       (requiereVisitaTecnica && tipoInstalacion === 'trifasica') ? (
                         // Botón para instalaciones trifásicas que necesitan evaluación
                         <button 
@@ -1039,10 +1067,10 @@ const Propuesta = () => {
                           }}
                           onClick={handleComprar}
                         >
-                          RESERVAR
+                          CONTRATAR
                         </button>
                       ) : (
-                        // Botón RESERVAR normal
+                        // Botón CONTRATAR normal
                         <button 
                           className="btn btn-lg px-4 py-2 fw-bold text-white border-0"
                           style={{
@@ -1053,7 +1081,7 @@ const Propuesta = () => {
                           }}
                           onClick={handleComprar}
                         >
-                          RESERVAR
+                          CONTRATAR
                         </button>
                       )
                     )}
@@ -1348,7 +1376,7 @@ const Propuesta = () => {
 
             {/* Botón COMPRAR centrado */}
             <div className="text-center">
-              {!reservaPagada && !visitaPagada && (requiereVisitaTecnica && tipoInstalacion === 'trifasica' && fsmState !== '06_VISITA_TECNICA') ? (
+              {(requiereVisitaTecnica && tipoInstalacion === 'trifasica' && fsmState !== '06_VISITA_TECNICA') ? (
                 // Botón para instalaciones trifásicas que necesitan evaluación (solo antes de solicitar)
                 <button 
                   className="btn btn-lg px-5 py-3 fw-bold text-white border-0"
@@ -1363,8 +1391,8 @@ const Propuesta = () => {
                   COMPRAR EN GRUPO
                 </button>
               ) : (
-                // Solo mostrar RESERVAR si NO estamos en estado 06_VISITA_TECNICA
-                (!reservaPagada && !visitaPagada && fsmState !== '06_VISITA_TECNICA') && (
+                // Solo mostrar CONTRATAR si NO estamos en estado 06_VISITA_TECNICA
+                fsmState !== '06_VISITA_TECNICA' && (
                   <button 
                     className="btn btn-lg px-5 py-3 fw-bold text-white border-0 comprar-btn"
                     style={{
@@ -1469,11 +1497,11 @@ const Propuesta = () => {
               </div>
             </div>
 
-            {/* Botones alineados: RESERVAR a la izquierda, contacto a la derecha */}
+            {/* Botones alineados: CONTRATAR a la izquierda, contacto a la derecha */}
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
-              {/* Botón RESERVAR alineado a la izquierda */}
+              {/* Botón CONTRATAR alineado a la izquierda */}
               <div>
-                {(!reservaPagada && !visitaPagada && fsmState !== '06_VISITA_TECNICA') && (
+                {fsmState !== '06_VISITA_TECNICA' && (
                   (requiereVisitaTecnica && tipoInstalacion === 'trifasica') ? (
                     // Botón para instalaciones trifásicas que necesitan evaluación
                     <button 
@@ -1486,10 +1514,10 @@ const Propuesta = () => {
                       }}
                       onClick={handleComprar}
                     >
-                      RESERVAR
+                      CONTRATAR
                     </button>
                   ) : (
-                    // Botón RESERVAR normal
+                    // Botón CONTRATAR normal
                     <button 
                       className="btn btn-lg px-5 py-3 fw-bold text-white border-0"
                       style={{
@@ -1500,7 +1528,7 @@ const Propuesta = () => {
                       }}
                       onClick={handleComprar}
                     >
-                      RESERVAR
+                      CONTRATAR
                     </button>
                   )
                 )}
