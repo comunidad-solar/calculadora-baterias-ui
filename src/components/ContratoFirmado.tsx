@@ -88,8 +88,8 @@ const ContratoFirmado = () => {
                     ¡Bienvenido a Comunidad Solar! 🎉
                   </h1>
                   <p className="lead text-muted">
-                    Tu contrato ha sido firmado exitosamente. ¡Ya eres oficialmente parte de nuestra comunidad! 
-                    Una copia firmada será enviada a tu correo electrónico.
+                    Tu contrato ha sido firmado exitosamente. Enviaremos una copia firmada a tu correo electronico. 
+                    ¡Ya eres oficialmente parte de nuestra comunidad!
                   </p>
                 </div>
 
@@ -178,23 +178,19 @@ const ContratoFirmado = () => {
                         <ul className="list-unstyled">
                           <li className="mb-3">
                             <span className="me-2">📧</span>
-                            <strong>Confirmación por email:</strong> En breve recibirás la copia firmada del contrato en tu correo electrónico.
+                            <strong>Confirmación por email:</strong> En breve recibirás la copia firmada del contrato y las formas de pago en tu correo electrónico.
                           </li>
                           <li className="mb-3">
                             <span className="me-2">📞</span>
-                            <strong>Contacto personalizado:</strong> Nuestro equipo técnico se pondrá en contacto contigo en las próximas 48 horas para coordinar la instalación.
+                            <strong>Contacto personalizado:</strong> Una vez recibido el pago, nuestro equipo técnico se pondrá en contacto contigo en las siguientes 48h para coordinar la instalación.
                           </li>
                           <li className="mb-3">
                             <span className="me-2">🔧</span>
-                            <strong>Instalación profesional:</strong> Programaremos la instalación de tu sistema de baterías en una fecha conveniente para ti.
+                            <strong>Instalación y activación:</strong> Una vez completada la instalación, te explicaremos como funciona tu nuevo sistema para poder maximizar tus ahorros. 
                           </li>
                           <li className="mb-3">
                             <span className="me-2">⚡</span>
-                            <strong>Activación y formación:</strong> Una vez completada la instalación, te explicaremos cómo funciona tu nuevo sistema y cómo maximizar tus ahorros.
-                          </li>
-                          <li>
-                            <span className="me-2">🌱</span>
-                            <strong>¡Comienza a ahorrar!</strong> Desde el primer día podrás disfrutar de tu energía renovable y ver el impacto positivo en tu factura eléctrica.
+                            <strong>Legalización:</strong> Con tu instalación ya funcionando, nuestro equipo preparará toda la documentación necesaria para tener tu instalación legalizada.
                           </li>
                         </ul>
                       </div>
