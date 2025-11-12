@@ -1,5 +1,6 @@
 import { useFormStore } from '../zustand/formStore';
 import { useAsesores } from '../hooks/useAsesores';
+import { useLocation } from 'react-router-dom';
 
 interface HeaderProps {
   showHeader?: boolean;
@@ -9,8 +10,18 @@ const Header = ({ showHeader }: HeaderProps) => {
   const { form } = useFormStore();
   const bypass = form.bypass;
   const { isAsesores } = useAsesores();
+  const location = useLocation();
 
-  // Lógica de visibilidad - misma que Footer
+  // Revisar si hay parámetro en la URL para ocultar el header
+  const searchParams = new URLSearchParams(location.search);
+  const hideHeaderParam = searchParams.get('hideHeader') === 'true';
+
+  // Lógica de visibilidad
+  // Si el parámetro hideHeader=true está en la URL, ocultar
+  if (hideHeaderParam) {
+    return null;
+  }
+
   // Si bypass = true y showHeader no está definido, por defecto false
   // Si bypass = true y showHeader = true, mostrar
   // Si bypass = false y showHeader = false, no mostrar

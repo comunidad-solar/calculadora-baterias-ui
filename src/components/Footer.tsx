@@ -1,4 +1,5 @@
 import { useFormStore } from '../zustand/formStore';
+import { useLocation } from 'react-router-dom';
 
 interface FooterProps {
   showFooter?: boolean;
@@ -7,8 +8,18 @@ interface FooterProps {
 const Footer = ({ showFooter }: FooterProps) => {
   const { form } = useFormStore();
   const bypass = form.bypass;
+  const location = useLocation();
+
+  // Revisar si hay parámetro en la URL para ocultar el footer
+  const searchParams = new URLSearchParams(location.search);
+  const hideFooterParam = searchParams.get('hideFooter') === 'true';
 
   // Lógica de visibilidad
+  // Si el parámetro hideFooter=true está en la URL, ocultar
+  if (hideFooterParam) {
+    return null;
+  }
+
   // Si bypass = true y showFooter no está definido, por defecto false
   // Si bypass = true y showFooter = true, mostrar
   // Si bypass = false y showFooter = false, no mostrar
