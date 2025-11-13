@@ -281,19 +281,61 @@ const HomeSelector: React.FC<HomeSelectorProps> = ({ onSelect }) => {
         </div>
       ) : (
         // Modo normal: mostrar botones comunero/no comunero
-        <div className="d-flex justify-content-center gap-3">
-          <button
-            className="btn btn-dark btn-lg fw-bold px-4 rounded-pill"
-            onClick={() => onSelect(true)}
-          >
-            Soy Comunero
-          </button>
-          <button
-            className="btn btn-outline-dark btn-lg fw-bold px-4 rounded-pill"
-            onClick={() => onSelect(false)}
-          >
-            No soy Comunero
-          </button>
+        <div className="text-center">
+          <h2 style={{
+            fontSize: '38px',
+            fontWeight: 800,
+            marginBottom: '2px',
+            lineHeight: '1.1'
+          }}>
+            Realiza tu estudio
+          </h2>
+          
+          <div style={{
+            fontSize: '38px',
+            fontWeight: 800,
+            marginBottom: '16px',
+            lineHeight: '1.1'
+          }}>
+            personalizado
+          </div>
+
+          <p style={{
+            fontSize: '18px',
+            fontWeight: 600,
+            color: '#111',
+            marginBottom: '18px'
+          }}>
+            Solo te llevará <strong>2 minutos</strong>
+          </p>
+
+          <p style={{
+            fontSize: '15px',
+            lineHeight: '1.5',
+            maxWidth: '950px',
+            margin: '0 auto 26px',
+            color: '#444'
+          }}>
+            Elige una opción y completa los siguientes pasos <br />
+            para obtener tu propuesta personalizada de batería.
+          </p>
+
+          <div className="d-flex justify-content-center gap-3 mt-4">
+            <button
+              className="btn btn-dark btn-lg fw-bold px-5 rounded-pill"
+              onClick={() => onSelect(true)}
+              style={{ fontSize: '18px' }}
+            >
+              Soy Comunero
+            </button>
+            <button
+              className="btn btn-outline-dark btn-lg fw-bold px-5 rounded-pill"
+              onClick={() => onSelect(false)}
+              style={{ fontSize: '18px' }}
+            >
+              No soy Comunero
+            </button>
+          </div>
         </div>
       )}
     </div>
