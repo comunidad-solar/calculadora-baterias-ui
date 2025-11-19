@@ -22,7 +22,7 @@ import iconResilence from '../assets/SolaXResilienceIcon.svg'
 import iconAhorro from '../assets/SolaXBatteryIcono.svg'
 import iconSeguridad from '../assets/BateriaSolaxIcono.svg'
 import vector from '../assets/Vector.png';
-import vector2 from '../assets/Vector2.png';
+import vector2 from '../assets/vector2.png';
 import vector3 from '../assets/Vector3.png';
 import vector4 from '../assets/Vector4.png';
 import vector5 from '../assets/Vector5.png';
