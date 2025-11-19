@@ -390,7 +390,7 @@ const PreguntasAdicionales = () => {
 
     // Si NO tiene baterías, validar distancia de instalación
     if (!tieneInstalacionFV && (tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') && tieneBaterias === false && instalacionCerca10m === null) {
-      showToast('Por favor indica si podríamos realizar la instalación a menos de 10m del cuadro eléctrico', 'error');
+      showToast('Por favor indica si podríamos realizar la instalación a menos de 5m del cuadro eléctrico', 'error');
       setLoading(false);
       return;
     }
@@ -1896,7 +1896,7 @@ const PreguntasAdicionales = () => {
             {tieneInstalacionFV === false && (tipoInstalacion === 'monofasica' || tipoInstalacion === 'trifasica') && tieneBaterias === false && (
               <div className="fade-in-result">
                 <label className="form-label h5 fw-bold mb-3">
-                  ¿Podríamos realizar la instalación a menos de 10m del cuadro eléctrico? <span className="text-danger">*</span>
+                  ¿Podríamos realizar la instalación a menos de 5m del cuadro eléctrico? <span className="text-danger">*</span>
                 </label>
                 
                 <div className="d-flex gap-3 mb-3">
