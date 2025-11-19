@@ -23,13 +23,13 @@ import iconAhorro from '../assets/SolaXBatteryIcono.svg'
 import iconSeguridad from '../assets/BateriaSolaxIcono.svg'
 import vector from '../assets/Vector.png';
 import vector2 from '../assets/vector2.png';
-import vector3 from '../assets/Vector3.png';
-import vector4 from '../assets/Vector4.png';
-import vector5 from '../assets/Vector5.png';
-import vector6 from '../assets/Vector6.png';
-import vector7 from '../assets/Vector7.png';
-import vector1 from '../assets/Vector1.png';
-import vector8 from '../assets/Vector8.png';
+import vector3 from '../assets/vector3.png';
+import vector4 from '../assets/vector4.png';
+import vector5 from '../assets/vector5.png';
+import vector6 from '../assets/vector6.png';
+import vector7 from '../assets/vector7.png';
+import vector1 from '../assets/vector1.png';
+import vector8 from '../assets/vector8.png';
 
 
 
