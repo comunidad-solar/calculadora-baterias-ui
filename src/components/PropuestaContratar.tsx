@@ -21,7 +21,7 @@ import iconoDescargaElectricidad from '../assets/BateriaSolaXElectricidadIcon.sv
 import iconResilence from '../assets/SolaXResilienceIcon.svg'
 import iconAhorro from '../assets/SolaXBatteryIcono.svg'
 import iconSeguridad from '../assets/BateriaSolaxIcono.svg'
-import vector from '../assets/vector.png';
+import vector from '../assets/Vector.png';
 import vector2 from '../assets/vector2.png';
 import vector3 from '../assets/vector3.png';
 import vector4 from '../assets/vector4.png';
