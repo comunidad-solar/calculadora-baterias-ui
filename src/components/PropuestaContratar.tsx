@@ -33,6 +33,7 @@ import vector8 from '../assets/vector8.png';
 
 
 
+
 // propuesta para contratar baterías
 // Tipos para los datos de la propuesta
 interface ProductItem {
