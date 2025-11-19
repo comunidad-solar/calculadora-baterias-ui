@@ -909,7 +909,10 @@ const Propuesta = () => {
                             fontSize: '2.5rem',
                             lineHeight: '1'
                           }}>
-                            {amount.toLocaleString('es-ES')}€
+                            {amount.toLocaleString('es-ES', { 
+                              minimumFractionDigits: 0, 
+                              maximumFractionDigits: 2 
+                            })}€
                           </span>
                         </div>
                         <p className="mb-0" style={{ 
