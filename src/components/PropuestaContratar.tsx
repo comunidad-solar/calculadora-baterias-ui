@@ -2,7 +2,7 @@ import { useUsuario } from '../context/UsuarioContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import BackButton from './BackButton';
 import PageTransition from './PageTransition';
-import PropuestaContratar from './PropuestaContratar';
+import Propuesta from './Propuesta';
 // import logoCS from '../assets/logocircularcs.png';
 // import bateriaEcoflow from '../assets/bateriaEcoflow1.png';
 import bateriaSolax from '../assets/Bateria_SolaXCover_Image.png';
@@ -14,14 +14,26 @@ import imagenFondoPropuesta4 from '../assets/imagenFondoPropuesta4.png';
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useFormStore } from '../zustand/formStore';
-import { bateriaService } from '../services/apiService';
+import { bateriaService, comuneroService } from '../services/apiService';
 import { useAsesores } from '../hooks/useAsesores';
 import iconoBateria from '../assets/SolaXBatteryIcon.svg'
 import iconoDescargaElectricidad from '../assets/BateriaSolaXElectricidadIcon.svg'
 import iconResilence from '../assets/SolaXResilienceIcon.svg'
 import iconAhorro from '../assets/SolaXBatteryIcono.svg'
 import iconSeguridad from '../assets/BateriaSolaxIcono.svg'
+import vector from '../assets/Vector.png';
+import vector2 from '../assets/Vector2.png';
+import vector3 from '../assets/Vector3.png';
+import vector4 from '../assets/Vector4.png';
+import vector5 from '../assets/Vector5.png';
+import vector6 from '../assets/Vector6.png';
+import vector7 from '../assets/Vector7.png';
+import vector1 from '../assets/Vector1.png';
+import vector8 from '../assets/Vector8.png';
 
+
+
+// propuesta para contratar baterías
 // Tipos para los datos de la propuesta
 interface ProductItem {
   item_id?: string;
@@ -45,21 +57,21 @@ interface PropuestaData {
       calle: string;
       ciudad: string;
       provincia: string;
-      codigoPostal: string;
+      codigoPostal: string; 
     };
   };
   [key: string]: any;
 }
 
-const Propuesta = () => {
+const PropuestaContratar = () => {
   const { validacionData, usuario } = useUsuario();
-  const { form } = useFormStore();
+  const { form, setField } = useFormStore();
   const navigate = useNavigate();
   const location = useLocation();
   const { isAsesores } = useAsesores();
   
   // Estado para controlar qué vista mostrar (solo para asesores)
-  const [vistaActual, setVistaActual] = useState<'propuesta' | 'contratar'>('propuesta');
+  const [vistaActual, setVistaActual] = useState<'propuesta' | 'contratar'>('contratar');
   
   // Obtener datos de la propuesta del state de navegación
   const propuestaData: PropuestaData | undefined = location.state?.propuestaData;
@@ -73,24 +85,24 @@ const Propuesta = () => {
   const fsmState: string = location.state?.fromFsmState || '';
   
   // Debug: mostrar datos recibidos
-  console.log('📋 Datos de propuesta recibidos:', propuestaData);
-  console.log('📋 Estructura completa de propuestaData:', JSON.stringify(propuestaData, null, 2));
-  console.log('📋 Datos del UsuarioContext:', { validacionData, usuario });
-  console.log('📋 Datos del FormStore:', { comunero: form.comunero, enZona: form.enZona });
+  // console.log('📋 Datos de propuesta recibidos:', propuestaData);
+  // console.log('📋 Estructura completa de propuestaData:', JSON.stringify(propuestaData, null, 2));
+  // console.log('📋 Datos del UsuarioContext:', { validacionData, usuario });
+  // console.log('📋 Datos del FormStore:', { comunero: form.comunero, enZona: form.enZona });
   
-  // Debug: mostrar información del tipo de instalación
-  console.log('⚡ Tipo de instalación detectado:', tipoInstalacion);
-  console.log('🔧 ¿Requiere visita técnica?:', requiereVisitaTecnica);
-  console.log('📍 Location state completo:', location.state);
+  // // Debug: mostrar información del tipo de instalación
+  // console.log('⚡ Tipo de instalación detectado:', tipoInstalacion);
+  // console.log('🔧 ¿Requiere visita técnica?:', requiereVisitaTecnica);
+  // console.log('📍 Location state completo:', location.state);
   
   // Debug: información de visita técnica si aplica
   if (visitaTecnicaCompletada) {
-    console.log('✅ Visita técnica completada - Botón de solicitar visita deshabilitado');
+    // console.log('✅ Visita técnica completada - Botón de solicitar visita deshabilitado');
   }
   
   // Debug para servidor: verificar si estamos en modo debug
   const isDebugMode = new URLSearchParams(window.location.search).get('debug') === 'true';
-  console.log('🔧 Modo debug:', isDebugMode);
+  // console.log('🔧 Modo debug:', isDebugMode);
   
   // Datos por defecto si no hay propuestaData
   const defaultAmount = 4699;
@@ -117,8 +129,8 @@ const Propuesta = () => {
   const tieneInstalacionFV = form.respuestasPreguntas?.tieneInstalacionFV;
   
   // Debug: verificar el valor de tieneInstalacionFV
-  console.log('🔍 Debug tieneInstalacionFV:', tieneInstalacionFV, 'tipo:', typeof tieneInstalacionFV);
-  console.log('🔍 Debug respuestasPreguntas completo:', form.respuestasPreguntas);
+  // console.log('🔍 Debug tieneInstalacionFV:', tieneInstalacionFV, 'tipo:', typeof tieneInstalacionFV);
+  // console.log('🔍 Debug respuestasPreguntas completo:', form.respuestasPreguntas);
   
   // Items adicionales condicionados
   const conditionalItems: string[] = [];
@@ -126,9 +138,9 @@ const Propuesta = () => {
   // Solo agregar legalización si tiene instalación fotovoltaica
   if (tieneInstalacionFV === true) {
     conditionalItems.push("Legalización (*Solo si se tiene instalación fotovoltaica)");
-    console.log('✅ Agregando item de legalización porque tiene instalación FV');
+    // console.log('✅ Agregando item de legalización porque tiene instalación FV');
   } else {
-    console.log('❌ NO agregando item de legalización. Valor:', tieneInstalacionFV);
+    // console.log('❌ NO agregando item de legalización. Valor:', tieneInstalacionFV);
   }
   
   // Combinar todos los items adicionales
@@ -193,41 +205,41 @@ const Propuesta = () => {
     iaMessage?: string;
   } | null>(null);
   
-  console.log('💰 Precio a mostrar:', amount);
-  console.log('📦 Items a mostrar:', items);
-  console.log('🏷️ Nombre del grupo:', groupName);
-  console.log('🔍 PropuestaData completa:', propuestaData);
+  // console.log('💰 Precio a mostrar:', amount);
+  // console.log('📦 Items a mostrar:', items);
+  // console.log('🏷️ Nombre del grupo:', groupName);
+  // console.log('🔍 PropuestaData completa:', propuestaData);
 
-  // Debug adicional para identificar problemas en servidor
-  console.log('🔍 Debug validaciones:');
-  console.log('  - validacionData (original):', validacionData);
-  console.log('  - fallbackValidacionData:', fallbackValidacionData);
-  console.log('  - usuario_propuesta:', usuario_propuesta);
-  console.log('  - fallbackValidacionData.enZona:', fallbackValidacionData?.enZona);
-  console.log('  - propuestaData?.conditions?.enZona:', propuestaData?.conditions?.enZona);
-  console.log('  - ¿fallbackValidacionData existe?', !!fallbackValidacionData);
-  console.log('  - ¿usuario_propuesta existe?', !!usuario_propuesta);
+  // // Debug adicional para identificar problemas en servidor
+  // console.log('🔍 Debug validaciones:');
+  // console.log('  - validacionData (original):', validacionData);
+  // console.log('  - fallbackValidacionData:', fallbackValidacionData);
+  // console.log('  - usuario_propuesta:', usuario_propuesta);
+  // console.log('  - fallbackValidacionData.enZona:', fallbackValidacionData?.enZona);
+  // console.log('  - propuestaData?.conditions?.enZona:', propuestaData?.conditions?.enZona);
+  // console.log('  - ¿fallbackValidacionData existe?', !!fallbackValidacionData);
+  // console.log('  - ¿usuario_propuesta existe?', !!usuario_propuesta);
   
   // Obtener enZona desde múltiples fuentes posibles (solo strings válidos)
   const enZonaFromPropuesta = propuestaData?.conditions?.enZona;
   const enZonaFromFallback = fallbackValidacionData?.enZona;
   const enZonaFromNestedData = propuestaData?.data?.conditions?.enZona;
   
-  console.log('  - enZonaFromPropuesta:', enZonaFromPropuesta, typeof enZonaFromPropuesta);
-  console.log('  - enZonaFromFallback:', enZonaFromFallback, typeof enZonaFromFallback);
-  console.log('  - enZonaFromNestedData:', enZonaFromNestedData, typeof enZonaFromNestedData);
+  // console.log('  - enZonaFromPropuesta:', enZonaFromPropuesta, typeof enZonaFromPropuesta);
+  // console.log('  - enZonaFromFallback:', enZonaFromFallback, typeof enZonaFromFallback);
+  // console.log('  - enZonaFromNestedData:', enZonaFromNestedData, typeof enZonaFromNestedData);
   
   // Validar enZona - solo acepta los 3 valores válidos como strings
   const valoresValidosEnZona = ["inZone", "inZoneWithCost", "outZone"];
   const enZonaParaValidar = enZonaFromPropuesta || enZonaFromFallback || enZonaFromNestedData;
   
-  console.log('  - enZonaParaValidar:', enZonaParaValidar, typeof enZonaParaValidar);
+  // console.log('  - enZonaParaValidar:', enZonaParaValidar, typeof enZonaParaValidar);
   
   const enZonaValida = !enZonaParaValidar || 
                       (typeof enZonaParaValidar === 'string' && 
                        (enZonaParaValidar === "inZone" || enZonaParaValidar === "inZoneWithCost"));
   
-  console.log('  - ¿enZona es válida?', enZonaValida);
+  // console.log('  - ¿enZona es válida?', enZonaValida);
   
   // Debug adicional: si enZona no es válida, mostrar por qué
   if (!enZonaValida) {
@@ -257,7 +269,7 @@ const Propuesta = () => {
         return;
       }
 
-      console.log('📞 Solicitando visita técnica para propuestaId:', propuestaIdFromStore);
+      // console.log('📞 Solicitando visita técnica para propuestaId:', propuestaIdFromStore);
 
       // Extraer datos de direccion si es un objeto
       let direccionTexto = '';
@@ -300,27 +312,43 @@ const Propuesta = () => {
         // Campos legacy mantenidos para compatibilidad
         campaignSource: form.campaignSource || '',
         utm: form.utm || '',
+        type: "contrata"
       };
 
-      console.log('📋 Datos para enviar:', datosVisitaTecnica);
+      // console.log('📋 Datos para enviar:', datosVisitaTecnica);
 
       // Llamar al servicio
       const resultado = await bateriaService.solicitarVisitaTecnica(datosVisitaTecnica);
 
       if (resultado.success) {
-        console.log('✅ Visita técnica solicitada exitosamente:', resultado);
-        setShowVisitaTecnicaModal(true);
+        // console.log('✅ Visita técnica solicitada exitosamente:', resultado);
+        // console.log('💳 Verificando URL de pago:', resultado.data?.paymentLink);
+        
+        // Verificar si está en modo asesores
+        // const isAsesores = form.asesores;
+        
+       
+          // Está en dominio de asesores o no hay URL de pago - mostrar modal tradicional
+          setShowVisitaTecnicaModal(true);
+          // console.log('📧 Mostrando confirmación tradicional para visita técnica');
+        
       } else {
-        console.error('❌ Error al solicitar visita técnica:', resultado.error);
+        // console.error('❌ Error al solicitar visita técnica:', resultado.error);
         alert('Error al procesar tu solicitud. Por favor, inténtalo de nuevo o contacta con soporte.');
       }
     } catch (error) {
-      console.error('❌ Error inesperado:', error);
+      // console.error('❌ Error inesperado:', error);
       alert('Error inesperado. Por favor, inténtalo de nuevo más tarde.');
+    } finally {
+      // Solo resetear el botón si no hay redirección
+      if (form.asesores) {
+        setButtonVTDisabled(false);
+      }
+      // Si no es asesor y hay redirección, no reseteamos ya que el usuario será redirigido
     }
   };
 
-  // Funciones para manejar SKU (solo asesores)
+  // Funciones para manejar SKU (solo asesores) - DUPLICADO de Propuesta.tsx
   const handleBuscarSku = async () => {
     if (!skuInput.trim()) {
       alert('Por favor, ingresa un código SKU');
@@ -470,12 +498,14 @@ const Propuesta = () => {
     setShowDniModal(true);
   };
 
-  const handleConfirmarCompra = async () => {
+const handleConfirmarCompra = async () => {
     // Validar DNI
     if (!dniInput || dniInput.trim() === '') {
       alert('Por favor, ingresa tu DNI para continuar.');
       return;
     }
+
+    setLoadingReserva(true);
 
     // Validar formato de DNI, NIE o TIE español
     const dniInput_clean = dniInput.trim().toUpperCase();
@@ -491,46 +521,46 @@ const Propuesta = () => {
     
     if (!dniRegex.test(dniInput_clean) && !nieRegex.test(dniInput_clean) && !tieRegex.test(dniInput_clean)) {
       alert('Por favor, ingresa un documento válido:\n• DNI: 8 números + letra (ej: 12345678A)\n• NIE: X/Y/Z + 7 números + letra (ej: X1234567A)\n• TIE: T + 8 números + letra (ej: T12345678A)');
+      setLoadingReserva(false);
+
       return;
     }
 
-    setLoadingReserva(true);
-    
     try {
       const propuestaIdFromStore = form.propuestaId;
-      console.log('� Iniciando proceso de reserva para propuestaId:', propuestaIdFromStore, 'con DNI:', dniInput);
+      // console.log('🛒 Iniciando proceso de compra para propuestaId:', propuestaIdFromStore, 'con DNI:', dniInput);
 
-      // Extraer nombre y apellido del usuario
-      const nombreCompleto = usuarioDisplay.nombre || 'Usuario';
-      const partesNombre = nombreCompleto.trim().split(' ');
-      const name = partesNombre[0] || 'Usuario';
-      const lastname = partesNombre.slice(1).join(' ') || '';
-
-      console.log('👤 Datos del usuario:', { name, lastname, email: usuarioDisplay.email });
-
-      // Generar enlace de pago para la reserva
-      const resultado = await bateriaService.generarEnlacePago({
-        propuestaId: propuestaIdFromStore!,
-        dni: dniInput.trim(),
-        name: name,
-        lastname: lastname,
-        mpkLogId: form.mpkLogId || undefined,
-        email: usuarioDisplay.email || undefined,
-      });
+      // Enviar código de validación usando el propuestaId y el DNI
+      const resultado = await comuneroService.enviarCodigoPorPropuestaId(propuestaIdFromStore!, dniInput.trim());
 
       if (resultado.success) {
-        console.log('✅ Solicitud de enlace de pago enviada exitosamente');
+        // console.log('✅ Código enviado exitosamente para compra con DNI:', dniInput);
         
-        // Cerrar modal DNI y mostrar confirmación de envío
+        // Cerrar modal y limpiar estado
         setShowDniModal(false);
         setDniInput('');
-        setShowConfirmacionEnvio(true);
+        
+        // Asegurar que el propuestaId esté guardado en el formStore
+        if (form.propuestaId !== propuestaIdFromStore) {
+          setField('propuestaId', propuestaIdFromStore);
+        }
+        
+        // Redirigir a la página de validación de código
+        navigate('/comunero/validar', { 
+          state: { 
+            fromCompra: true,
+            propuestaId: propuestaIdFromStore,
+            email: usuarioDisplay.email,
+            flujo: 'compra'
+          } 
+        });
       } else {
-        console.error('❌ Error al enviar solicitud de enlace de pago:', resultado.error);
-        alert('Error al procesar la reserva. Por favor, inténtalo de nuevo o contacta con soporte.');
+        console.error('❌ Error al enviar código para compra:', resultado.error);
+        alert('Error al procesar la compra. Por favor, inténtalo de nuevo o contacta con soporte.');
       }
     } catch (error) {
-      console.error('❌ Error inesperado en reserva:', error);
+      setLoadingReserva(false);
+      console.error('❌ Error inesperado en compra:', error);
       alert('Error inesperado. Por favor, inténtalo de nuevo más tarde.');
     } finally {
       setLoadingReserva(false);
@@ -558,25 +588,22 @@ const Propuesta = () => {
   }
   
   if (isDebugMode) {
-    console.log('🔧 Modo debug activo - saltando validaciones');
+    // console.log('🔧 Modo debug activo - saltando validaciones');
   }
   
-  console.log('✅ Todas las validaciones pasaron, renderizando propuesta');
+  // console.log('✅ Todas las validaciones pasaron, renderizando propuesta');
 
-  // La propuestaId ya está gestionada centralmente en Zustand
-  // No necesitamos extraerla de otras fuentes para evitar conflictos
-  console.log('💾 PropuestaId actual en store:', form.propuestaId);
+  // console.log('💾 PropuestaId actual en store:', form.propuestaId);
 
-  // Crear usuario de display con datos de fallback para el render
   const usuarioDisplay = usuario_propuesta || {
     nombre: 'Usuario',
     email: 'usuario@ejemplo.com',
     direccion: 'Dirección no disponible'
   };
 
-  // Si es modo asesores y se seleccionó "contratar", renderizar PropuestaContratar
-  if (isAsesores && vistaActual === 'contratar') {
-    return <PropuestaContratar />;
+  // Si es modo asesores y se seleccionó "propuesta", renderizar Propuesta
+  if (isAsesores && vistaActual === 'propuesta') {
+    return <Propuesta />;
   }
 
   return (
@@ -909,7 +936,10 @@ const Propuesta = () => {
                             fontSize: '2.5rem',
                             lineHeight: '1'
                           }}>
-                            {amount.toLocaleString('es-ES')}€
+                            {amount.toLocaleString('es-ES', { 
+                              minimumFractionDigits: 0, 
+                              maximumFractionDigits: 2 
+                            })}€
                           </span>
                         </div>
                         <p className="mb-0" style={{ 
@@ -938,7 +968,7 @@ const Propuesta = () => {
                             }}
                             onClick={handleComprar}
                           >
-                            RESERVAR
+                            CONTRATAR
                           </button>
                         ) : (
                           <button 
@@ -950,7 +980,7 @@ const Propuesta = () => {
                             }}
                             onClick={handleComprar}
                           >
-                            RESERVAR
+                            CONTRATAR
                           </button>
                         )
                       )}
@@ -1000,7 +1030,7 @@ const Propuesta = () => {
                             }}
                             onClick={handleComprar}
                           >
-                            RESERVAR
+                            CONTRATAR
                           </button>
                         ) : (
                           <button 
@@ -1012,7 +1042,7 @@ const Propuesta = () => {
                             }}
                             onClick={handleComprar}
                           >
-                            RESERVAR
+                            CONTRATAR
                           </button>
                         )
                       )}
@@ -1256,7 +1286,7 @@ const Propuesta = () => {
           <div className="mt-5">
             <div className="row g-0">
               {/* Imagen de la batería EcoFlow */}
-              <div className="col-lg-7" >
+              <div className="col-lg-6" >
                 <div className="position-relative d-flex flex-column align-items-center">
                   {/* Fondo verde decorativo - más pequeño */}
                   <div 
@@ -1302,12 +1332,13 @@ const Propuesta = () => {
               </div>
               
               {/* Card de características */}
-              <div className="col-lg-5" style={{padding: '0 35px 0 0'}}>
+              <div className="col-lg-6" style={{padding: '0 35px 0 0'}}>
                 <div 
-                  className="bg-white rounded-4 shadow-lg p-4 h-100"
+                  className="bg-white rounded-4 shadow-lg p-4"
                   style={{ 
                     // border: '3px solid #A0D034',
-                    position: 'relative'
+                    position: 'relative',
+                    height: '90%'
                   }}
                 >
                                     {/* Título */}
@@ -1325,30 +1356,41 @@ const Propuesta = () => {
                   
                   {/* Lista de características */}
                   <div className="mt-3">
-                    {[
-                      { icon: '🛡️', text: 'Sistema de extinción de incendios integrado.' },
-                      { icon: '🔋', text: 'BMS inteligente que protege contra sobrecargas.' },
-                      { icon: '☔', text: 'Certificación IP65: protege de la lluvia y el polvo.' },
-                      { icon: '🌡️', text: 'Módulo de calentamiento automático.' },
-                      { icon: '🔌', text: 'Instalación plug&play, rápida sin complicación.' },
-                      { icon: '📱', text: 'Control total desde tu móvil con la App.' },
-                      { icon: '⚡', text: '6 kW de potencia para evitar cortes de luz.' },
-                      { icon: '🔇', text: 'Sistema antiincendios, seguro y silencioso.' },
-                      { icon: '📜', text: '15 años de garantía real, por escrito.' },
-                      { icon: '👁️', text: 'Un diseño que no querrás esconder.' },
-                      { icon: '💰', text: 'Precio exclusivo para comuneros' }
-                    ].map((item, index) => (
-                      <div key={index} className="d-flex align-items-start gap-2 mb-1">
-                        <span style={{ fontSize: '1rem', minWidth: '20px' }}>{item.icon}</span>
-                        <span style={{ color: '#2A2A2A', fontSize: '0.85rem', lineHeight: '1.3' }}>
-                          {item.text}
-                        </span>
-                      </div>
-                    ))}
+                    {(() => {
+                      const vectores = [vector, vector1, vector2, vector3, vector4, vector5, vector6, vector7, vector8];
+                      const caracteristicas = [
+                        'Inversor híbrido y Sistema de Gestión de Batería (BMS)',
+                        'Sin necesidad de Instalación fotovoltaica',
+                        'Baja tensión de inicio',
+                        '7x24 Tarifa por Horario (ToU)', 
+                        'Programación Inteligente',
+                        'Compatible con generadores y cargadores de vehículos eléctricos',
+                        'Gestión inteligente de cargas',
+                        'Diseño atractivo', 
+                        '+6.000 Ciclos de vida'
+                      ];
+                      
+                      return caracteristicas.map((text, index) => (
+                        <div key={index} className="d-flex align-items-start gap-2 mb-2">
+                          <img 
+                            src={vectores[index] || vector} 
+                            alt="Característica" 
+                            style={{ 
+                              width: '16px', 
+                              height: '16px', 
+                              minWidth: '16px'
+                            }} 
+                          />
+                          <span style={{ color: '#2A2A2A', fontSize: '0.85rem', lineHeight: '1.3' }}>
+                            {text}
+                          </span>
+                        </div>
+                      ));
+                    })()}
                   </div>
                   
                   {/* Botón COMPRAR */}
-                  <div className="text-center mt-3">
+                  <div className="text-center mt-5">
                     {fsmState !== '06_VISITA_TECNICA' && (
                       (requiereVisitaTecnica && tipoInstalacion === 'trifasica') ? (
                         // Botón para instalaciones trifásicas que necesitan evaluación
@@ -1362,10 +1404,10 @@ const Propuesta = () => {
                           }}
                           onClick={handleComprar}
                         >
-                          RESERVAR
+                          CONTRATAR
                         </button>
                       ) : (
-                        // Botón RESERVAR normal
+                        // Botón CONTRATAR normal
                         <button 
                           className="btn btn-lg px-4 py-2 fw-bold text-white border-0"
                           style={{
@@ -1376,7 +1418,7 @@ const Propuesta = () => {
                           }}
                           onClick={handleComprar}
                         >
-                          RESERVAR
+                          CONTRATAR
                         </button>
                       )
                     )}
@@ -1686,7 +1728,7 @@ const Propuesta = () => {
                   COMPRAR EN GRUPO
                 </button>
               ) : (
-                // Solo mostrar RESERVAR si NO estamos en estado 06_VISITA_TECNICA
+                // Solo mostrar CONTRATAR si NO estamos en estado 06_VISITA_TECNICA
                 fsmState !== '06_VISITA_TECNICA' && (
                   <button 
                     className="btn btn-lg px-5 py-3 fw-bold text-white border-0 comprar-btn"
@@ -1792,9 +1834,9 @@ const Propuesta = () => {
               </div>
             </div>
 
-            {/* Botones alineados: RESERVAR a la izquierda, contacto a la derecha */}
+            {/* Botones alineados: CONTRATAR a la izquierda, contacto a la derecha */}
             <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
-              {/* Botón RESERVAR alineado a la izquierda */}
+              {/* Botón CONTRATAR alineado a la izquierda */}
               <div>
                 {fsmState !== '06_VISITA_TECNICA' && (
                   (requiereVisitaTecnica && tipoInstalacion === 'trifasica') ? (
@@ -1809,10 +1851,10 @@ const Propuesta = () => {
                       }}
                       onClick={handleComprar}
                     >
-                      RESERVAR
+                      CONTRATAR
                     </button>
                   ) : (
-                    // Botón RESERVAR normal
+                    // Botón CONTRATAR normal
                     <button 
                       className="btn btn-lg px-5 py-3 fw-bold text-white border-0"
                       style={{
@@ -1823,7 +1865,7 @@ const Propuesta = () => {
                       }}
                       onClick={handleComprar}
                     >
-                      RESERVAR
+                      CONTRATAR
                     </button>
                   )
                 )}
@@ -2251,12 +2293,12 @@ const Propuesta = () => {
                       <div className="spinner-border spinner-border-sm me-2" role="status">
                         <span className="visually-hidden">Cargando...</span>
                       </div>
-                      Procesando reserva...
+                      Procesando contratación...
                     </>
                   ) : (
                     <>
                       <span className="me-2">✓</span>
-                      Continuar con la reserva
+                      Continuar con la contratación
                     </>
                   )}
                 </button>
@@ -2678,4 +2720,4 @@ const Propuesta = () => {
   );
 };
 
-export default Propuesta;
+export default PropuestaContratar;

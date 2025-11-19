@@ -10,6 +10,7 @@ interface ApiResponse<T = any> {
   data?: T;
   error?: string;
   message?: string;
+  iaMessage?: string; // Mensaje generado por IA (puede venir al nivel superior)
 }
 
 // Función helper para hacer requests HTTP
@@ -61,8 +62,10 @@ const makeRequest = async <T = any>(
     return {
       success: true,
       data: data.data || data, // Usar data.data si existe, sino data completo
-      message: data.message
-    };
+      message: data.message,
+      // Preservar propiedades adicionales como iaMessage
+      ...(data.iaMessage && { iaMessage: data.iaMessage })
+    } as ApiResponse<T>;
   } catch (error) {
     console.error('Error en makeRequest:', error);
     return {
@@ -594,6 +597,56 @@ export const bateriaService = {
     console.log('🔍 Verificando estado de pago para propuesta:', propuestaId);
     return makeRequest(`baterias/reserva/estado-pago/${propuestaId}`, {
       method: 'GET',
+    });
+  },
+
+  // Buscar producto por SKU (para asesores)
+  async buscarSku(sku: string, propuestaId: string): Promise<ApiResponse<{
+    sku: string;
+    nombre: string;
+    descripcion?: string;
+    precio: number;
+    stock?: number;
+    categoria?: string;
+    zoho_item_id?: string;
+  }>> {
+    console.log('🔍 Buscando producto SKU:', sku, 'para propuesta:', propuestaId);
+    return makeRequest('baterias/search-sku', {
+      method: 'POST',
+      body: JSON.stringify({ sku, propuestaId }),
+    });
+  },
+
+  // Agregar productos por SKU a la propuesta (para asesores)
+  async agregarProductosSku(
+    propuestaId: string,
+    productos: Array<{
+      sku: string;
+      nombre: string;
+      precio: number;
+      cantidad: number;
+      zoho_item_id?: string;
+    }>
+  ): Promise<ApiResponse<{
+    propuestaId: string;
+    productosAgregados: number;
+    montoTotal: number;
+    montoAnterior: number;
+    montoNuevo: number;
+    iaMessage?: string;
+    productos: Array<{
+      sku: string;
+      nombre: string;
+      precio: number;
+      cantidad: number;
+      subtotal: number;
+      zoho_item_id?: string;
+    }>;
+  }>> {
+    console.log('➕ Agregando productos a propuesta:', propuestaId, 'Productos:', productos.length);
+    return makeRequest('baterias/add-new-skus', {
+      method: 'POST',
+      body: JSON.stringify({ propuestaId, productos }),
     });
   },
 };
