@@ -11,7 +11,7 @@ import solaxProposalBattery from '../assets/BateríaSolaXTransparentBackground.p
 // import ecoflowLogo from '../assets/ECOFLOWLOGO.png';
 import solaxLogo from '../assets/SolaXBatteryLogo.png';
 import imagenFondoPropuesta4 from '../assets/imagenFondoPropuesta4.png';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useFormStore } from '../zustand/formStore';
 import { bateriaService, comuneroService } from '../services/apiService';
@@ -194,6 +194,7 @@ const PropuestaContratar = () => {
     precio: number;
     cantidad: number;
     zoho_item_id?: string;
+    productoPrincipal?: boolean;
   }>>([]);
   const [loadingBusquedaSku, setLoadingBusquedaSku] = useState(false);
   const [showSkuSection, setShowSkuSection] = useState(false);
@@ -210,6 +211,35 @@ const PropuestaContratar = () => {
   // console.log('📦 Items a mostrar:', items);
   // console.log('🏷️ Nombre del grupo:', groupName);
   // console.log('🔍 PropuestaData completa:', propuestaData);
+  
+  // Cargar productos existentes desde propuestaData cuando está disponible
+  useEffect(() => {
+    // Intentar obtener los items desde múltiples ubicaciones posibles
+    const itemsDesdeBackend = 
+      location.state?.propuestaItems ||
+      propuestaData?.propuesta?.items ||
+      propuestaData?.productData?.items ||
+      propuestaData?.items ||
+      [];
+    
+    console.log('🔍 Items desde backend (PropuestaContratar):', itemsDesdeBackend);
+    
+    if (Array.isArray(itemsDesdeBackend) && itemsDesdeBackend.length > 0) {
+      // Formatear productos como editables (con SKU generado si no existe)
+      const productosFormateados = itemsDesdeBackend.map((item: any, index: number) => ({
+        sku: item.sku || item.zoho_item_id || `EXISTING_${index}`,
+        nombre: item.name || item.nombre || 'Producto sin nombre',
+        precio: item.rate || item.precio || 0,
+        cantidad: item.quantity || item.cantidad || 1,
+        zoho_item_id: item.zoho_item_id,
+        productoPrincipal: item.productoPrincipal || false // Solo si viene explícitamente del backend
+      }));
+      
+      // Cargar directamente en productosSeleccionados para que sean editables
+      setProductosSeleccionados(productosFormateados);
+      console.log('✅ Productos existentes cargados como editables (PropuestaContratar):', productosFormateados);
+    }
+  }, [propuestaData, location.state]);
 
   // // Debug adicional para identificar problemas en servidor
   // console.log('🔍 Debug validaciones:');
@@ -416,6 +446,16 @@ const PropuestaContratar = () => {
       productosSeleccionados.map(p => 
         p.sku === sku ? { ...p, cantidad: nuevaCantidad } : p
       )
+    );
+  };
+
+  const handleToggleProductoPrincipal = (sku: string) => {
+    // Solo un producto puede ser principal a la vez
+    setProductosSeleccionados(
+      productosSeleccionados.map(p => ({
+        ...p,
+        productoPrincipal: p.sku === sku
+      }))
     );
   };
 
@@ -695,10 +735,10 @@ const handleConfirmarCompra = async () => {
                     </div>
                   </div>
 
-                  {/* Lista de productos seleccionados */}
+                  {/* Lista de productos (existentes + nuevos) */}
                   {productosSeleccionados.length > 0 && (
                     <div className="mb-4">
-                      <h6 className="fw-bold mb-3">Productos Agregados:</h6>
+                      <h6 className="fw-bold mb-3" style={{ color: '#58B9C6' }}>📦 Productos en la Propuesta:</h6>
                       <div className="table-responsive">
                         <table className="table table-bordered">
                           <thead className="table-light">
@@ -715,7 +755,19 @@ const handleConfirmarCompra = async () => {
                             {productosSeleccionados.map((producto) => (
                               <tr key={producto.sku}>
                                 <td>{producto.sku}</td>
-                                <td>{producto.nombre}</td>
+                                <td>
+                                  <div className="d-flex align-items-center gap-2">
+                                    <input
+                                      className="form-check-input"
+                                      type="checkbox"
+                                      checked={producto.productoPrincipal || false}
+                                      onChange={() => handleToggleProductoPrincipal(producto.sku)}
+                                      style={{ cursor: 'pointer', flexShrink: 0 }}
+                                      title="Marcar como producto principal (será el título de la propuesta)"
+                                    />
+                                    <span>{producto.nombre}</span>
+                                  </div>
+                                </td>
                                 <td>{producto.precio.toLocaleString('es-ES')}€</td>
                                 <td>
                                   <div className="d-flex align-items-center gap-2">
@@ -792,7 +844,7 @@ const handleConfirmarCompra = async () => {
                   {productosSeleccionados.length === 0 && (
                     <div className="alert alert-info">
                       <i className="fas fa-info-circle me-2"></i>
-                      No hay productos agregados. Busca productos por código SKU para agregarlos.
+                      No hay productos en la propuesta. Busca productos por código SKU para agregarlos.
                     </div>
                   )}
                 </div>

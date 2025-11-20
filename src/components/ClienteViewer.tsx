@@ -54,9 +54,19 @@ const ClienteViewer = () => {
             const respuestasPreguntas = resultado.rawResponse?.data?.respuestasPreguntas;
             const tipoInstalacion = respuestasPreguntas?.tipoInstalacion || 'desconozco';
             
+            // Extraer items de la propuesta desde la respuesta raw
+            // Intentar múltiples rutas para acceder a los items
+            const rawResponseAny = resultado.rawResponse as any;
+            const propuestaItems = 
+              rawResponseAny?.data?.propuesta?.items || 
+              resultado.datosParaStore.propuestaData?.productData?.mapped_items || 
+              [];
+            console.log('📦 Items desde backend para pasar a Propuesta:', propuestaItems);
+            
             navigate('/propuesta', { 
               state: { 
                 propuestaData: resultado.datosParaStore.propuestaData,
+                propuestaItems: propuestaItems, // Pasar items directamente
                 fromFsmState: '04_DATOS_RECOGIDOS',
                 tipoInstalacion: tipoInstalacion,
                 requiereVisitaTecnica: tipoInstalacion === 'trifasica'
@@ -75,9 +85,18 @@ const ClienteViewer = () => {
             const datosVT = resultado.datosParaStore as any; // Cast para acceder a propiedades específicas
             const tipoInstalacion = datosVT.tipoInstalacion || 'trifasica';
             
+            // Extraer items de la propuesta desde la respuesta raw
+            const rawResponseAny = resultado.rawResponse as any;
+            const propuestaItems = 
+              rawResponseAny?.data?.propuesta?.items || 
+              resultado.datosParaStore.propuestaData?.productData?.mapped_items || 
+              [];
+            console.log('📦 Items desde backend (visita técnica) para pasar a Propuesta:', propuestaItems);
+            
             navigate('/propuesta', { 
               state: { 
                 propuestaData: resultado.datosParaStore.propuestaData,
+                propuestaItems: propuestaItems, // Pasar items directamente
                 fromFsmState: '06_VISITA_TECNICA',
                 tipoInstalacion: tipoInstalacion,
                 requiereVisitaTecnica: false, // Ya se realizó la visita técnica
