@@ -715,7 +715,40 @@ const PreguntasAdicionales = () => {
           
           showToast('¡Propuesta generada correctamente!', 'success');
           
-          // Redirigir a la página de propuesta con los datos
+          // Obtener propuestaId de la respuesta para cargar los items
+          const propuestaId = response.data?.id || response.data?.propuesta?.id || form.propuestaId;
+          
+          if (propuestaId) {
+            console.log('🔄 Cargando datos completos de la propuesta:', propuestaId);
+            
+            try {
+              // Llamar al endpoint /baterias/comunero/{propuestaId} para obtener items
+              const propuestaCompleta = await nuevoComuneroService.obtenerPorId(propuestaId);
+              
+              if (propuestaCompleta.success && propuestaCompleta.data) {
+                const propuestaItems = (propuestaCompleta.data as any)?.data?.propuesta?.items || [];
+                
+                console.log('📦 Items cargados desde backend:', propuestaItems);
+                console.log('📦 Estructura completa de la respuesta:', propuestaCompleta.data);
+                
+                // Redirigir a la página de propuesta con los datos completos
+                navigate('/propuesta', { 
+                  state: { 
+                    propuestaData: response.data,
+                    propuestaItems: propuestaItems,
+                    tipoSolicitud: 'dentro-10m',
+                    tipoInstalacion: tipoInstalacion,
+                    requiereVisitaTecnica: tipoInstalacion === 'trifasica'
+                  } 
+                });
+                return;
+              }
+            } catch (error) {
+              console.error('⚠️ Error al cargar datos completos, usando datos originales:', error);
+            }
+          }
+          
+          // Fallback: navegar con los datos originales de create-proposal
           navigate('/propuesta', { 
             state: { 
               propuestaData: response.data,
@@ -794,15 +827,47 @@ const PreguntasAdicionales = () => {
         showToast('¡Información guardada correctamente!', 'success');
         
         // Actualizar propuestaId en el store si el backend devuelve una nueva/actualizada
-        if (response.data?.propuestaId && response.data.propuestaId !== form.propuestaId) {
-          console.log('💾 Actualizando propuestaId en store:', response.data.propuestaId);
-          setField('propuestaId', response.data.propuestaId);
+        const propuestaId = response.data?.propuestaId || response.data?.id || response.data?.solicitud?.id || form.propuestaId;
+        if (propuestaId && propuestaId !== form.propuestaId) {
+          console.log('💾 Actualizando propuestaId en store:', propuestaId);
+          setField('propuestaId', propuestaId);
         }
         
         // Limpiar flags de sesión al completar el proceso exitosamente
         sessionStorage.removeItem('datosActualizadosObtenidos');
         
-        // Redirigir a la página de propuesta con los datos recibidos
+        // Obtener propuestaId de la respuesta para cargar los items
+        if (propuestaId) {
+          console.log('🔄 Cargando datos completos de la propuesta:', propuestaId);
+          
+          try {
+            // Llamar al endpoint /baterias/comunero/{propuestaId} para obtener items
+            const propuestaCompleta = await nuevoComuneroService.obtenerPorId(propuestaId);
+            
+            if (propuestaCompleta.success && propuestaCompleta.data) {
+              const propuestaItems = (propuestaCompleta.data as any)?.data?.propuesta?.items || [];
+              
+              console.log('📦 Items cargados desde backend:', propuestaItems);
+              console.log('📦 Estructura completa de la respuesta:', propuestaCompleta.data);
+              
+              // Redirigir a la página de propuesta con los datos completos
+              navigate('/propuesta', {
+                state: { 
+                  propuestaData: response.data,
+                  propuestaItems: propuestaItems,
+                  tipoSolicitud: 'formulario-completo',
+                  tipoInstalacion: tipoInstalacion,
+                  requiereVisitaTecnica: tipoInstalacion === 'trifasica'
+                } 
+              });
+              return;
+            }
+          } catch (error) {
+            console.error('⚠️ Error al cargar datos completos, usando datos originales:', error);
+          }
+        }
+        
+        // Fallback: Redirigir con los datos originales de create-proposal
         navigate('/propuesta', {
           state: { 
             propuestaData: response.data,
